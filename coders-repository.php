@@ -29,6 +29,31 @@ final class CodersRepo{
 
         $this->init();
     }
+    /**
+     * @return string
+     */
+    public static final function base(){
+        return ABSPATH . '/' . get_option( 'coders_repo_base' , self::ENDPOINT );
+    }
+    /**
+     * 
+     * @param array $filters
+     * @return array
+     */
+    public static final function list( array $filters ){
+        return array();
+    }
+    /**
+     * 
+     * @global \wpdb $wpdb
+     * @global string $prefix
+     * @param string $public_id
+     * @return \CODERS\Repository\Resource|Boolean
+     */
+    public static final function import( $public_id ){
+        
+        return \CODERS\Repository\Resource::import($public_id);
+    }
     
     /**
      * @global \WP $wp
@@ -50,16 +75,11 @@ final class CodersRepo{
      */
     public final function request(){
         
-        $request_id = filter_input(INPUT_GET, 'coders_repo_request');
+        $rid = filter_input(INPUT_GET, 'rid');
         
-        return !is_null($request_id) ? $request_id : FALSE;
+        return !is_null($rid) ? $rid : FALSE;
     }
-    
-    
-    public final function import( $id ){
-        
-        return var_dump($id);
-    }
+
     /**
      * 
      * @return \CodersRepo
@@ -106,8 +126,20 @@ final class CodersRepo{
                     //blow up 404 errors here
                     $wp_query->set('is_404', FALSE);
                     //and execute the response
-
-                    var_dump(\CodersRepo::instance());
+                    
+                    $REPO = \CodersRepo::instance();
+                    //var_dump($REPO->request());
+                    $resource = $REPO->import($REPO->request());
+                    
+                    //var_dump($resource);die;
+                    
+                    if( FALSE !== $resource ){
+                        
+                        $resource->download();
+                    }
+                    else{
+                        print('INVALID_CONTENT_ERROR');
+                    }
 
                     //then terminate app and wordpressresponse
                     exit;
