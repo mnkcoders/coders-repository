@@ -1,4 +1,4 @@
-CREATE TABLE `ap_coders_repository` (
+CREATE TABLE IF NOT EXISTS `ap_coders_repository` (
  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
  `public_id` varchar(32) NOT NULL,
  `name` varchar(32) NOT NULL,
