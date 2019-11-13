@@ -65,20 +65,6 @@ final class Resource{
         return file_exists($this->path());
     }
     /**
-     * 
-     */
-    public final function download(){
-        
-        if($this->exists()){
-            header('Content-Type:' . $this->type );
-
-            print $this->load();
-        }
-        else{
-            print $this->path();
-        }
-    }
-    /**
      * @return string|Boolean
      */
     public final function load(){

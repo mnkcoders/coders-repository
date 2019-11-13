@@ -7,7 +7,7 @@
  * Author: Coder01
  * Author URI: 
  * License: GPLv2 or later
- * Text Domain: coders_framework
+ * Text Domain: coders_repository
  * Domain Path: lang
  * Class: CodersRepo
  * 
@@ -79,6 +79,41 @@ final class CodersRepo{
         
         return !is_null($rid) ? $rid : FALSE;
     }
+    /**
+     * @param String $file_id
+     * @return \CodersRepo
+     */
+    public final function download( $file_id ){
+        
+        $file = self::import( $file_id );
+        
+        if($file !== FALSE ){
+            
+            header('Content-Type:' . $file->type );
+
+            print $file->load();
+        }
+        else {
+            print $file->path();
+        }
+
+        return $this;
+    }
+    /**
+     * @param String $file_id
+     * @return String
+     */
+    public final function attach( $file_id ){
+        
+        $file = self::import( $file_id );
+        
+        if($file !== FALSE ){
+        
+            return base64_encode( $file->load( ) );
+        }
+        
+        return '';
+    }
 
     /**
      * 
@@ -93,6 +128,23 @@ final class CodersRepo{
         
         if(is_admin()){
             //INITIALIZE ADMIN MANAGEMENT
+            add_action('admin_menu', function() {
+                add_menu_page(
+                        __('Repository', 'coders_repository'),
+                        __('Repository', 'coders_repository'),
+                        'administrator', 'coders-repository',
+                        function() {
+                            print 'admin';
+                        }, 'f509'  ,51);
+                add_submenu_page(
+                        'coders-repository',
+                        __('Settings', 'coders_repository'),
+                        __('Settings', 'coders_repository'),
+                        'administrator','coders-repository-settings',
+                        function(){
+                            print 'settings';
+                        });
+            }, 100000);
         }
         else{
             //INITIALIZE REDIRECTION RULES
@@ -129,19 +181,8 @@ final class CodersRepo{
                     
                     $REPO = \CodersRepo::instance();
                     //var_dump($REPO->request());
-                    $resource = $REPO->import($REPO->request());
-                    
-                    //var_dump($resource);die;
-                    
-                    if( FALSE !== $resource ){
-                        
-                        $resource->download();
-                    }
-                    else{
-                        print('INVALID_CONTENT_ERROR');
-                    }
+                    $REPO->download($REPO->request());
 
-                    //then terminate app and wordpressresponse
                     exit;
                 }
             } );
