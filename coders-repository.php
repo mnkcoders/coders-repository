@@ -33,14 +33,51 @@ final class CodersRepo{
      * @return string
      */
     public static final function base(){
-        return ABSPATH . '/' . get_option( 'coders_repo_base' , self::ENDPOINT );
+        return sprintf('%s%s',
+                preg_replace('/\\\\/', '/', ABSPATH),
+                get_option( 'coders_repo_base' , self::ENDPOINT ));
+    }
+    /**
+     * @param string $rid Resource ID
+     * @return URL
+     */
+    public static final function url( $rid ){
+        return sprintf('%s?template=%s&rid=%s', get_site_url(),self::ENDPOINT,$rid);
+    }
+    /**
+     * @return array
+     */
+    public static final function storage(){
+        
+        $output = array();
+        $root = self::base();
+        //var_dump(self::base());
+        //var_dump(scandir(self::base()));
+        foreach(scandir($root) as $item ){
+            if( is_dir($root . '/' . $item ) && $item !== '.' && $item !== '..' ){
+                $output[] = $item;
+            }
+        }
+        
+        return $output;
+    }
+    /**
+     * 
+     * @param string $collection
+     * @return array
+     */
+    public static final function collection( $collection ){
+        
+        \CODERS\Repository\Resource::collection($collection);
+        
+        return array();
     }
     /**
      * 
      * @param array $filters
      * @return array
      */
-    public static final function list( array $filters ){
+    public static final function list( array $filters  = array( ) ){
         return array();
     }
     /**
@@ -128,21 +165,23 @@ final class CodersRepo{
         
         if(is_admin()){
             //INITIALIZE ADMIN MANAGEMENT
+            require_once( sprintf( '%s/admin/controller.php',__DIR__) );
+            
             add_action('admin_menu', function() {
                 add_menu_page(
                         __('Repository', 'coders_repository'),
                         __('Repository', 'coders_repository'),
                         'administrator', 'coders-repository',
                         function() {
-                            print 'admin';
-                        }, 'f509'  ,51);
+                            \CODERS\Repository\Admin\Controller::action();
+                        }, 'dashicons-grid-view'  ,51);
                 add_submenu_page(
                         'coders-repository',
                         __('Settings', 'coders_repository'),
                         __('Settings', 'coders_repository'),
                         'administrator','coders-repository-settings',
                         function(){
-                            print 'settings';
+                            \CODERS\Repository\Admin\Controller::action('settings');
                         });
             }, 100000);
         }

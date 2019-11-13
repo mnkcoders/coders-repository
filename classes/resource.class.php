@@ -23,6 +23,48 @@ final class Resource{
         $this->populate($meta);
     }
     /**
+     * 
+     * @global wpdb $wpdb
+     * @global string $table_prefix
+     * @param array $filters
+     * @return array
+     */
+    private static final function query( array $filters  = array() ){
+
+        global $wpdb;
+        
+        global $table_prefix;
+        
+        $where = array();
+        
+        foreach( $filters as $var => $val ){
+            switch( TRUE ){
+                case is_string($val):
+                    $where[] = sprintf("`%s`='%s'",$var,$val);
+                    break;
+                case is_object($val):
+                    $where[] = sprintf("`%s`='%s'",$var,$val->toString());
+                    break;
+                case is_array($val):
+                    $where[] = sprintf("`%s` IN ('%s')",$var, implode("','", $val));
+                    break;
+                default:
+                    $where[] = sprintf('`%s`=%s',$var,$val);
+                    break;
+            }
+        }
+        
+        $query = sprintf("SELECT * FROM `%scoders_repository`",$table_prefix);
+        
+        if( count($where)){
+            $query .= " WHERE " . implode(' AND ', $where);
+        }
+        
+        $result = $wpdb->get_results($query,ARRAY_A);
+
+        return ( count($result)) ? $result : array();
+     }
+    /**
      * @param array $input
      * @return \CODERS\Repository\Resource
      */
@@ -103,16 +145,20 @@ final class Resource{
         return array();
     }
     /**
+     * @param string $collection
+     * @return array
+     */
+    public static final function collection( $collection ){
+        
+        return self::query( array( 'storage' => $collection ) );
+    }
+    /**
      * @param string $public_id
      * @return \CodersRepoSource
      */
     public static final function import( $public_id ){
         
-        global $wpdb;
-        
-        global $table_prefix;
-
-        $result = $wpdb->get_results(sprintf("SELECT * FROM `%scoders_repository` WHERE `public_id`='%s'",$table_prefix,$public_id),ARRAY_A);
+        $result = self::query(array('public_id'=>$public_id));
 
         return ( count($result)) ? new Resource( $result[0] ) : FALSE;
     }
