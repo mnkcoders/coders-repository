@@ -30,12 +30,20 @@ final class CodersRepo{
         $this->init();
     }
     /**
+     * @param string $collection
      * @return string
      */
-    public static final function base(){
-        return sprintf('%s%s',
+    public static final function base( $collection = '' ){
+        
+        $base = sprintf('%s%s',
                 preg_replace('/\\\\/', '/', ABSPATH),
                 get_option( 'coders_repo_base' , self::ENDPOINT ));
+        
+        if(strlen($collection)){
+            $base . '/' . $collection;
+        }
+        
+        return $base;
     }
     /**
      * @param string $rid Resource ID
@@ -43,23 +51,6 @@ final class CodersRepo{
      */
     public static final function url( $rid ){
         return sprintf('%s?template=%s&rid=%s', get_site_url(),self::ENDPOINT,$rid);
-    }
-    /**
-     * @return array
-     */
-    public static final function storage(){
-        
-        $output = array();
-        $root = self::base();
-        //var_dump(self::base());
-        //var_dump(scandir(self::base()));
-        foreach(scandir($root) as $item ){
-            if( is_dir($root . '/' . $item ) && $item !== '.' && $item !== '..' ){
-                $output[] = $item;
-            }
-        }
-        
-        return $output;
     }
     /**
      * 
@@ -72,13 +63,8 @@ final class CodersRepo{
         
         return array();
     }
-    /**
-     * 
-     * @param array $filters
-     * @return array
-     */
-    public static final function list( array $filters  = array( ) ){
-        return array();
+    public static final function repositories(){
+        
     }
     /**
      * 
@@ -128,13 +114,25 @@ final class CodersRepo{
             
             header('Content-Type:' . $file->type );
 
-            print $file->load();
+            print $file->read();
         }
         else {
             print $file->path();
         }
 
         return $this;
+    }
+    /**
+     * @param string $file_id
+     * @return string
+     */
+    public final function encode( $file_id ){
+
+        $file = self::import( $file_id );
+        
+        return ($file !== FALSE ) ?
+                base64_encode( $file->read( ) ) :
+                FALSE;
     }
     /**
      * @param String $file_id
@@ -173,7 +171,7 @@ final class CodersRepo{
                         __('Repository', 'coders_repository'),
                         'administrator', 'coders-repository',
                         function() {
-                            \CODERS\Repository\Admin\Controller::action();
+                            \CODERS\Repository\Admin\Controller::action('dashboard');
                         }, 'dashicons-grid-view'  ,51);
                 add_submenu_page(
                         'coders-repository',
@@ -242,4 +240,4 @@ final class CodersRepo{
     }
 }
 
-\CodersRepo::instance();
+CodersRepo::instance();

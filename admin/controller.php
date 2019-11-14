@@ -14,7 +14,7 @@ class Controller {
 
     public final function __get($name) {
 
-        $att = sprintf('get%sAttribute',$name);
+        $att = sprintf('get%sAttribute', preg_replace('/_/', '', $name));
 
         return (method_exists($this, $att)) ? $this->$att() : FALSE;
     }
@@ -25,7 +25,7 @@ class Controller {
      */
     public final function __call($name, $arguments) {
 
-        $method = sprintf('get%sMethod',$name);
+        $method = sprintf('get%sMethod',preg_replace('/_/', '', $name));
 
         return (method_exists($this, $method)) ? $this->$method( $arguments ) : FALSE;
     }
@@ -37,10 +37,17 @@ class Controller {
         return sprintf('%s/html/%s.php',__DIR__,$view);
     }
     /**
+     * @return string|URL
+     */
+    protected final function getFormActionAttribute(){
+        return get_admin_url( ) . '?page=coders-repository' ;
+    }
+    /**
      * @return array
      */
     protected final function getStorageAttribute(){
-        return \CodersRepo::storage();
+        
+        return \CODERS\Repository\Resource::storage();
     }
     /**
      * @return string|FALSE
@@ -68,7 +75,7 @@ class Controller {
         $input = filter_input_array(INPUT_POST);
         
         
-        return $input;
+        return !is_null($input) ? $input : array();
     }
     /**
      * @param mixed $output
@@ -95,14 +102,34 @@ class Controller {
         }
     }
     
-    protected final function dashboard_action(){
+    protected final function dashboard_action( array $request = array()){
+        
+        $action = array_key_exists('coders_repo_action', $request) ?
+                $request['coders_repo_action'] :
+                '';
+        
+        switch( $action ){
+            case 'upload':
+                $R = \CODERS\Repository\Resource::upload( 'coders_repo_upload' );
+                //var_dump($R);
+                break;
+        }
         
         require $this->getView('collections');
     }
     
-    protected final function upload_action( ){
+    protected final function upload_action( array $request ){
         
-        return TRUE;
+        if(array_key_exists('upload', $request)){
+            
+            $R = \CODERS\Repository\Resource::upload($request['upload']);
+            
+            var_dump($R);
+            
+            return $this->dashboard_action();
+        }
+        
+        return FALSE;
     }
     
     protected final function remove_action( ){
@@ -124,7 +151,7 @@ class Controller {
      * @param String $action
      * @return \CODERS\Repository\Admin\Controller
      */
-    public static final function action( $action = 'dashboard' ){
+    public static final function action( $action = '' ){
         
         $ctl = new Controller( $action );
         

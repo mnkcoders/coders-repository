@@ -23,5 +23,13 @@
     <li class="container upload dropzone">
         <label class="caption">Upload here your items</label>
     </li>
+    <li class="container upload">
+        <form name="upload" action="<?php print $this->form_action  ?>" method="post" enctype="multipart/form-data">
+        
+            <input type="hidden" name="MAX_FILE_SIZE" value="5000000" />
+            <input type="file" name="coders.repo.upload" />
+            <button type="submit" name="coders.repo.action" value="upload">Upload</button>
+        </form>
+    </li>
     
 </ul>
