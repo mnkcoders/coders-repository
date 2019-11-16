@@ -11,7 +11,7 @@ class Controller {
     protected function __construct( ) {
 
     }
-
+    
     public final function __get($name) {
 
         $att = sprintf('get%sAttribute', preg_replace('/_/', '', $name));
@@ -25,9 +25,17 @@ class Controller {
      */
     public final function __call($name, $arguments) {
 
-        $method = sprintf('get%sMethod',preg_replace('/_/', '', $name));
+        switch( TRUE ){
+            case preg_match(  '/^display_/' , $name ):
+                $method = sprintf('display%sMethod', preg_replace('/display_/', '', $name));
+                //var_dump($method);
+                break;
+            default:
+                $method = sprintf('get%sMethod',preg_replace('/_/', '', $name));
+                break;
+        }
 
-        return (method_exists($this, $method)) ? $this->$method( $arguments ) : FALSE;
+        return (method_exists($this, $method)) ? $this->$method( count($arguments) ? $arguments[0]  : array( ) ) : FALSE;
     }
     /**
      * @param string $view
@@ -35,6 +43,21 @@ class Controller {
      */
     protected final function getView( $view ){
         return sprintf('%s/html/%s.php',__DIR__,$view);
+    }
+    /**
+     * 
+     * @param string $view
+     * @return \CODERS\Repository\Admin\Controller
+     */
+    protected final function display( $view ){
+        
+        printf('<div class="coders-repository %s-view"><!-- CODERS REPO CONTAINER -->',$view);
+        
+        require $this->getView($view);
+        
+        print('<!-- CODERS REPO CONTAINER --></div>');
+        
+        return $this;
     }
     /**
      * @return string|URL
@@ -58,13 +81,64 @@ class Controller {
                 FALSE;
     }
     /**
-     * @param string $attributes
+     * @return int
+     */
+    protected final function getMaxFileSizeAttribute(){
+        return 255 * 255 * get_option('coders.repository.max_file_size',50);
+    }
+    /**
+     * @param string $collection
      * @return array
      */
-    protected final function getCollectionMethod( array $attributes ){
-        return count($attributes) ?
-            \CODERS\Repository\Resource::collection($attributes[0]) :
+    protected final function getCollectionMethod( $collection ){
+        return count($collection) ?
+            \CODERS\Repository\Resource::collection($collection) :
             array();
+    }
+    /**
+     * @param array $params
+     * @return string
+     */
+    protected final function getFormActionMethod( array $params = array( ) ){
+        
+        $url = get_admin_url( ) . '?page=coders-repository' ;
+        
+        if( count ($params)){
+            foreach( $params as $var=>$val ){
+                $url .= sprintf('&%s=%s',$var,$val);
+            }
+        }
+        
+        return $url;
+    }
+    /**
+     * @param array $resource
+     * @return string
+     */
+    protected final function displayResourceMethod( array $resource ){
+        
+        //return $resource['name'];
+        
+        //$url = \CodersRepo::url($resource['public_id']);
+        
+        switch( $resource[ 'type' ] ){
+            case 'image/png':
+            case 'image/gif':
+            case 'image/jpeg':
+            case 'image/jpg':
+                return sprintf('<img class="content media" src="%s" alt="%s" title="%s" />',
+                    \CodersRepo::url($resource['public_id']),
+                        $resource['name'],
+                        $resource['name']);
+            case 'text/html':
+                return sprintf('<span class="content html">%s</span>',$resource['name']);
+            case 'text/plain':
+            default:
+                return sprintf('<span class="content text">%s</span>',$resource['name']);
+        }
+        
+        //return sprintf('<a class="link" href="%s" target="_blank">%s</a>', $url , $display );
+        //return sprintf('<!-- INVALID_TYPE [%s] -->',$resource['type']);
     }
     /**
      * 
@@ -72,10 +146,13 @@ class Controller {
      */
     protected static final function request(){
         
-        $input = filter_input_array(INPUT_POST);
+        $post = filter_input_array(INPUT_POST);
         
+        $get = filter_input_array(INPUT_GET);
         
-        return !is_null($input) ? $input : array();
+        return array_merge(
+                !is_null($get) ? $get : array()  ,
+                !is_null($post) ? $post : array() );
     }
     /**
      * @param mixed $output
@@ -107,15 +184,39 @@ class Controller {
         $action = array_key_exists('coders_repo_action', $request) ?
                 $request['coders_repo_action'] :
                 '';
-        
+
         switch( $action ){
+            case 'remove':
+                if(array_key_exists('coders_repo_id', $request)){
+                    $R = \CODERS\Repository\Resource::load($request['coders_repo_id']);
+                    if( $R !== FALSE ){
+                        var_dump(  $R->delete() );
+                    }
+                }
+                break;
             case 'upload':
-                $R = \CODERS\Repository\Resource::upload( 'coders_repo_upload' );
-                //var_dump($R);
+                $this->_attributes['collection'] = array_key_exists('coders_repo_collection', $request) ?
+                        $request['coders_repo_collection'] :
+                        'default';
+                $R = \CODERS\Repository\Resource::upload( 'coders_repo_upload' , $this->_attributes['collection'] );
+                break;
+            case 'create_collection':
+                if( array_key_exists('coders_repo_create', $request) ){
+                    $this->_attributes['collection'] = $request['coders_repo_create'];
+                    if( \CODERS\Repository\Resource::createCollection($this->_attributes['collection']) ){
+                        //print 'success!!';
+                    }
+                }
+                break;
+            case 'refresh':
+                $this->_attributes['collection'] = array_key_exists('coders_repo_collection', $request) ?
+                        $request['coders_repo_collection'] :
+                        'default';
                 break;
         }
         
-        require $this->getView('collections');
+        //require $this->getView('collections');
+        $this->display('collections');
     }
     
     protected final function upload_action( array $request ){
@@ -139,7 +240,8 @@ class Controller {
     
     protected final function settings_action(){
         
-        require $this->getView('settings');
+        //require $this->getView('settings');
+        $this->display('settings');
     }
 
     protected final function save_settings_action( ){

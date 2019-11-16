@@ -136,6 +136,30 @@ final class Resource{
         return $this->exists() ? file_get_contents($this->path()) : FALSE;
     }
     /**
+     * @return int
+     */
+    public final function size(){
+        return $this->exists() ? filesize($this->path()) : 0;
+    }
+    /**
+     * @return boolean
+     */
+    public final function isAttachment(){
+        switch( $this->_meta['type']){
+            //images and media
+            case 'image/jpg':
+            case 'image/jpeg':
+            case 'image/png':
+            case 'image/gif':
+            case 'image/bmp':
+            //text files
+            case 'text/plain':
+            case 'text/html':
+                return TRUE;
+        }
+        return FALSE;
+    }
+    /**
      * @global \wpdb $wpdb
      * @global string $table_prefix
      * @return boolean
@@ -152,18 +176,23 @@ final class Resource{
      * @param string $collection
      * @return boolean
      */
-    private static final function checkCollection( $collection ){
+    public static final function createCollection( $collection ){
         
         $path = \CodersRepo::base($collection);
         
-        return ( filetype( $path ) === 'dir' ) ? TRUE : mkdir($path);
+        return ( file_exists( $path ) ) ? TRUE : mkdir($path);
     }
     /**
      * @return boolean
      */
     public final function delete(){
         
-        return self::remove($this->_ID);
+        if( self::remove($this->_ID) ){
+            
+            return unlink($this->path());
+        }
+        
+        return FALSE;
     }
     /**
      * @global wpdb $wpdb
@@ -176,7 +205,7 @@ final class Resource{
         global $wpdb,$table_prefix;
         
         $deleted = $wpdb->delete(sprintf('%scoders_repository',$table_prefix), array( 'ID' => $id ) );
-        
+
         return $deleted !== FALSE && $deleted > 0;
     }
     /**
@@ -241,7 +270,7 @@ final class Resource{
             
             if(strlen($buffer) && !$R->exists( ) ){
                 
-                if( !self::checkCollection($meta['storage']) || !$R->write($buffer) ){
+                if( !self::createCollection($meta['storage']) || !$R->write($buffer) ){
                    
                     return FALSE;
                 }
@@ -263,7 +292,7 @@ final class Resource{
     public static final function upload( $input , $collection = 'default' ){
         
         try{
-            $destination = \CodersRepo::base($collection);
+            //$destination = \CodersRepo::base($collection);
             
             $fileMeta = array_key_exists($input, $_FILES) ? $_FILES[ $input ] : array();
 
@@ -271,9 +300,9 @@ final class Resource{
                 throw new \Exception('UPLOAD_ERROR_INVALID_FILE');
             }
             
-            if( strlen($destination) === 0 ){
+            /*if( strlen($destination) === 0 ){
                 throw new \Exception('UPLOAD_ERROR_INVALID_DESTINATION');
-            }
+            }*/
             
             switch( $fileMeta['error'] ){
                 case UPLOAD_ERR_CANT_WRITE:
@@ -294,6 +323,8 @@ final class Resource{
                     break;
             }
             
+            $fileMeta['storage'] = $collection;
+            
             $buffer = file_get_contents($fileMeta['tmp_name']);
             
             unlink($fileMeta['tmp_name']);
@@ -310,8 +341,18 @@ final class Resource{
         return FALSE;
     }
     /**
+     * @param int $ID
+     * @return \CODERS\Repository\Resource
+     */
+    public static final function load( $ID ){
+
+        $result = self::query(array('ID'=>$ID));
+
+        return ( count($result)) ? new Resource( $result[0] ) : FALSE;
+    }
+    /**
      * @param string $public_id
-     * @return \CodersRepoSource
+     * @return \CODERS\Repository\Resource
      */
     public static final function import( $public_id ){
         

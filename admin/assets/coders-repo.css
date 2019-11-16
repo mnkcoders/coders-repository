@@ -1,0 +1,243 @@
+/**/
+.coders-repository{
+    max-width: 90%;
+}
+.coders-repository input[type="text"]{
+    margin: 0;
+}
+.coders-repository > .header{
+    margin: 40px 0 20px;
+}
+.coders-repository .container{
+    padding: 20px;
+    margin: 40px auto;
+    box-sizing: border-box;
+    
+    background-color: transparent;
+}
+.coders-repository .container.highlight{
+    transition: ease-in 240ms;
+}
+.coders-repository .container.highlight:hover{
+    background-color: rgba(255,255,255,0.25);
+}
+.coders-repository .container select{
+    min-width: 168px;
+}
+.coders-repository .container.dropzone{
+    border: 1px dashed rgba(0,0,0,0.25);
+    padding: 20px;
+    margin: 40px auto;
+    box-sizing: border-box;
+
+    text-transform: uppercase;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+.coders-repository.collections-view ul.collection{
+    width: 100%;
+    border-top: 2px rgba(0,0,0,0.1);
+}
+
+.coders-repository ul.collection > li.inline{ display: inline-block; vertical-align: top; margin: 0 10px 0 0; }
+
+.coders-repository .separator{
+    border-bottom: 1px solid rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    display: block;
+}
+
+.coders-repository.collections-view ul.collection > li.category.inline > a{
+    display: block;
+    padding: 10px 20px;
+    margin: 0 5px 0 0;
+    box-sizing: border-box;
+    background-color: rgba(255,255,255,0.65);
+    transition: ease-in 240ms;
+    border-radius: 2px;
+    text-decoration: none;
+    letter-spacing: 1px;
+}
+.coders-repository.collections-view ul.collection > li.category.inline > a:hover{
+    background-color: rgba(255,255,255,1);
+}
+
+.coders-repository.collections-view ul.collection > li.category > input[type="radio"]{ display: none; }
+.coders-repository.collections-view ul.collection > li.category > input[type="radio"] + label{
+    display: block;
+    padding: 6px 20px;
+    margin: 0 5px 0 0;
+    min-width: 180px;
+    box-sizing: border-box;
+    background-color: rgba(255,255,255,0.65);
+    transition: ease-in 240ms;
+    border-radius: 2px;
+    text-decoration: none;
+    text-align: center;
+    letter-spacing: 1px;
+    
+    position: relative;
+}
+.coders-repository.collections-view ul.collection > li.category > input[type="radio"] + label:before{
+    font-size: 15px;
+    font-family: 'dashicons';
+    content: '\f155';
+    display: block;
+    padding: 5px;
+    position: absolute;
+    left: 0; top: 0;
+    opacity: 0;
+    color: #ffffff;
+}
+.coders-repository.collections-view ul.collection > li.category > input[type="radio"] + label:hover{
+    box-shadow: 0 0 8px rgba(0,0,0,0.15);
+}
+.coders-repository.collections-view ul.collection > li.category > input[type="radio"]:checked + label{
+    background-color: #007cba;
+    color: #ffffff;
+}
+.coders-repository.collections-view ul.collection > li.category > input[type="radio"]:checked + label:before{ opacity: 1; }
+
+.coders-repository.collections-view ul.collection > li.resource{
+    transition: ease-in 240ms;
+    box-sizing: border-box;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+.coders-repository.collections-view ul.collection > li.resource > .toolbox{
+    pointer-events: none;
+    opacity: 0;
+    transition: ease-in 240ms;
+    
+    background-color: rgba(255,255,255,0.1);
+    
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+}
+.coders-repository.collections-view ul.collection > li.resource:hover{
+    background-color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+}
+.coders-repository.collections-view ul.collection > li.resource:hover > .toolbox{
+    opacity: 1;
+    pointer-events: default;
+}
+.coders-repository.collections-view ul.collection > li.resource > .item-box{
+    display: block;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%;
+}
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .action{
+    position: absolute;
+    display: block;
+    margin: 0;
+    padding: 5px;
+    color: #fff;
+    background-color: rgba(0,0,0,0.5);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: ease-in 440ms;
+    border-radius: 50%;
+    border: 1px solid transparent;
+}
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .action:hover,
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .action:focus,
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .action:active{
+    border-color: rgba(0,0,0,0.15);
+}
+.coders-repository.collections-view ul.collection > li.resource:hover > .item-box > .action{
+    opacity: 1;
+    pointer-events: initial;
+    margin: 10px;
+}
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .action.top{ top: 0; }
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .action.left{ left: 0; }
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .action.right{ right: 0; }
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .action.bottom{ bottom: 0; }
+
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .content{
+    display: block;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .content.media{
+    transition: ease-in 550ms;
+}
+.coders-repository.collections-view ul.collection > li.resource:hover > .item-box > .content.media{
+    transform: scale(1.05);
+}
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .content.html,
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .content.text{
+    text-align: center;
+    font-size: 15px;
+    color: #555555;
+    line-height: 48px;
+    letter-spacing: 1px;
+    padding: calc(100% - 48px) 0 0;
+    pointer-events: none;
+}
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .content.html:before,
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .content.text:before{
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: calc(50% - 48px) 0 calc(50% - 48px);
+
+    color: rgba(0,0,0,0.1);
+    line-height: 96px;
+    font-size: 96px;
+    font-family: dashicons;
+    
+    transition: ease-in 240ms;
+}
+.coders-repository.collections-view ul.collection > li.resource:hover > .item-box > .content.html:before,
+.coders-repository.collections-view ul.collection > li.resource:hover > .item-box > .content.text:before{
+    color: rgba(0,0,0,0.35);
+}
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .content.text:before{ content: "\f121"; }
+.coders-repository.collections-view ul.collection > li.resource > .item-box > .content.html:before{ content: "\f499"; }
+
+
+
+@media only screen and (max-width: 479px){
+    .coders-repository.collections-view ul.collection > li.resource{
+        display: block;
+        margin: 0 auto 2%;
+    }
+}
+@media only screen and (min-width: 480px){
+    .coders-repository.collections-view ul.collection > li.resource{
+        display: inline-block;
+        vertical-align: top;
+        float: left;
+    }
+    .coders-repository.collections-view ul.collection:after{
+        content: '';
+        display: block;
+        height: 0;
+        clear: both;
+    }
+}
+@media only screen and (min-width: 480px) and (max-width: 780px){
+    .coders-repository.collections-view ul.collection > li.resource{ width: 49%; margin: 0 2% 2% 0; }
+    .coders-repository.collections-view ul.collection > li.resource:nth-child(2n){ margin-right: 0; }
+}
+@media only screen and (min-width: 781px) and (max-width: 1199px){
+    .coders-repository.collections-view ul.collection > li.resource{ width: 32%; margin: 0 2% 2% 0; }
+    .coders-repository.collections-view ul.collection > li.resource:nth-child(3n){ margin-right: 0; }
+}
+@media only screen and (min-width: 1200px){
+    .coders-repository.collections-view ul.collection > li.resource{ width: 15%; margin: 0 2% 2% 0; }
+    .coders-repository.collections-view ul.collection > li.resource:nth-child(6n){ margin-right: 0; }
+}

@@ -39,8 +39,8 @@ final class CodersRepo{
                 preg_replace('/\\\\/', '/', ABSPATH),
                 get_option( 'coders_repo_base' , self::ENDPOINT ));
         
-        if(strlen($collection)){
-            $base . '/' . $collection;
+        if( strlen( $collection ) ){
+            $base .= '/' . $collection;
         }
         
         return $base;
@@ -113,6 +113,15 @@ final class CodersRepo{
         if($file !== FALSE ){
             
             header('Content-Type:' . $file->type );
+            
+            if( !$file->isAttachment()){
+                header( sprintf('Content-Disposition: attachment; filename="%s"',$file->name ));
+            }
+            else{
+                header( sprintf('Content-Disposition: inline; filename="%s"',$file->name ));
+            }
+            
+            header("Content-Length: " . $file->size() );
 
             print $file->read();
         }
@@ -157,12 +166,21 @@ final class CodersRepo{
     private final function init(){
         
         define('CODERS__REPOSITORY__DIR',__DIR__);
-        //define('CODERS__REPOSITORY__URL',get_plu);
+        
+        define('CODERS__REPOSITORY__URL', plugin_dir_url(__FILE__));
+        
         require_once(sprintf('%s/classes/resource.class.php',CODERS__REPOSITORY__DIR));
         
         
         if(is_admin()){
             //INITIALIZE ADMIN MANAGEMENT
+            
+            add_action('admin_enqueue_scripts', function(){
+                wp_enqueue_style('coders-repo-admin-style', sprintf('%sadmin/assets/coders-repo.css',CODERS__REPOSITORY__URL));
+                wp_enqueue_script('coders-repo-admin-script', sprintf('%sadmin/assets/coders-repo.js',CODERS__REPOSITORY__URL),array('jquery'));
+            });
+            //add_filter( 'admin_body_class', 'coders-repository' );
+            
             require_once( sprintf( '%s/admin/controller.php',__DIR__) );
             
             add_action('admin_menu', function() {
@@ -241,3 +259,16 @@ final class CodersRepo{
 }
 
 CodersRepo::instance();
+
+/**
+ * Setup DB
+ */
+register_activation_hook(__FILE__, function( ){
+
+    $setup_path = sprintf('%s/setup.php');
+    
+    if(file_exists($setup_path)){
+        
+        require( $setup_path );
+    }
+});
