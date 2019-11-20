@@ -285,60 +285,83 @@ final class Resource{
     }
     /**
      * @param string $input
+     * @return array
+     */
+    private static final function parseUploadMeta( $input ){
+            
+            $upload = array_key_exists($input, $_FILES) ? $_FILES[ $input ] : array();
+
+            $list = array();
+            //var_dump($upload);
+            if( count($upload) ){
+                
+                if(is_array($upload['name'])){
+                    for( $i = 0 ; $i < count($upload['name']) ; $i++ ){
+                        $list[] = array(
+                            'name' => $upload['name'][$i],
+                            'tmp_name' => $upload['tmp_name'][$i],
+                            'type' => $upload['type'][$i],
+                            'error' => $upload['error'][$i],
+                        );
+                    }
+                }
+                else{
+                    $list[] = $upload;
+                }
+            }
+            
+            return $list;
+    }
+
+    /**
+     * @param string $input
      * @param string $collection
      * @return boolean
      * @throws \Exception
      */
     public static final function upload( $input , $collection = 'default' ){
         
-        try{
-            //$destination = \CodersRepo::base($collection);
-            
-            $fileMeta = array_key_exists($input, $_FILES) ? $_FILES[ $input ] : array();
+        $created = 0;
+        
+        foreach( self::parseUploadMeta($input) as $upload ) {
+            try{
+                switch( $upload['error'] ){
+                    case UPLOAD_ERR_CANT_WRITE:
+                        throw new \Exception('UPLOAD_ERROR_READ_ONLY');
+                    case UPLOAD_ERR_EXTENSION:
+                        throw new \Exception('UPLOAD_ERROR_INVALID_EXTENSION');
+                    case UPLOAD_ERR_FORM_SIZE:
+                        throw new \Exception('UPLOAD_ERROR_SIZE_OVERFLOW');
+                    case UPLOAD_ERR_INI_SIZE:
+                        throw new \Exception('UPLOAD_ERROR_CFG_OVERFLOW');
+                    case UPLOAD_ERR_NO_FILE:
+                        throw new \Exception('UPLOAD_ERROR_NO_FILE');
+                    case UPLOAD_ERR_NO_TMP_DIR:
+                        throw new \Exception('UPLOAD_ERROR_INVALID_TMP_DIR');
+                    case UPLOAD_ERR_PARTIAL:
+                        throw new \Exception('UPLOAD_ERROR_INCOMPLETE');
+                    case UPLOAD_ERR_OK:
+                        break;
+                }
 
-            if( count($fileMeta) === 0 ){
-                throw new \Exception('UPLOAD_ERROR_INVALID_FILE');
-            }
-            
-            /*if( strlen($destination) === 0 ){
-                throw new \Exception('UPLOAD_ERROR_INVALID_DESTINATION');
-            }*/
-            
-            switch( $fileMeta['error'] ){
-                case UPLOAD_ERR_CANT_WRITE:
-                    throw new \Exception('UPLOAD_ERROR_READ_ONLY');
-                case UPLOAD_ERR_EXTENSION:
-                    throw new \Exception('UPLOAD_ERROR_INVALID_EXTENSION');
-                case UPLOAD_ERR_FORM_SIZE:
-                    throw new \Exception('UPLOAD_ERROR_SIZE_OVERFLOW');
-                case UPLOAD_ERR_INI_SIZE:
-                    throw new \Exception('UPLOAD_ERROR_CFG_OVERFLOW');
-                case UPLOAD_ERR_NO_FILE:
-                    throw new \Exception('UPLOAD_ERROR_NO_FILE');
-                case UPLOAD_ERR_NO_TMP_DIR:
-                    throw new \Exception('UPLOAD_ERROR_INVALID_TMP_DIR');
-                case UPLOAD_ERR_PARTIAL:
-                    throw new \Exception('UPLOAD_ERROR_INCOMPLETE');
-                case UPLOAD_ERR_OK:
-                    break;
-            }
-            
-            $fileMeta['storage'] = $collection;
-            
-            $buffer = file_get_contents($fileMeta['tmp_name']);
-            
-            unlink($fileMeta['tmp_name']);
-           
-            if( $buffer !== FALSE ){
+                $buffer = file_get_contents($upload['tmp_name']);
 
-                return self::create($fileMeta , $buffer);
+                unlink($upload['tmp_name']);
+
+                if( $buffer !== FALSE ){
+                    $upload['storage'] = $collection;
+                    if( self::create($upload , $buffer ) !== FALSE ){
+                        $created++;
+                    }
+                }
             }
-        }
-        catch (\Exception $ex) {
-            print( $ex->getMessage() );
+            catch (\Exception $ex) {
+                //send notification
+                print( $ex->getMessage() );
+            }
         }
         
-        return FALSE;
+        return $created;
     }
     /**
      * @param int $ID
