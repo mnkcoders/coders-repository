@@ -170,6 +170,8 @@ final class CodersRepo{
         define('CODERS__REPOSITORY__URL', plugin_dir_url(__FILE__));
         
         require_once(sprintf('%s/classes/resource.class.php',CODERS__REPOSITORY__DIR));
+        require_once(sprintf('%s/classes/request.class.php',CODERS__REPOSITORY__DIR));
+        require_once(sprintf('%s/classes/response.class.php',CODERS__REPOSITORY__DIR));
         
         
         if(is_admin()){
@@ -189,6 +191,7 @@ final class CodersRepo{
                         __('Repository', 'coders_repository'),
                         'administrator', 'coders-repository',
                         function() {
+                            //\CODERS\Repository\Response::route('dashboard');
                             \CODERS\Repository\Admin\Controller::action('dashboard');
                         }, 'dashicons-grid-view'  ,51);
                 add_submenu_page(

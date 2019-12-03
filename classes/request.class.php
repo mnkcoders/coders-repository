@@ -3,8 +3,14 @@
  * Request Class
  */
 final class Request{
-    
+    /**
+     * @var array
+     */
     private $_input = array();
+    /**
+     * @var string
+     */
+    private $_action = 'default';
     /**
      * 
      * @param array $input
@@ -19,6 +25,9 @@ final class Request{
      */
     public final function __get($name) {
         return $this->get($name, '');
+    }
+    public final function action(){
+        //return $this->_input['action']
     }
     /**
      * @param string $name
@@ -53,7 +62,15 @@ final class Request{
         foreach( $input as $var => $val ){
             
             if( preg_match('/^coders_repo_/', $var) ){
-                $this->_input[preg_replace('/^coders_repo_/', '', $var) ] = $val;
+                $key = preg_replace('/^coders_repo_/', '', $var);
+                switch( $key ){
+                    case 'action':
+                        $this->_action = $val;
+                        break;
+                    default:
+                        $this->_input[ ] = $val;
+                        break;
+                }
             }
         }
         
@@ -89,8 +106,7 @@ final class Request{
         
         $input = array_merge(
                 !is_null($get) ? $get : array(),
-                !is_null($post) ? $post : array(),
-                );
+                !is_null($post) ? $post : array());
         
         return new Request($input);
     }
