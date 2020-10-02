@@ -1,4 +1,4 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\Repository\Posts;
 /**
  * 
  */
@@ -6,9 +6,10 @@ final class AjaxController extends \CODERS\Repository\Response{
     
     protected function default_action(\CODERS\Repository\Request $request) {
         
-        $repo = \CODERS\Repository\Model::create('admin.repository');
-        
-        return $this->ajax( $repo->list_collections );
+        return $this->ajax(array(
+            'ts'=>$this->ts(),
+            'response' => 'OK',
+        ));
     }
 
 }

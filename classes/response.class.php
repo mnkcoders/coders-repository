@@ -74,23 +74,37 @@ abstract class Response {
      */
     protected function ajax( $output ){
         
+        header('Content-type: application/json');
+        
+        $response = array(
+            'ts' => $this->ts(),
+        );
+        
         switch( TRUE ){
             case is_null($output):
                 //null responses are considered as empty, nothing bad happened, then TRUE
-                return NULL;
-            case is_array($output):
-                //serialize the whole array
-                return json_encode( $output );
-            case is_object($output):
-                //parse to string
-                return json_encode( array( 'response'=> intval( $output->toString() ) ) );
+                break;
             case is_bool($output):
-                return json_encode( array( 'response'=> intval( $output ) ) );
+                $response['response'] = intval($output);
+                break;
             //case is_numeric($output):
             //case is_string($output):
+            case is_array($output):
+                //serialize the whole array
+                $response['response'] = $output;
+                break;
+            case is_object($output) && method_exists($output, 'serialize' ):
+                //parse model result
+                $response['response'] = $output->data();
+                break;
             default:
-                return json_encode( array( 'response'=> $output ) );
+                $response['response'] = $output;
+                break;
         }
+        
+        print json_encode( $response );
+        
+        return TRUE;
     }
     /**
      * @param \CODERS\Repository\Request $request

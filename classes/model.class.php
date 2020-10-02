@@ -1,7 +1,13 @@
 <?php namespace CODERS\Repository;
 
 abstract class Model{
-    
+    /**
+     * @var array
+     */
+    private $_content = array();
+    /**
+     * @param array $data
+     */
     protected function __construct( array $data = array( ) ) {
         
     }
@@ -13,6 +19,10 @@ abstract class Model{
         
         return $name[count($name) - 1 ];
     }
+    /**
+     * @return array
+     */
+    public final function data(){ return $this->_content; }
     /**
      * @return string
      */
