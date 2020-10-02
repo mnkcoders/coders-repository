@@ -11,13 +11,6 @@ final class RepositoryModel extends \CODERS\Repository\Model{
     protected final function getResource( $resource_id ){
         return \CodersRepo::resourceLink( $resource_id );
     }
-    
-    /**
-     * @return string|URL
-     */
-    protected final function getFormActionAttribute(){
-        return get_admin_url( ) . '?page=coders-repository' ;
-    }
     /**
      * @return array
      */
@@ -49,3 +42,4 @@ final class RepositoryModel extends \CODERS\Repository\Model{
         return \CODERS\Repository\Resource::storage();
     }
 }
+
