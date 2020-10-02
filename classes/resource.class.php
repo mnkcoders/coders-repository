@@ -4,6 +4,8 @@
  */
 final class Resource{
     
+    const DEFAULT_CHUNK_SIZE = 1024 * 1024;
+    
     private $_meta = array(
         'ID'=>0,
         'public_id'=>'',
@@ -136,15 +138,67 @@ final class Resource{
         return $this->exists() ? file_get_contents($this->path()) : FALSE;
     }
     /**
+     * Array of headers required to stream this file
+     * @param boolean $attach
+     * @return array
+     */
+    public final function headers( $attach = FALSE ){
+        
+        $header = array(
+            sprintf('Content-Type: ' , $this->type),
+            sprintf( 'Content-Disposition: %s; filename="%s"',
+                    //mark as attachment if cannot be embedded or not required as download
+                    $attach || !$this->embeddable() ? 'attachment' : 'inline',
+                    $this->name ),
+            sprintf( 'Content-Length: %s', $this->size() )
+        );
+        
+        return $header;
+    }
+    /**
+     * Stream out the file content in a buffered loop
+     * @param int $chunk_size default to 1MB (1024 * 1024)
+     * @return boolean
+     */
+    public final function stream( $chunk_size = self::DEFAULT_CHUNK_SIZE ){
+        
+        if( !$this->exists()){
+            return FALSE;
+        }
+        
+        $path = $this->path();
+        
+        $buffer = '';
+        $cnt = 0;
+        $handle = fopen( $path , 'rb' );
+
+        if( $handle === FALSE ){
+            return FALSE;
+        }
+        
+        while( !feof($handle)){
+            $buffer = fread($handle, $chunk_size );
+            print $buffer;
+            ob_flush();
+            flush();
+            $cnt += strlen($buffer);
+        }
+        
+        $status = fclose($handle);
+        
+        return $status ? $cnt : FALSE;
+    }
+    /**
      * @return int
      */
     public final function size(){
         return $this->exists() ? filesize($this->path()) : 0;
     }
     /**
+     * Can be embedded in the webview?
      * @return boolean
      */
-    public final function isAttachment(){
+    public final function embeddable(){
         switch( $this->_meta['type']){
             //images and media
             case 'image/jpg':

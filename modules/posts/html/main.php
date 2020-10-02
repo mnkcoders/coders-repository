@@ -37,7 +37,7 @@
     <li class="resource inline">
         <div class="item-box">
             <?php print $this->display_resource( $item ); ?>
-            <a href="<?php print \CodersRepo::url($item['public_id']) ?>" target="_blank" class="action top right dashicons-external dashicons"></a>
+            <a href="<?php print $this->resource_link($item['public_id']) ?>" target="_blank" class="action top right dashicons-external dashicons"></a>
             <a href="<?php print $this->form_action(array(
                 'coders_repo_id'=>$item['ID'],
                 'coders.repo.action'=>'remove'));

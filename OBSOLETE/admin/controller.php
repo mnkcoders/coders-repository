@@ -1,10 +1,11 @@
-<?php namespace CODERS\Repository\Controllers;
+<?php namespace CODERS\Repository\Admin;
 /**
  * Description of controller
  */
-final class Dashboard extends \CODERS\Repository\Response {
+class Controller {
     
     private $_attributes = array(
+
         'collection' => 'default',
     );
     
@@ -52,9 +53,7 @@ final class Dashboard extends \CODERS\Repository\Response {
     protected final function display( $view ){
         
         printf('<div class="coders-repository %s-view"><!-- CODERS REPO CONTAINER -->',$view);
-        
         require $this->getView($view);
-        
         print('<!-- CODERS REPO CONTAINER --></div>');
         
         return $this;
@@ -91,7 +90,7 @@ final class Dashboard extends \CODERS\Repository\Response {
      * @return array
      */
     protected final function getCollectionMethod( $collection ){
-        return count($collection) ?
+        return strlen($collection) ?
             \CODERS\Repository\Resource::collection($collection) :
             array();
     }
@@ -112,6 +111,13 @@ final class Dashboard extends \CODERS\Repository\Response {
         return $url;
     }
     /**
+     * @param string $resource_id
+     * @return string
+     */
+    protected final function getResourceLinkMethod( $resource_id ){
+        return \CodersRepo::resourceLink( $resource_id );
+    }
+    /**
      * @param array $resource
      * @return string
      */
@@ -126,8 +132,9 @@ final class Dashboard extends \CODERS\Repository\Response {
             case 'image/gif':
             case 'image/jpeg':
             case 'image/jpg':
+                $link = $this->getResourceLinkMethod($resource['public_id']);
                 return sprintf('<img class="content media" src="%s" alt="%s" title="%s" />',
-                    \CodersRepo::url($resource['public_id']),
+                        $link,
                         $resource['name'],
                         $resource['name']);
             case 'text/html':

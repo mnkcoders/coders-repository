@@ -2,98 +2,77 @@
 /**
  * Description of controller
  */
-class Response {
-    
-    private $_attributes = array(
-        
-    );
+abstract class Response {
     
     protected function __construct( ) {
 
     }
     /**
-     * @param string $att
-     * @param mixed $value
-     * @return \CODERS\Repository\Response
-     */
-    protected final function set( $att , $value ){
-        $this->_attributes[$att]  = $value;
-        return $this;
-    }
-    /**
-     * @param string $att
-     * @param mixed $default
-     * @return mixex
-     */
-    protected final function get( $att , $default = FALSE ){
-        return array_key_exists($att, $this->_attributes) ? $this->_attributes[$att] : $default;
-    }
-    /**
-     * 
-     * @param string $name
-     * @return mixed
-     */
-    public final function __get($name) {
-
-        $att = sprintf('get%sAttribute', preg_replace('/_/', '', $name));
-
-        return (method_exists($this, $att)) ? $this->$att() : $this->get($name,FALSE);
-    }
-    /**
-     * @param string $name
-     * @param mixed $arguments
-     * @return mixed
-     */
-    public final function __call($name, $arguments) {
-
-        switch( TRUE ){
-            case preg_match(  '/^display_/' , $name ):
-                $method = sprintf('display%sMethod', preg_replace('/display_/', '', $name));
-                //var_dump($method);
-                break;
-            default:
-                $method = sprintf('get%sMethod',preg_replace('/_/', '', $name));
-                break;
-        }
-
-        return (method_exists($this, $method)) ? $this->$method( count($arguments) ? $arguments[0]  : array( ) ) : FALSE;
-    }
-    /**
-     * @param string $view
      * @return string
      */
-    protected final function getView( $view ){
-        return sprintf('%s/html/%s.php',__DIR__,$view);
+    public function __toString() {
+        $class = explode('\\', get_class($this));
+        return $class[count($class) - 1 ];
+    }
+    /**
+     * @return string
+     */
+    public final function module(){
+        $class = explode('\\', get_class($this));
+        return count($class) > 1 ?
+            $class[count($class) - 2 ] :
+            $class[count($class) - 1 ]  ;
+    }
+    /**
+     * @param string $model
+     * @return \CODERS\Repository\Model
+     */
+    protected final function importModel( $model ){
+        return Model::create($model );
+    }
+    /**
+     * @param string $view
+     * @return \CODERS\Repository\View
+     */
+    protected final function importView( $view ){
+        return View::create( $view );
+    }
+    /**
+     * @param \CODERS\Repository\Request $request
+     * @return boolean
+     */
+    private final function execute( Request $request ){
+        
+        $call = sprintf('%s_action', $request->action() );
+
+        return method_exists($this, $call) ?
+                $this->$call( $request ) :
+                $this->error($request);
+    }
+    /**
+     * @param \CODERS\Repository\Request $request
+     * @return boolean
+     */
+    protected function error(Request $request ){
+
+        printf('Undefined action [%s]', strval($request));
+        
+        var_dump($request);
+
+        return FALSE;
+    }
+    /**
+     * @return string
+     */
+    protected final function ts(){
+        return date( 'YmdHis' );
     }
     /**
      * 
-     * @param string $view
-     * @return \CODERS\Repository\Response
+     * @param type $output
+     * @return type
      */
-    protected final function display( $view ){
-        
-        printf('<div class="coders-repository %s-view"><!-- CODERS REPO CONTAINER -->',$view);
-        
-        require $this->getView($view);
-        
-        print('<!-- CODERS REPO CONTAINER --></div>');
-        
-        return $this;
-    }
-    protected final function request( ){
-        
-        $request = \CODERS\Repository\Request::import();
-        
-        $method = sprintf('%s_action',$request->action());
-        
-        return self::response( method_exists($this, $method) ? $this->$method( self::request() ) : FALSE );
-
-    }
-    /**
-     * @param mixed $output
-     * @return JSON
-     */
-    protected static final function response( $output ){
+    protected function ajax( $output ){
         
         switch( TRUE ){
             case is_null($output):
@@ -114,37 +93,52 @@ class Response {
         }
     }
     /**
-     * @param String $route
-     * @return \CODERS\Repository\Response
+     * @param \CODERS\Repository\Request $request
      */
-    public static final function route( $route = '' ){
+    abstract protected function default_action(Request $request );
+    /**
+     * @param \CODERS\Repository\Request $request
+     * @return \CODERS\Repository\Response | boolean
+     * @throws \Exception
+     */
+    public static final function create( Request $request ){
         
-        $root = explode('/',  preg_replace('/\\\\/', '/', __DIR__ ) );
-        
-        $path = sprintf('%s/admin/controllers/%s.php' , implode('/',array_slice($root, 0, count($root)-1)) , strtolower( $route ) );
-        
-        $class = sprintf('\CODERS\Repository\Controllers\%s',$route);
-        //$root = sprintf('%s/../admin/controllers/%s.php', preg_replace('/\\\\/', '/', __DIR__ ), strtolower( $route ) );
-        
-        if(file_exists($path)){
+        try{
 
-            require_once $path;
-            
-            if(class_exists($class)){
+            $path = sprintf('%s/modules/%s/controllers/%s.php',
+                    preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR ),
+                    strtolower( $request->module() ), strtolower( $request->controller() ) );
 
-                $C = new $class();
-                
-                return self::response( $C->request() );
+            $class = sprintf('\CODERS\Repository\%s\%sController',
+                    $request->module(), $request->controller() );
+
+            if(file_exists($path)){
+                require_once $path;
+                if(class_exists($class) && is_subclass_of($class, self::class)){
+                    $C = new $class();
+                    return $C->execute( $request );
+                }
+                else{
+                    throw new \Exception(sprintf('Invalid Controller %s',$class) );
+                }
+            }
+            else{
+                throw new \Exception(sprintf('Invalid path %s',$path) );
+            }
+        }
+        catch (\Exception $ex) {
+            if(is_admin()){
+                printf('<div class="notice notice-error"><p>%s</p></div>',$ex->getMessage());
+            }
+            else{
+                print( $ex->getMessage( ) );
             }
         }
         
-        return new Response( $route );
-        
-        $method = $route . '_action';
-        
-        return self::response( method_exists($ctl, $method) ? $ctl->$method( self::request() ) : FALSE );
+        return FALSE;
     }
 }
+
 
 
 

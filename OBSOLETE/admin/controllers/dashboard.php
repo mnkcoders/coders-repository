@@ -1,13 +1,17 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\Repository\Controllers;
 /**
  * Description of controller
  */
-class Controller {
+final class Dashboard extends \CODERS\Repository\Response {
     
     private $_attributes = array(
         'collection' => 'default',
     );
     
+    protected function default_action(\CODERS\Repository\Request $request) {
+        
+    }
+
     protected function __construct( ) {
 
     }
