@@ -58,9 +58,9 @@ abstract class View{
             }
             foreach( $script_list as $script => $deps ){
                 $include = is_array($deps) ? $deps : strlen( $deps ) ? array($deps) : array();
-                wp_enqueue_style(
+                wp_enqueue_script(
                         sprintf('coders-repo-%s-%s',$module,$script),
-                        sprintf('%smodules/%s/assets/%s.css',
+                        sprintf('%smodules/%s/assets/%s.js',
                         CODERS__REPOSITORY__URL, $module, $script),$include);
             }
         });
