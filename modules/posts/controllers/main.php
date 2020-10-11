@@ -20,9 +20,6 @@ final class MainController extends \CODERS\Repository\Response{
         $view = \CODERS\Repository\View::create('pub.main');
         $view->setModel( $model )->display();
         
-        
-        
-        
         return TRUE;
     }
     

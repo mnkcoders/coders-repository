@@ -21,18 +21,6 @@ final class Request{
         self::MODULE => 'Posts',
     );
     /**
-     * @var string
-     */
-    private $_action = 'default';
-    /**
-     * @var string
-     */
-    private $_controller = 'main';
-    /**
-     * @var string
-     */
-    private $_module = 'Posts';
-    /**
      * 
      * @param array $input
      */

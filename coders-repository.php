@@ -13,7 +13,8 @@
  * 
  * @author Coder01 <coder01@mnkcoder.com>
  ******************************************************************************/
-final class CodersRepo{
+//final class CodersRepo{
+class CodersRepo{
     
     const ENDPOINT = 'repository';
     const RESOURCE = 'resource';
@@ -22,7 +23,7 @@ final class CodersRepo{
      */
     private static $_INSTANCE = NULL;
     /**
-     * @var type 
+     * @var array
      */
     private static $_dependencies = array(
         'view',
@@ -32,11 +33,52 @@ final class CodersRepo{
         'response'
     );
     /**
+     * @var array
+     */
+    private $_components = array(
+        //
+    );
+    /**
      * 
      */
-    private final function __construct() {
+    protected function __construct() {
 
-        $this->init();
+       $this->preload(); 
+        
+    }
+    /**
+     * @return string
+     */
+    public final function __toString() {
+        $NS = explode('\\', get_class($this ) );
+        $class = $NS[count($NS) - 1 ];
+        $suffix = strrpos($class, 'Module');
+        return strtolower( substr($class, 0 ,$suffix) );
+    }
+    /**
+     * 
+     */
+    private final function preload(){
+        foreach( $this->_components as $component ){
+            if( !$this->component($component) ){
+                self::notice(sprintf('Invalid component %s',$component));
+            }
+        }
+    }
+    /**
+     * @param string $component
+     * @param string $type
+     */
+    protected final function component( $component , $type = 'models' ){
+        
+        $path = sprintf('%s/components/%s/%s.php',CODERS__REPOSITORY__DIR,$component,$component);
+        
+        if(file_exists($path)){
+            require $path;
+            return TRUE;
+        }
+        
+        return FALSE;
     }
     /**
      * @param string $collection
@@ -71,6 +113,7 @@ final class CodersRepo{
     public static final function resourceLink( $rid ){
 
         return sprintf('%s?%s=%s', get_site_url(),self::RESOURCE,$rid);
+
     }
     /**
      * 
@@ -110,38 +153,75 @@ final class CodersRepo{
         return \CODERS\Repository\Resource::import($public_id);
     }
     /**
+     * @param string $endpoint
+     * @throws \Exception
+     */
+    public static final function endpoint( $endpoint ){
+        
+        try{
+            if(strlen($endpoint) === 0){
+                throw new \Exception('Invalid Endpoint');
+            }
+            if( self::$_INSTANCE !== NULL ){
+                throw new \Exception('A module is already running');
+            }
+
+            $path = sprintf('%s/modules/%s/module.php',
+                    preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR ),
+                    strtolower( $endpoint ) );
+
+            $class = sprintf('\CODERS\Repository\%s\%sModule',$endpoint,$endpoint);
+
+            if( file_exists( $path ) ){
+                
+                require_once $path;
+
+                if(class_exists( $class ) && is_subclass_of( $class, self::class ) ){
+                    self::$_INSTANCE = new $class();
+                    return self::$_INSTANCE;
+                }
+                else{
+                    throw new \Exception(sprintf('Invalid Endpoint %s',$class));
+                }
+            }
+            else{
+                throw new \Exception(sprintf('Invalid Endpoint %s',$path));
+            }
+        }
+        catch (Exception $ex) {
+            self::notice($ex->getMessage(), 'error');
+        }
+        
+        return FALSE;
+    }
+    /**
      * @param String $file_id
      * @param boolean $attach
      * @return \CodersRepo
      */
-    public final function download( $file_id , $attach = FALSE ){
+    public static final function download( $file_id , $attach = FALSE ){
         
-        $file = self::import( $file_id );
-        
-        if( $file !== FALSE ){
-            foreach( $file->headers( $attach ) as $header ){
-                header( $header ); 
+        try{
+            if(is_null($file_id) || strlen($file_id) === 0 ){
+                throw new Exception('INVALID OR EMPTY RID');
             }
-            //print $file->read();
-            //output strream
-            $file->stream( /*default chunk size*/ );
-        }
-        else {
-            printf('INVALID RID#%s',$file_id);
-        }
+            
+            $file = self::import( $file_id );
 
-        return $this;
-    }
-    /**
-     * @param boolean $attachment
-     * @return string|boolean
-     */
-    public final function get( $attachment = FALSE ){
-        
-        $rid = filter_input(INPUT_GET, self::RESOURCE );
-
-        if( !is_null($rid) ){
-            $this->download($rid , $attachment );
+            if( $file !== FALSE ){
+                foreach( $file->headers( $attach ) as $header ){
+                    header( $header ); 
+                }
+                //print $file->read();
+                //output strream
+                $file->stream( /*default chunk size*/ );
+            }
+            else {
+                throw new Exception(sprintf('INVALID RID#%s',$file_id));
+            }
+        }
+        catch (Exception $ex) {
+            printf( '<p><i>%s</i></p>',$ex->getMessage() );
         }
     }
     /**
@@ -171,12 +251,28 @@ final class CodersRepo{
         
         return '';
     }
-
     /**
-     * 
+     * @param string $endpoint
+     * @return boolean
+     */
+    public final function validate( $endpoint ){
+        return in_array($endpoint, array('posts','repository'));
+    }
+    /**
+     * @param string $action
+     * @return CodersRepo
+     */
+    protected function run( $action ){
+
+        $request = \CODERS\Repository\Request::import( $action );
+        \CODERS\Repository\Response::create($request);
+        
+        return $this;
+    }
+    /**
      * @return \CodersRepo
      */
-    private final function init(){
+    public static final function init(){
         
         //one time loader
         if(defined('CODERS__REPOSITORY__DIR')){
@@ -184,6 +280,10 @@ final class CodersRepo{
         }
         define('CODERS__REPOSITORY__DIR',__DIR__);
         define('CODERS__REPOSITORY__URL', plugin_dir_url(__FILE__));
+        
+        if(self::setup()){
+            self::notice(__('Coders Repository Database registered!','coders_repository'));
+        }
 
         //register dependencies        
         foreach( self::$_dependencies as $class ){
@@ -191,10 +291,14 @@ final class CodersRepo{
         }
         
         if(is_admin()){
+            
+            //initialize Admin
+            CodersRepo::endpoint('Admin');
+            
             //register styles and scripts using the helper within the view
-            \CODERS\Repository\View::attachScripts('admin',
-                    array('style'),
-                    array('script'=>array('jquery')));
+            //\CODERS\Repository\View::attachScripts('admin',
+            //        array('style'),
+            //        array('script'=>array('jquery')));
             //add_filter( 'admin_body_class', 'coders-repository' );
             
             add_action('admin_menu', function() {
@@ -203,8 +307,9 @@ final class CodersRepo{
                         __('Repository', 'coders_repository'),
                         'administrator', 'coders-repository',
                         function() {
-                            $R = \CODERS\Repository\Request::import('admin');
-                            \CODERS\Repository\Response::create($R);
+                            CodersRepo::instance()->run('admin.main');
+                            //$R = \CODERS\Repository\Request::import('admin');
+                            //\CODERS\Repository\Response::create($R);
                         }, 'dashicons-grid-view'  ,51);
                 add_submenu_page(
                         'coders-repository',
@@ -212,8 +317,9 @@ final class CodersRepo{
                         __('Settings', 'coders_repository'),
                         'administrator','coders-repository-settings',
                         function(){
-                            $R = \CODERS\Repository\Request::import('admin.settings');
-                            \CODERS\Repository\Response::create($R);
+                            CodersRepo::instance()->run('admin.settings');
+                            //$R = \CODERS\Repository\Request::import('admin.settings');
+                            //\CODERS\Repository\Response::create($R);
                         });
             }, 100000);
         }
@@ -245,30 +351,26 @@ final class CodersRepo{
                 global $wp , $wp_query;
                 $query = $wp->query_vars;
                 switch( TRUE ){
-                    case array_key_exists(self::ENDPOINT, $query):
-                        $wp_query->set('is_404', FALSE);
-                        $request = \CODERS\Repository\Request::import();
-                        \CODERS\Repository\Response::create($request);
-                        //hooked repository app, exit WP framework
-                        exit;
                     case array_key_exists(self::RESOURCE, $query):
                         $wp_query->set('is_404', FALSE);
-                        $rid = filter_input(INPUT_GET, self::RESOURCE );
-                        $is_attachment = filter_input(INPUT_GET, 'attachment');
-                        if( !is_null($rid) ){
-                            $attach = !is_null($is_attachment) && intval( $is_attachment ) > 0;
-                            CodersRepo::instance()->get( $attach );
+                        CodersRepo::download(
+                                filter_input(INPUT_GET, self::RESOURCE ),
+                                filter_input(INPUT_GET, 'attachment') );
+                        //hooked repository app, exit WP framework
+                        exit;
+                    case array_key_exists(self::ENDPOINT, $query):
+                        $wp_query->set('is_404', FALSE);
+                        $EP = CodersRepo::endpoint($query[self::ENDPOINT]);
+                        if( FALSE !== $EP ){
+                            $EP->run($query[self::ENDPOINT]);
                         }
-                        else{
-                            print('#');
-                        }
+                        //$request = \CODERS\Repository\Request::import();
+                        //\CODERS\Repository\Response::create($request);
                         //hooked repository app, exit WP framework
                         exit;
                 }
             } );
         }
-        
-        return $this;
     }
     /**
      * Setup DB Activation Hook
@@ -313,15 +415,16 @@ final class CodersRepo{
      */
     static final function instance(){
         if(is_null(self::$_INSTANCE)){
-            self::$_INSTANCE = new \CodersRepo ();
+            //self::$_INSTANCE = new \CodersRepo ();
             if(self::setup()){
                 self::notice(__('Coders Repository Database registered!','coders_repository'));
             }
+            self::init();
         }
         return self::$_INSTANCE;
     }
 }
 
-CodersRepo::instance();
+CodersRepo::init();
 
 
