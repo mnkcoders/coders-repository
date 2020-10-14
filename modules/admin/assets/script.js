@@ -6,13 +6,141 @@ function CodersView(){
     
     var _elements = {
         'dropZone': null,
+        /**
+         * @type Element
+         */
         'tabs':null,
+        /**
+         * @type Element
+         */
         'collectionBox':null,
-        'uploader':null
+        'timeout': 2000,
+        'inputs':{
+            'dropzone':'coders-repo-dropzone',
+            'uploader':'coders-repo-uploader'
+        },
+        //'uploader':null
+    };
+    /**
+     * @returns {Element[]}
+     */
+    this.tabs = function(){
+        return typeof _elements.tabs === 'object' ?
+            [].slice.call( _elements.tabs.children ) :
+                    [];
+    };
+    /**
+     * @returns {Element[]}
+     */
+    this.panels = function(){
+        return typeof _elements.collectionBox === 'object' ?
+            [].slice.call( _elements.collectionBox.children ) :
+                    [];
+    };
+    /**
+     * @param {String} tab
+     * @returns {CodersView}
+     */
+    this.switchTab = function( selection ){
+        
+        console.log(this.tabs());
+        this.tabs().forEach( function( tab ){
+            if( tab.getAttribute('data-tab') === selection  && !tab.classList.contains('active')){
+                tab.classList.add('active');
+            }
+            else{
+                tab.classList.remove('active');
+            }
+        });
+
+        this.panels().forEach( function( panel ){
+            if( panel.getAttribute('data-tab') === selection  && !panel.classList.contains('active')){
+                panel.classList.add('active');
+            }
+            else{
+                panel.classList.remove('active');
+            }
+        });
+        
+        return this;
+    };
+    /**
+     * @param {String} collection
+     * @param {Element} panel
+     * @returns {CodersView}
+     */
+    this.addPanel = function( item , panel ){
+
+        var _view = this;
+
+        var cls = item === 'create-collection' ?
+                'item create icon-plus button-primary' :
+                'item button';
+        var title = item === 'create-collection' ?
+                'New Collection' :
+                        item;
+
+        var tab = this.element('li',{'class':cls,'data-tab':item},title );
+        
+        tab.addEventListener( 'click' , e => {
+            e.preventDefault();
+            e.stopPropagation();
+            _view.switchTab( item );
+            console.log('clicked ' + item );
+            return false;
+        } );
+
+        _elements.tabs.prepend( tab );
+        
+        _elements.collectionBox.prepend(this.element('div',{
+            'class':'container', 'data-tab':item
+        }, panel ) );
+        
+        return this;
+    };
+    
+    /**
+     * @returns {String}
+     */
+    this.url = function( vars , root ){
+        
+        var url = window.location.href;
+        
+        if( root ){
+            url = url.substr( 0 , url.indexOf('/coders-repository/'));
+        }
+        
+        if( typeof vars === 'object' ){
+
+            var params = [];
+            
+            Object.keys( vars ).forEach(function(item){
+            
+                params.push( item + '=' + vars[ item ] );
+            });
+            
+            return url +
+                ( url.indexOf('?') > -1 ? '&' : '?' ) +
+                params.join('&');
+        }
+        
+        //return _repo.URL + '?page=coders-repository';
+        return url;
     };
     
     this.getContainer = function(){
         return document.getElementById( 'repository' );
+    };
+    
+    /**
+     * @param {String} message 
+     * @returns {CodersController}
+     */
+    this.notify = function( message ){
+        
+        document.querySelectorAll('');
+        
+        return this;
     };
     
     /**
@@ -78,105 +206,191 @@ function CodersView(){
         };
         return img;
     };
-
-    /**
-     * Tab box
-     * @returns {Element}
-     */
-    this.tabs = function(){
-        
-        _elements.tabs = this.element('ul');
-        
-        return _elements.tabs;
-    };
-    /**
-     * Collection Box
-     * @returns {Element}
-     */
-    this.collectionBox = function(){
-        
-        _elements.collectionBox = this.element('div');
-        
-        
-        return _elements.collectionBox;
-    };
     
-    this.uploader = function(){
-      
-        var _view = this;
-       
-        var inputFile = this.element('input',{
-            'type':'file',
-            'name':'upload',
-            'multiple':true,
-            //'accept':this.acceptedTypes().join(', '),
-            'id': _repo.inputs.dropzone + '_input'
-        });
-        inputFile.addEventListener( 'click', e => {
-            console.log('Selecting files...');
-            return true;
-        });
-        var inputSize = this.element('input',{
-            'type':'hidden',
-            'name':'MAX_FILE_SIZE',
-            'value':_repo.options.fileSize});
-        var inputLabel = this.element('label',
-            {'for':inputFile.id,'class':'dropbox step current'},
-            'Select or drop your files here');
-        inputLabel.addEventListener( 'click', e => {
-            return true;
-        });
-        var pBarContainer = this.element('div',
-            {'class':'progress-bar step'},
-            this.element('span',{'class':'progress-status'}));
-        var btnUpload = this.element('button',{
-            'type':'submit',
-            'name':'action',
-            'value':'upload',
-            'class':'button button-large icon-upload'
-        },'Upload')
-        var lblCaption=  this.element('label',{'class':'caption'});
-        //lblCaption.innerHTML = 'Ready to upload';
+    /**
+     * li.item
+     *      div.content
+     *              a.type[file-type]
+     *                  img alt title
+     *                  span[name]
+     * @param {Object} itemData
+     * @returns {Element}
+     */
+    this.addItem = function( itemData ){
+
+        if( this.acceptedTypes().includes( itemData.type ) ){
+            //var img = document.createElement('img');
+            var img = this.image({
+                'alt':itemData.name,
+                'title':itemData.name,
+                'src':this.url({'resource_id':itemData.ID},true)
+            });
+            
+        }
+        
+        var caption = this.element('span',false,itemData.name);
+        var link = this.element('a',{'className':'action open icon-link'});
+        var remove = this.element('a',{
+            'className':'action remove icon-remove',
+            'href':this.url({'task':'remove','id':itemData.ID})});
+
+        var content = this.element('div',{'className':'content'});
+        content.appendChild(img);
+        content.appendChild(caption);
+        content.appendChild(link);
+        content.appendChild(remove);
+
+        var item = this.element('li',{'className':'item'});
+        //item.href = itemData.url;
+        item.appendChild(content);
+        
+        return item;
+    };
+    /**
+     * @param {Function} caller
+     * @returns {Element}
+     */
+    this.progressBar = function( caption , cls ){
+        
+        var progressBar = this.element('div',{'class': 'progress-bar ' + ( cls || '' ) },[
+            this.element('span',{'class':'step'}),
+            this.element('span',{'class':'caption'})
+        ]);
+        /**
+         * Define a fast child catch
+         * @param {String} cls
+         * @returns {Element|Boolean}
+         */
+        progressBar.getElement = function( cls ){
+            for( var e = 0 ; e < this.childNodes.length ; e++ ){
+                if( this.childNodes[ e ].classList.contains( cls ) ){
+                    return this.childNodes[ e ];
+                }
+            }
+            return false;
+        };
+        //define a label overrider
+        progressBar.setLabel = function( text ){
+            var label = this.getElement( 'caption' );
+            if( false !== label ){
+                label.innerText = text;
+            }
+            return this;
+        };
+        //define a progress event call
+        progressBar.update = function( progress ){
+            this.dispatchEvent( new CustomEvent( 'ProgressBarStep' , {
+                'detail':{'progress':progress,'ts': new Date() },
+                'bubbles': false,
+                'cancelable': true
+            } ) );
+            return this;
+        };
+        //define a progress event handler
+        progressBar.addEventListener( 'ProgressBarStep' , function( e ){
+            var bar = progressBar.getElement('step');
+            //var caption = progressBar.getElement('caption');
+            if( false !== bar ){
+                var status = !Number.isNaN( e.detail.progress ) ?
+                        Number.parseInt( e.detail.progress ) : 0;
+                if( status > 100 ){
+                    status = 100;
+                }
+                else if( status < 0 ){
+                    status = 0;
+                }
+                bar.style = 'width:' + status + '%';
+                //caption.innerHTML = status + '%';
+            }
+            
+        } , false );
+        
+        return progressBar.setLabel( caption || '' );
+    };
+    /**
+     * @param {String} name
+     * @returns {Element}
+     */
+    this.prepareForm = function( name ){
         var formData = this.element('form',{
+            'name': name || 'upload',
             'method':'POST',
             'action':this.url({'action':'upload'}),
             'enctype':'multipart/form-data',
             'class':'form-container step'
         });
-        formData.appendChild(btnUpload);
-        formData.appendChild(inputSize);
-        formData.appendChild(inputFile).addEventListener( 'change',function(e){
+        return formData;
+    };
+    /**
+     * @param {String} collection 
+     * @param {Function} uploadHandler Upload exchange handler
+     * @returns {Element}
+     */
+    this.uploader = function( collection , uploadHandler ){
+      
+        var _view = this;
+       
+        //handle here the progressBar to attach a caller when required
+        var progressBar = this.progressBar('Upload','hidden content');
+
+        var formData = this.element('form',{
+            //FORM DECLARATION
+            'name': 'collection',
+            'method':'POST',
+            'action':this.url({'action':'upload'}),
+            'enctype':'multipart/form-data'
+        },[
+            //FORM ELEMENTS
+            this.element('input',{'type':'hidden',
+                'name':'MAX_FILE_SIZE',
+                'value':CodersView.FileSize()}),
+            this.element('input',{
+                'class':'hidden',
+                'id': collection + '-files',
+                'type':'file',
+                'name':'upload',
+                'multiple':true,
+                //'accept':this.acceptedTypes().join(', '),
+                //'id': _repo.inputs.dropzone + '_input'
+            }).addEventListener( 'click', e => {
+                console.log('Selecting files...');
+                console.log(e);
+                return true;
+            })
+            /*this.element('button',{
+                'class':'button button-large icon-upload hidden',
+                'id': ( collection + '-upload' ),
+                'type':'submit',
+                'name':'action',
+                'value':'upload'
+            }, progressBar )*/
+        ]);
+        
+        formData.addEventListener( 'change', e => {
             e.preventDefault();
-            btnUpload.innerHTML = _view.cleanFileName( this.value.toString( ) );
-            console.log( typeof this.value );
-            console.log( this.value );
-            console.log( btnUpload.innerHTML );
-            //inputLabel.classList.remove('current');
-            //formData.classList.add('current');
-            _view.setStep(formData, 'Ready to upload!' );
+            progressBar.setLabel('Uploading...');
+            console.log(e);
+            uploadHandler( [] , progressBar );
+            //avoid bubbling over form
             return true;
-        });
-        var btnClose = this.element('span',{'class':'close'});
-        btnClose.addEventListener('click',function(e){
-            e.preventDefault();
-            _view.closeUploader();
-            /*document.querySelectorAll('.coders-repo.drop-zone').forEach(function(item){
-                item.classList.remove('show');
-            });*/
-            return true;
-        });
-        var dropZone = this.element('div',{'class':'coders-repo drop-zone container'});
-        dropZone.appendChild(btnClose);
-        dropZone.appendChild(inputLabel);   //1st
-        dropZone.appendChild(lblCaption);
-        dropZone.appendChild(formData);     //2nd
-        dropZone.appendChild(pBarContainer);//3rd
-        dropZone.addEventListener( 'click', e => {
-            //e.preventDefault();
-            e.stopPropagation();
-            return false;
         });
         
+        var dropZone = this.element('li',{'class':'uploader item'},[
+            formData,
+            this.element('label',{
+                'class':'icon-upload large-icon content',
+                'for': ( collection + '-files' )
+            }, 'Upload' ),
+            progressBar
+
+        ]);
+           
+        dropZone.addEventListener( 'click', e => {
+                //e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+            
         ['dragenter','dragleave','dragover','drop'].forEach( function( event ){
             dropZone.addEventListener(event, function(e){
                 e.preventDefault();
@@ -191,43 +405,70 @@ function CodersView(){
                         break;
                     case 'drop':
                         dropZone.classList.remove('uploading');
-                        inputLabel.classList.remove('current');
                         //pBarContainer.classList.add('current');
-                        var files = e.dataTransfer.files;
-                        _view.resetQueue( files )
-                                .attemptUpload( )
-                                .setStep(pBarContainer, 'Uploading ...');
+                        if( typeof uploadHandler === 'function' ){
+                            var files = e.dataTransfer.files;
+                            if( files.length ){
+                                progressBar.setLabel('Uploading ...');
+                                uploadHandler( files , progressBar );
+                            }
+                        }
+                        else{
+                            progressBar.setLabel('Invalid Upload Handler');
+                        }
                         break;
                 }
             }, false);
         });
-        
-        _elements.uploader = this.element('div',
-            {'class':'container drop-zone','id':_repo.inputs.dropzone},
-            dropZone);
-        _elements.uploader.addEventListener( 'click', function(e){
-            e.preventDefault();
-            this.classList.remove('show');
-            return true;
-        });
 
-        return _elements.uploader;
+        return dropZone;
     };
-    
-    
     /**
      * @returns {CodersView}
      */
     this.initialize = function(){
         
-        this.getContainer().appendChild( this.tabs( ) );
-        this.getContainer().appendChild( this.collectionBox( ) );
-        this.getContainer().appendChild( this.uploader( ) );
+        var container = this.getContainer();
+        if( null !== container ){
+            _elements.tabs = this.element('ul',{
+                'class':'collection-tab inline container'
+            });
+            _elements.collectionBox = this.element('div',{
+                'class': 'repository-box'
+            } );
+
+            container.appendChild( _elements.tabs );
+            container.appendChild( _elements.collectionBox );
+            
+            this.addPanel( 'create-collection' , this.element('div',
+                {'class':'content','data-tab':'create-collection'},[
+                this.element('input',
+                    {'type':'text','name':'collection','placeholder':'Name your collection'}),
+                this.element('button',
+                    {'type':'submit','name':'action','value':'create'},'Create')
+            ]));
+            this.addPanel( 'test1' , this.element('ul',
+                {'class':'collection test1 inline'},
+                this.uploader('test1',function(){})));
+            this.addPanel( 'test2' , this.element('ul',
+                {'class':'collection test2 inline'},
+                this.uploader('test2',function(){})));
+            this.addPanel( 'test3' , this.element('ul',
+                {'class':'collection test3 inline'},
+                this.uploader('test3',function(){})));
+        }
+        else{
+            console.log('Container not found');
+        }
         return this;
     };
     
     return this.initialize();
 }
+/**
+ * @returns {Number}
+ */
+CodersView.FileSize = function(){ return 256 * 256 * 256; };
 /**
  * @returns {CodersUploader}
  */
@@ -278,21 +519,14 @@ function CodersModel(){
 (function CodersController( ){
     
     var _repo = {
-        'collection':'default',
-        //'URL': typeof URL !== 'undefined' ? URL : null,
-        'timeout': 2000,
-        'inputs':{
-            'dropzone':'coders-repo-dropzone',
-            'uploader':'coders-repo-uploader'
-        },
-        'options':{
-            'fileSize': 256 * 256 * 256
-        },
-        'queue': {
-            'files':[],
-            'uploaded':0
-        },
-        'view': new CodersView(),
+        'collections':[],
+        /**
+         * @type CodersView
+         */
+        'view': null,
+        /**
+         * @type CodersModel
+         */
         'server': new CodersModel(),
         'debug': true
     };
@@ -330,25 +564,6 @@ function CodersModel(){
     this.urlRoot = function(){
         return window.location.pathname;
     };
-    this.getContainer = function(){
-        return document.getElementById( 'repository' );
-    };
-    /**
-     * @returns {HTMLDivElement}
-     */
-    this.getDropZone = function(){
-        
-        var dropZone = document.getElementById( _repo.inputs.dropzone );
-        
-        return dropZone !== null ? dropZone : this.appendUploader();
-    };
-    /**
-     * @returns {Element}
-     */
-    this.getUploadButton = function(){
-        
-        return document.getElementsByClassName( _repo.inputs.uploader );
-    };
     /**
      * @returns {CodersController}
      */
@@ -357,37 +572,9 @@ function CodersModel(){
         return this;
     };
     /**
-     * @param {String} message 
-     * @returns {CodersController}
-     */
-    this.notify = function( message ){
-        
-        document.querySelectorAll('');
-        
-        return this;
-    };
-    /**
      * @returns {CodersController}
      */
     this.createCollection = function( collection ){
-        
-        return this;
-    };
-    /**
-     * @param {String} collection
-     * @returns {CodersController}
-     */
-    this.collectionOBSOLETE = function( collection ){
-        
-        return this.ajax( 'collection' , {'collection':collection} , function( resources ){
-            
-            //clear up the current view (shitty JS option)
-            this.repoContainer().innerHTML = '';
-            
-            //foreach resource, append into the current list view
-            
-            console.log( resources );
-        });
         
         return this;
     };
@@ -445,19 +632,6 @@ function CodersModel(){
                 console.log( typeof resources );
             }
         });
-    };
-    /**
-     * @returns {CodersController}
-     */
-    this.updateProgressBar = function( progress ){
-        
-        document.querySelectorAll('.coders-repo.drop-zone .progress-bar .progress-status').forEach( function( bar ){
-            var value = parseInt( progress * 100 );
-            bar.style.width = value.toString() + '%';
-            bar.innerHTML = value + '%';
-        });
-        
-        return this;
     };
     /**
      * data.task
@@ -540,163 +714,6 @@ function CodersModel(){
 
         return this;
     };
-    /**
-     * @returns {Element}
-     */
-    this.repoContainer = function(){
-        return document.getElementById('coder-repo-collection');
-    };
-    /**
-     * @returns {Element}
-     */
-    this.collectionsContainer = function(){
-        return document.querySelectorAll('.nav-list.collections');
-    };
-    /**
-     * Create a new HTML Element
-     * @param {String} element
-     * @param {Object|Array} attributes
-     * @param {String|Element} content
-     * @returns {Element|CodersController.element.E}
-     */
-    this.element = function ( element , attributes , content ){
-        var e = document.createElement(element);
-        //run over attributes
-        if(typeof attributes === 'object') {
-            for (var att in attributes) {
-                if (attributes.hasOwnProperty(att)) {
-                    e.setAttribute( att , attributes[ att ] );
-                    //e[att] = attributes[att];
-                }
-            }
-        }
-        //append content
-        switch( true ){
-            case (typeof content === 'object' && content instanceof Element):
-                e.appendChild(content);
-                break;
-            case ( typeof content === 'string' ):
-                e.innerHTML = content;
-                break;
-        }
-        return e;
-    };
-    /**
-     * @param {Object} attributes
-     * @returns {Image}
-     */
-    this.image = function( attributes ){
-        var img = new Image();
-        //run over attributes
-        if(typeof attributes === 'object') {
-            for (var att in attributes) {
-                if (attributes.hasOwnProperty(att)) {
-                    img[att] = attributes[att];
-                }
-            }
-        }
-        //append image format
-        img.onload = function(e){
-            //console.log('Loading image ...');
-            if( this.width > this.height ){
-                this.classList.add('landscape');
-            }
-            if( this.width < this.height ){
-                this.classList.add('portrait');
-            }
-        };
-        return img;
-    };
-    /**
-     * li.item
-     *      div.content
-     *              a.type[file-type]
-     *                  img alt title
-     *                  span[name]
-     * @param {Object} itemData
-     * @returns {Element}
-     */
-    this.addItem = function( itemData ){
-
-        if( this.acceptedTypes().includes( itemData.type ) ){
-            //var img = document.createElement('img');
-            var img = this.image({
-                'alt':itemData.name,
-                'title':itemData.name,
-                'src':this.url({'resource_id':itemData.ID},true)
-            });
-            
-        }
-        
-        var caption = this.element('span',false,itemData.name);
-        var link = this.element('a',{'className':'action open icon-link'});
-        var remove = this.element('a',{
-            'className':'action remove icon-remove',
-            'href':this.url({'task':'remove','id':itemData.ID})});
-
-        var content = this.element('div',{'className':'content'});
-        content.appendChild(img);
-        content.appendChild(caption);
-        content.appendChild(link);
-        content.appendChild(remove);
-
-        var item = this.element('li',{'className':'item'});
-        //item.href = itemData.url;
-        item.appendChild(content);
-        
-        return item;
-    };
-    
-    this.displayCollection = function( name ){
-        
-        var box = this.element('div',{'class':'container ' + name ,'id':name } );
-                
-        var collection = this.element('ul',{'class':'collection'});
-        
-        box.appendChild( collection );
-        
-        return  box;
-    };
-    /**
-     * @returns {Element}
-     */
-    this.collectionCreator = function(){
-        
-        var text = this.element('input',
-            {'type':'text','name':'collection','placeholder':'Name your collection'});
-        
-        var button = this.element('button',
-            {'type':'submit','name':'action','value':'create'},
-            'Create');
-            
-        var box = this.element('div',{'class':'box create-collection'});
-        
-        box.appendChild( text );
-        box.appendChild( button );
-        
-        return box;
-    };
-    /**
-     * Collection Tab Header
-     * @returns {CodersController}
-     */
-    this.createContent = function(){
-        
-        var tabs = this.element('ul',
-            {'class':'collection-list','id':'collection-tab'},
-            this.element('li',{'class':'item create-collection'},'New'));
-        var container = this.element('div',
-            {'class':'container','id':'collection-box'},
-            this.collectionCreator());
-        
-        this.getContainer().appendChild( tabs );
-        this.getContainer().appendChild( container );
-        this.getContainer().appendChild( this.appendUploader());
-        
-        return this;
-    };
-    
-    
     /**
      * @param {String} id
      * @returns {String}
@@ -802,190 +819,6 @@ function CodersModel(){
         return filename[ filename.length - 1 ];
     };
     /**
-     * @param {Element} element
-     * @param {String} message 
-     * @returns {CodersController}
-     */
-    this.setStep = function( element , message ){
-        
-        document.querySelectorAll('.drop-zone.container .step').forEach( function( item ){
-            item.classList.remove('current');
-        });
-        if( element !== null ){
-            element.classList.add('current');
-        }
-        
-        if( typeof message !== 'undefined'){
-            document.querySelectorAll('.drop-zone.container .caption').forEach( function( item ){
-                item.innerHTML = message;
-            });
-        }
-        
-        return this;
-    };
-    /**
-     * @returns {CodersController}
-     */
-    this.closeUploader = function(){
-        document.querySelectorAll('.coders-repo.drop-zone').forEach(function(item){
-            item.classList.remove('show');
-        });
-        return this;
-    };
-    /**
-     * 
-     * @returns {HTMLElement}
-     */
-    this.appendUploadButton = function(){
-        
-        var _controller = this;
-        
-        var item = document.createElement('li');
-        item.className = 'item';
-        var button = document.createElement('button');
-        button.className = 'coders-repo-uploader content icon-upload large-icon';
-        button.type = 'button';
-        button.innerHTML = 'Upload';
- 
-        button.addEventListener( 'click' , function(e){
-
-            e.preventDefault();
-            
-            if( _repo.debug ){
-                console.log('Opening uploader!!');
-            }
-            
-            _controller.getDropZone().classList.add('show');
-
-            return true;
-        });
-        
-        item.appendChild( button );
-            
-        return item;
-    };
-    /**
-     * @returns {HTMLDivElement}
-     */
-    this.appendUploader = function( ){
-        
-        var _controller = this;
-       
-        var inputFile = this.element('input',{
-            'type':'file',
-            'name':'upload',
-            'multiple':true,
-            //'accept':this.acceptedTypes().join(', '),
-            'id': _repo.inputs.dropzone + '_input'
-        });
-        inputFile.addEventListener( 'click', e => {
-            console.log('Selecting files...');
-            return true;
-        });
-        var inputSize = this.element('input',{
-            'type':'hidden',
-            'name':'MAX_FILE_SIZE',
-            'value':_repo.options.fileSize});
-        var inputLabel = document.createElement('label');
-        inputLabel.setAttribute('for' , inputFile.id );
-        inputLabel.className = 'dropbox step current';
-        inputLabel.innerHTML = 'Select or drop your files here';
-        inputLabel.addEventListener( 'click', e => {
-            return true;
-        });
-        var pBarContainer = document.createElement('div');
-        pBarContainer.className = 'progress-bar step';
-        var pBarProgress = document.createElement('span');
-        pBarProgress.className = 'progress-status';
-        pBarContainer.appendChild(pBarProgress);
-        var btnUpload = document.createElement('button');
-        btnUpload.type = 'submit';
-        btnUpload.name = 'task';
-        btnUpload.value = 'upload';
-        btnUpload.className = 'btn btn-big icon-upload';
-        btnUpload.innerHTML = 'Upload';
-        var lblCaption=  document.createElement('label');
-        lblCaption.className = 'caption';
-        //lblCaption.innerHTML = 'Ready to upload';
-        var formData = document.createElement('form');
-        formData.method = 'POST';
-        formData.action = this.url({'task':'upload'});
-        formData.enctype = 'multipart/form-data';
-        formData.className = 'form-container step';
-        formData.appendChild(btnUpload);
-        formData.appendChild(inputSize);
-        formData.appendChild(inputFile).addEventListener( 'change',function(e){
-            e.preventDefault();
-            btnUpload.innerHTML = _controller.cleanFileName( this.value.toString( ) );
-            console.log( typeof this.value );
-            console.log( this.value );
-            console.log( btnUpload.innerHTML );
-            //inputLabel.classList.remove('current');
-            //formData.classList.add('current');
-            _controller.setStep(formData, 'Ready to upload!' );
-            return true;
-        });
-        var btnClose = document.createElement('span');
-        btnClose.className = 'close';
-        btnClose.addEventListener('click',function(e){
-            e.preventDefault();
-            _controller.closeUploader();
-            /*document.querySelectorAll('.coders-repo.drop-zone').forEach(function(item){
-                item.classList.remove('show');
-            });*/
-            return true;
-        });
-        var dropZone = document.createElement('div');
-        dropZone.className = 'coders-repo drop-zone container';
-        dropZone.appendChild(btnClose);
-        dropZone.appendChild(inputLabel);   //1st
-        dropZone.appendChild(lblCaption);
-        dropZone.appendChild(formData);     //2nd
-        dropZone.appendChild(pBarContainer);//3rd
-        dropZone.addEventListener( 'click', e => {
-            //e.preventDefault();
-            e.stopPropagation();
-            return false;
-        });
-        
-        ['dragenter','dragleave','dragover','drop'].forEach( function( event ){
-            dropZone.addEventListener(event, function(e){
-                e.preventDefault();
-                e.stopPropagation();
-                switch( event ){
-                    case 'dragenter':
-                    case 'dragover':
-                        dropZone.classList.add('highlight');
-                        break;
-                    case 'dragleave':
-                        dropZone.classList.remove('highlight');
-                        break;
-                    case 'drop':
-                        dropZone.classList.remove('uploading');
-                        inputLabel.classList.remove('current');
-                        //pBarContainer.classList.add('current');
-                        var files = e.dataTransfer.files;
-                        _controller.resetQueue( files )
-                                .attemptUpload( )
-                                .setStep(pBarContainer, 'Uploading ...');
-                        break;
-                }
-            }, false);
-        });
-        
-        var dropModal = this.element('div',
-            {'class':'container drop-zone','id':_repo.inputs.dropzone},
-            dropZone);
-        dropModal.addEventListener( 'click', function(e){
-            e.preventDefault();
-            this.classList.remove('show');
-            return true;
-        });
-        return dropModal;
-        //return document.body.appendChild( dropModal );
-    };
-    
-    /**
      * @returns {CodersController}
      */
     this.bind = function(){
@@ -994,24 +827,10 @@ function CodersModel(){
 
         document.addEventListener('DOMContentLoaded',function(e){
 
-            _controller.createContent();
-
-            /*var uploadButton = _controller.getUploadButton();
-
-            if( uploadButton !== null ){
-
-                Array.prototype.forEach.call( uploadButton , function( btn ){
-
-                    btn.addEventListener( 'click' , function(e){
-                        e.preventDefault();
-                        console.log('Opening uploader!!');
-                        _controller.getDropZone().classList.add('show');
-                        return true;
-                    });
-                });
-            }*/
+            _repo.view = new CodersView();
             
-            //_controller.collections().list(/*load content list*/);
+            _repo.server = new CodersModel();
+
         });
         
         //console.log( this.url( false ,true));

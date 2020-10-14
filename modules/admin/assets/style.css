@@ -8,6 +8,7 @@
 .coders-repository > .header{
     margin: 40px 0 20px;
 }
+.coders-repository .hidden{ display: none !important; }
 .coders-repository .container{
     padding: 20px;
     margin: 40px auto;
@@ -41,13 +42,62 @@
     border-top: 2px rgba(0,0,0,0.1);
 }
 
-.coders-repository ul.collection > li.inline{ display: inline-block; vertical-align: top; margin: 0 10px 0 0; }
+.coders-repository ul.inline > li{ display: inline-block; vertical-align: top; margin: 0 10px 0 0; }
 
-.coders-repository ul.collection.category > li{
-    
+.coders-repository ul.collection-tab{
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #5a5a5a;
 }
-.coders-repository ul.collection.resource > li{
-    
+
+.coders-repository .repository-box{
+    position: relative;
+    display: block;
+    width: 100%;
+    height: auto;
+}
+.coders-repository .repository-box > .container{
+    display: block;
+    width: 100%;
+    position: absolute;
+    top: 0; left: 0;
+    opacity: 0;
+    transition: ease-in 250ms;
+    pointer-events: none;
+}
+.coders-repository .repository-box > .container.active{
+    pointer-events: initial;
+    opacity: 1;
+}
+.coders-repository .repository-box ul.collection{
+    width: 100%;
+    min-height: 100px;
+    display: block;
+}
+.coders-repository ul.collection:after{
+    content: '';
+    display: block;
+    height: 0;
+    clear: both;
+}
+.coders-repository ul.collection > li.item{
+    width: 22%;
+    margin-right: 4%;
+    float:left;
+}
+.coders-repository ul.collection > li.item:nth-child(4n){
+    margin-right: 0;
+}
+
+.coders-repository ul.collection > li.item > .content{
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%;
+    background-color: rgba(255,255,255,0.15);
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
 }
 
 .coders-repository .separator{
