@@ -50,18 +50,19 @@ abstract class View{
         $action_hook = ( $module === 'admin' ) ? 'admin_enqueue_scripts' : 'enqueue_scripts';
         
         add_action( $action_hook , function() use($module,$style_list,$script_list){
+            
+            $root = sprintf('%smodules/%s/client', CODERS__REPOSITORY__URL, $module);
+            
             foreach( $style_list as $style ){
                 wp_enqueue_style(
                         sprintf('coders-repo-%s-%s',$module,$style),
-                        sprintf('%smodules/%s/assets/%s.css',
-                        CODERS__REPOSITORY__URL, $module, $style));
+                        sprintf('%s/%s.css', $root, $style));
             }
             foreach( $script_list as $script => $deps ){
                 $include = is_array($deps) ? $deps : strlen( $deps ) ? array($deps) : array();
                 wp_enqueue_script(
                         sprintf('coders-repo-%s-%s',$module,$script),
-                        sprintf('%smodules/%s/assets/%s.js',
-                        CODERS__REPOSITORY__URL, $module, $script),$include);
+                        sprintf('%s/%s.js', $root, $script),$include);
             }
         });
     }

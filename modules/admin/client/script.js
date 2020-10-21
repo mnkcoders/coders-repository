@@ -463,7 +463,7 @@ function CodersView(){
         return this;
     };
     
-    return this.initialize();
+    return this;
 }
 /**
  * @returns {Number}
@@ -474,22 +474,35 @@ CodersView.FileSize = function(){ return 256 * 256 * 256; };
  */
 function CodersModel(){
    
+    var _client = {
+        'queue':{
+            'files':[],
+            'current': 0
+        }
+    };
+        /**
+     * @returns {File|Boolean}
+     */
+    this.currentFile = function(){
+        return _client.queue.files.length > _client.queue.current ?
+                _client.queue.files[ _client.queue.current ] :
+                        false;
+    };
+   
     /**
      * @returns {String}
      */
-    this.urlRoot = function(){
+    this.urlRoot = function(  ){
         return window.location.pathname;
     };
     /**
      * @returns {String}
      */
-    this.url = function( vars , root ){
+    this.url = function( vars ){
+        
+        return 'http://localhost/WORDPRESS/artistpad/wp-admin/admin.php?page=coders-repository&action=main.default';
         
         var url = window.location.href;
-        
-        if( root ){
-            url = url.substr( 0 , url.indexOf('/coders-repository/'));
-        }
         
         if( typeof vars === 'object' ){
 
@@ -505,137 +518,9 @@ function CodersModel(){
                 params.join('&');
         }
         
-        //return _repo.URL + '?page=coders-repository';
-        return url;
-    };
-    
-    
-    return this;
-}
-
-/**
- * https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
- */
-(function CodersController( ){
-    
-    var _repo = {
-        'collections':[],
-        /**
-         * @type CodersView
-         */
-        'view': null,
-        /**
-         * @type CodersModel
-         */
-        'server': new CodersModel(),
-        'debug': true
-    };
-    /**
-     * @returns {String}
-     */
-    this.url = function( vars , root ){
-        
-        var url = window.location.href;
-        
-        if( root ){
-            url = url.substr( 0 , url.indexOf('/coders-repository/'));
-        }
-        
-        if( typeof vars === 'object' ){
-
-            var params = [];
-            
-            Object.keys( vars ).forEach(function(item){
-            
-                params.push( item + '=' + vars[ item ] );
-            });
-            
-            return url +
-                ( url.indexOf('?') > -1 ? '&' : '?' ) +
-                params.join('&');
-        }
-        
-        //return _repo.URL + '?page=coders-repository';
         return url;
     };
     /**
-     * @returns {String}
-     */
-    this.urlRoot = function(){
-        return window.location.pathname;
-    };
-    /**
-     * @returns {CodersController}
-     */
-    this.server = function(){
-        
-        return this;
-    };
-    /**
-     * @returns {CodersController}
-     */
-    this.createCollection = function( collection ){
-        
-        return this;
-    };
-    /**
-     * @returns {CodersController}
-     */
-    this.collections = function(){
-        
-        var _self = this;
-        
-        return this.ajax( 'collections' , {} , function( collections ){
-            
-            //clear up the current view (shitty JS option)
-            _self.collectionsContainer().innerHTML = '';
-            //foreach resource, append into the current list view
-            for( var c = 0 ; c < collections.length ; c++ ){
-                //_self.collectionsContainer().appendChild();
-            }
-            
-            if( _repo.debug ){
-                console.log( typeof resources );
-            }
-        });
-    };
-    /**
-     * @param {String|Array} filters
-     * @returns {CodersController}
-     */
-    this.list = function( filters ){
-        
-        var _self = this;
-        
-        if( typeof filters === 'undefined' ){
-            filters = false;
-        }
-
-        if( _repo.debug ){
-            console.log('Loading contents...');
-        }
- 
-        return this.ajax( 'list' , {'filters':filters} , function( resources ){
-            
-            //clear up the current view (shitty JS option)
-            _self.repoContainer().innerHTML = '';
-            _self.repoContainer().appendChild( _self.appendUploadButton(  ) );
-            //foreach resource, append into the current list view
-            for( var id in resources ){
-                if( resources.hasOwnProperty( id ) ){
-                    //console.log( resources[id] );
-                    _self.repoContainer().appendChild(  _self.addItem( resources[id] ) );
-                }
-            }
-            
-            if( _repo.debug ){
-                console.log( typeof resources );
-            }
-        });
-    };
-    /**
-     * data.task
-     * data.callback
      * @param {Object} data
      * @returns {CodersController}
      */
@@ -676,12 +561,57 @@ function CodersModel(){
         return this;
     };
     /**
+     * @returns {String}
+     */
+    this.url = function( vars , root ){
+        
+        var url = window.location.href;
+        
+        if( root ){
+            url = url.substr( 0 , url.indexOf('/coders-repository/'));
+        }
+        
+        if( typeof vars === 'object' ){
+
+            var params = [];
+            
+            Object.keys( vars ).forEach(function(item){
+            
+                params.push( item + '=' + vars[ item ] );
+            });
+            
+            return url +
+                ( url.indexOf('?') > -1 ? '&' : '?' ) +
+                params.join('&');
+        }
+        
+        //return _repo.URL + '?page=coders-repository';
+        return url;
+    };
+    
+    /**
+     * @returns {Array}
+     */
+    this.acceptedTypes = function(){
+        return [
+            'image/png',
+            'image/gif',
+            'image/jpeg',
+            'image/bmp',
+            'text/plain',
+            'text/html',
+            'text/json',
+            'application/json'
+        ];
+    };
+    /**
      * @param {File} fileData
+     * @param {Function} callback
      * @returns {CodersController}
      */
-    this.transfer = function( fileData ){
+    this.transfer = function( fileData , callback ){
         
-        var _controller = this;
+        var _self = this;
 
         var formData = new FormData();
         
@@ -695,16 +625,16 @@ function CodersModel(){
                 if( !data.hasOwnProperty('error')){
                     if( Array.isArray( data ) ){
                         data.forEach( function(item){
-                            _controller.receive( item );
+                            _self.receive( item );
                         });
-                        _controller.attemptUpload();
+                        _self.attemptUpload();
                     }
                     else{
-                        _controller.receive( data ).attemptUpload();
+                        _self.receive( data ).attemptUpload();
                     }
                 }
                 else{
-                    _controller.receive( ).attemptUpload();
+                    _self.receive( ).attemptUpload();
                 }
             }).catch( function( error ){
                 if( _repo.debug ){
@@ -714,13 +644,7 @@ function CodersModel(){
 
         return this;
     };
-    /**
-     * @param {String} id
-     * @returns {String}
-     */
-    this.itemUrl = function( id ){
-        return this.url( {'resource_id':id} );
-    };
+    
     /**
      * @param {Object} progress
      * @returns {CodersController}
@@ -745,22 +669,15 @@ function CodersModel(){
         //update progress bar
         return this.updateProgressBar( _repo.queue.current / _repo.queue.files.length );
     };
-    /**
-     * @returns {File|Boolean}
-     */
-    this.currentFile = function(){
-        return _repo.queue.files.length > _repo.queue.current ?
-                _repo.queue.files[ _repo.queue.current ] :
-                        false;
-    };
+    
     /**
      * @returns {CodersController}
      */
     this.attemptUpload = function( ){
         
-        var upload = _repo.queue.files[ _repo.queue.current ];
+        var upload = _client.queue.files[ _client.queue.current ];
         
-        if( _repo.queue.current < _repo.queue.files.length ){
+        if( _client.queue.current < _client.queue.files.length ){
             //call event for next upload
 
             this.transfer( upload );
@@ -776,37 +693,29 @@ function CodersModel(){
      * @returns {CodersController}
      */
     this.resetQueue = function( fileList ){
-        _repo.queue.files = fileList;
-        _repo.queue.current = 0;
+        _client.queue.files = fileList;
+        _client.queue.current = 0;
         
-        if( _repo.debug ){
-            console.log('Queuing ' + _repo.queue.files.length + ' files ...' );
+        if( _client.debug ){
+            console.log('Queuing ' + _client.queue.files.length + ' files ...' );
         }
 
         return this;
     };
-    /**
-     * @param {String} collection
-     * @returns {CodersController}
-     */
-    this.loadCollection = function( collection ){
+    
+    this.collections = function(){
         
-        return this;
+        return [];
     };
-    /**
-     * @returns {Array}
-     */
-    this.acceptedTypes = function(){
-        return [
-            'image/png',
-            'image/gif',
-            'image/jpeg',
-            'image/bmp',
-            'text/plain',
-            'text/html',
-            'text/json',
-            'application/json'
-        ];
+    
+    this.resources = function( collection ){
+        
+        return [];
+    };
+    
+    this.addCollection = function( collection ){
+        
+        return false;
     };
     /**
      * @param {String} input
@@ -818,6 +727,41 @@ function CodersModel(){
         
         return filename[ filename.length - 1 ];
     };
+    this.remove = function( resource ){
+        
+        return false;
+    };
+    
+    this.dropCollection = function( collection ){
+        
+        return false;
+    };
+    /**
+     * @returns {CodersModel}
+     */
+    this.initialize = function(){
+        return this;
+    };
+    
+    return this;
+}
+
+/**
+ * https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
+ */
+(function CodersController( ){
+    
+    var _repo = {
+        /**
+         * @type CodersView
+         */
+        'view': new CodersView(),
+        /**
+         * @type CodersModel
+         */
+        'server': new CodersModel(),
+        'debug': true
+    };
     /**
      * @returns {CodersController}
      */
@@ -827,10 +771,10 @@ function CodersModel(){
 
         document.addEventListener('DOMContentLoaded',function(e){
 
-            _repo.view = new CodersView();
-            
-            _repo.server = new CodersModel();
+            _repo.server.initialize();
 
+            _repo.view.initialize();
+            
         });
         
         //console.log( this.url( false ,true));

@@ -262,9 +262,14 @@ class CodersRepo{
      * @param string $action
      * @return CodersRepo
      */
-    protected function run( $action ){
+    protected function run( $action = '' ){
 
-        $request = \CODERS\Repository\Request::import( $action );
+        $request = strlen($action) ?
+                //define the output route
+                \CODERS\Repository\Request::route( $action ) :
+                //check for post/get variables
+                \CODERS\Repository\Request::import( );
+        
         \CODERS\Repository\Response::create($request);
         
         return $this;
@@ -321,7 +326,14 @@ class CodersRepo{
                             //$R = \CODERS\Repository\Request::import('admin.settings');
                             //\CODERS\Repository\Response::create($R);
                         });
-            }, 100000);
+            }, 100000 );
+            //register all ajax handlers
+            add_action( 'wp_ajax_coders_admin' , function(){
+                
+                CodersRepo::instance()->run('admin.ajax');
+                
+                wp_die();
+            }, 100000 );
         }
         else{
             //INITIALIZE REDIRECTION RULES
@@ -370,6 +382,13 @@ class CodersRepo{
                         exit;
                 }
             } );
+            //register ajax handlers
+            add_action( 'wp_ajax_coders_module' , function(){
+                
+                CodersRepo::instance()->run('ajax');
+                
+                wp_die();
+            }, 100000 );
         }
     }
     /**

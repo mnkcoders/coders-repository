@@ -8,7 +8,7 @@ final class Request{
     const CONTROLLER = 'controller';
     const MODULE = 'module';
     
-    const DEF_MODULE = 'Posts';
+    const DEF_MODULE = 'repository';
     const DEF_CONTROLLER = 'main';
     const DEF_ACTION = 'default';
     
@@ -18,15 +18,33 @@ final class Request{
     private $_input = array(
         self::ACTION => 'default',
         self::CONTROLLER => 'main',
-        self::MODULE => 'Posts',
+        self::MODULE => '',
     );
+    
+    private $_fingerprint;
+    
     /**
      * 
      * @param array $input
      */
     private function __construct( array $input ) {
         
-        $this->unpack($input);
+        $this->unpack($input)->readFP();
+    }
+    /**
+     * Import fingerprint
+     * @return \CODERS\Repository\Request
+     */
+    private final function readFP(){
+
+        $client = array(
+            filter_input(INPUT_SERVER, 'REMOTE_ADDR'),
+            filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
+        );
+        
+        $this->_fingerprint = base64_encode( implode('|', $client ) );
+        
+        return $this;
     }
     /**
      * @param array $input
@@ -43,6 +61,9 @@ final class Request{
                         break;
                 }
             }*/
+        }
+        if(strlen($this->module()) === 0 ){
+            $this->_input[ self::MODULE ] = is_admin() ? 'admin' : self::DEF_MODULE;
         }
         return $this;
     }
@@ -107,10 +128,85 @@ final class Request{
                 array();
     }
     /**
+     * HASH CODE from the current client's request fingerprint
+     * @return string
+     */
+    public final function fingerPrint(){
+        
+        return md5( $this->_fingerprint );
+    }
+    /**
+     * @return string
+     */
+    public final function SID(){
+        
+        $SID = filter_input(INPUT_COOKIE, 'CODERS_SID');
+        
+        return $SID !== NULL ? $SID : '';
+    }
+    /**
+     * @return int
+     */
+    public final function userID(){
+        
+        return 0;
+    }
+    /**
+     * @return WP_User
+     */
+    public final function userName( $niceName = FALSE ){
+        
+        $ID = $this->userID();
+        
+        if( $ID ){
+            
+            $user = get_user_by('ID', $ID);
+            
+            if( $user !== FALSE ){
+                
+                return $niceName ? $user->user_nicename : $user->user_login;
+            }
+        }
+        
+        return '';
+    }
+    public static final function url( $module , $action = 'main.default' , $args = array( ) ){
+        
+        return '';
+        
+    }
+    /**
      * @param array $request
      * @return \CODERS\Repository\Request
      */
     public static final function create( array $request ){ return new Request( $request ); }
+    /**
+     * @param string $context
+     * @return \CODERS\Repository\Request
+     */
+    public static final function route( $context = self::DEF_MODULE  ){
+        
+        if(strlen($context)){
+            $path = explode('.', $context);
+            $input[self::MODULE] = $path[0];
+            if( count( $path ) > 1 ){
+                $input[self::CONTROLLER] = $path[1];
+            }
+            if( count( $path ) > 2 ){
+                $input[self::ACTION] = $path[2];
+            }
+        }
+        
+        $post = filter_input_array(INPUT_POST );
+        
+        $get = filter_input_array(INPUT_GET );
+        
+        $input = array_merge(
+                !is_null($get) ? $get : array(),
+                !is_null($post) ? $post : array());
+        
+        return self::create($input);
+    }
     /**
      * @param string $context
      * @return \CODERS\Repository\Request
