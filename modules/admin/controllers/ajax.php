@@ -22,6 +22,18 @@ final class AjaxController extends \CODERS\Repository\Response{
         
         return $this->ajax($collection);
     }
+    
+    protected final function create_collection_action( \CODERS\Repository\Request $request ){
+                        
+        $collection = preg_replace( '/ / ','' , strtolower($request->get('collection','')) );
+        
+        if( strlen($collection) ){
+            
+            return $this->ajax(array('collection' => $collection));
+        }
+        
+        return $this->ajax( array( 'message' => 'Invalid collection name' ) );
+    }
 
     protected final function error(\CODERS\Repository\Request $request) {
 

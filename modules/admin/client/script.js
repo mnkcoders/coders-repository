@@ -2,7 +2,7 @@
  * 
  * @returns {CodersView}
  */
-function CodersView(){
+function CodersView( client ){
     
     var _elements = {
         'dropZone': null,
@@ -18,9 +18,14 @@ function CodersView(){
         'inputs':{
             'dropzone':'coders-repo-dropzone',
             'uploader':'coders-repo-uploader'
-        },
+        }
         //'uploader':null
     };
+    /**
+     * @type CodersModel
+     */
+    var _server = client instanceof CodersModel ? client : null;
+    
     /**
      * @returns {Element[]}
      */
@@ -102,9 +107,16 @@ function CodersView(){
      * @returns {CodersView}
      */
     this.addCollection = function( collection ){
-        return this.addPanel( collection , this.element('ul',
+        
+        console.log( typeof this.appendUploader );
+        
+        var uploader = this.appendUploader( collection );
+        
+        var container = this.element('ul',
                 {'class': 'collection ' + collection + ' inline'},
-                this.uploader( collection , function () {})));
+                uploader);
+        
+        return this.addPanel( collection , container );
     };
     /**
      * @param {String} collection
@@ -365,11 +377,10 @@ function CodersView(){
     };
     /**
      * @param {String} collection 
-     * @param {Function} uploadHandler Upload exchange handler
      * @returns {Element}
      */
-    this.uploader = function( collection , uploadHandler ){
-      
+    this.appendUploader = function( collection ){
+              
         var _view = this;
        
         //handle here the progressBar to attach a caller when required
@@ -408,11 +419,15 @@ function CodersView(){
             }, progressBar )*/
         ]);
         
+        var files = [];
+        
         formData.addEventListener( 'change', e => {
             e.preventDefault();
             progressBar.setLabel('Uploading...');
             console.log(e);
-            uploadHandler( [] , progressBar );
+            _server.ajax('upload', files ,function( response ){
+                //progressBar.update( progress );
+            });
             //avoid bubbling over form
             return true;
         });
@@ -448,15 +463,18 @@ function CodersView(){
                     case 'drop':
                         dropZone.classList.remove('uploading');
                         //pBarContainer.classList.add('current');
-                        if( typeof uploadHandler === 'function' ){
-                            var files = e.dataTransfer.files;
-                            if( files.length ){
-                                progressBar.setLabel('Uploading ...');
-                                uploadHandler( files , progressBar );
-                            }
+                        var files = e.dataTransfer.files;
+                        if (files.length) {
+                            progressBar.setLabel('Uploading ...');
+                            _server.ajax( 'upload' , files , function( response ){
+                                //get all registered file metadata to append
+                                //them into the collection
+                                console.log( response ) ;
+                                
+                            });
                         }
                         else{
-                            progressBar.setLabel('Invalid Upload Handler');
+                            progressBar.setLabel('No files to upload?');
                         }
                         break;
                 }
@@ -469,13 +487,9 @@ function CodersView(){
      * @param {array} collections 
      * @returns {CodersView}
      */
-    this.initialize = function( collections ){
+    this.initialize = function( ){
         
         var container = this.getContainer();
-        
-        if( !Array.isArray( collections ) ){
-            collections = [];
-        }
         
         if( null !== container ){
             _elements.tabs = this.element('ul',{
@@ -487,19 +501,39 @@ function CodersView(){
 
             container.appendChild( _elements.tabs );
             container.appendChild( _elements.collectionBox );
+            
+            var txtCollection = this.element('input',{
+                'type': 'text',
+                'name': 'collection',
+                'placeholder': 'Name your collection'});
+            var btnCollection = this.element('button',{
+                'class': 'button button-primary',
+                'type': 'submit',
+                'name': 'action',
+                'value': 'create'},
+            'Create');
+            
+            btnCollection.addEventListener('click', e => {
+                e.preventDefault();
+                var collection = txtCollection.value;
+                console.log('Create collection ' + collection );
+                _server.createCollection( collection , _view.addCollection );
+                return true;
+            });
 
             this.addPanel('create-collection', this.element('div',
                     {'class': 'content', 'data-tab': 'create-collection'}, [
-                this.element('input',
-                        {'type': 'text', 'name': 'collection', 'placeholder': 'Name your collection'}),
-                this.element('button',
-                        {'type': 'submit', 'name': 'action', 'value': 'create'}, 'Create')
+                txtCollection, btnCollection
             ]));
-            for( var c = 0 ; c < collections.length ; c++ ){
-                this.addPanel( collections[ c ] , this.element('ul',
-                    {'class':'collection ' + collections[ c ] +' inline'},
-                    this.uploader(collections[ c ],function(){})));
-            }
+            
+            var _view = this;
+            _server.ajax( 'default' , {} , function( response ){                 
+                var collections = response.data || [];
+                collections.forEach( function( item ){
+                    _view.addCollection( item);
+                });
+                _view.switchTab( );
+            });
         }
         else{
             console.log('Container not found');
@@ -507,7 +541,7 @@ function CodersView(){
         return this;
     };
     
-    return this;
+    return this.initialize( );
 }
 /**
  * @returns {Number}
@@ -546,7 +580,7 @@ function CodersModel(){
     this.url = function( ){
         
         if( _client.debug ){
-            console.log( ajaxurl );
+            //console.log( ajaxurl );
         }
        
         /*
@@ -569,7 +603,7 @@ function CodersModel(){
             }
         }
         if(_client.debug ){
-            console.log( serialized );
+            //console.log( serialized );
         }
         return serialized.join('&');
     };
@@ -601,7 +635,7 @@ function CodersModel(){
             }
             else{
                 if( _client.debug ){
-                   console.log( 'status: ' + this.status );
+                   //console.log( 'status: ' + this.status );
                 }
             }
         };
@@ -738,10 +772,23 @@ function CodersModel(){
         
         return [];
     };
-    
-    this.addCollection = function( collection ){
+    /**
+     * @param {String} collection
+     * @param {Function} callback
+     * @returns {CodersModel}
+     */
+    this.createCollection = function( collection  , callback ){
         
-        return false;
+        this.ajax( 'create_collection', { 'collection': collection }, function( response ){
+            
+            //console.log( response );
+            var collection = response.data.hasOwnProperty('collection') ?
+                response.data.collection : '';
+            
+            callback( collection );
+        });
+        
+        return this;
     };
     /**
      * @param {String} input
@@ -774,7 +821,7 @@ function CodersModel(){
         return this;
     };
     
-    return this;
+    return this.initialize();
 }
 
 /**
@@ -790,7 +837,7 @@ function CodersModel(){
         /**
          * @type CodersModel
          */
-        'server': new CodersModel(),
+        //'server': new CodersModel(),
         'debug': true
     };
     /**
@@ -798,33 +845,14 @@ function CodersModel(){
      */
     this.bind = function(){
 
-        var _controller = this;
+        //var _controller = this;
 
         document.addEventListener('DOMContentLoaded',function(e){
 
-            _repo.server.initialize();
-
-            _repo.view.initialize();
-            
-            _repo.server.ajax( 'default' , {} , function( response ){ 
-                
-                var collections = response.data || [];
-                
-                collections.forEach( function( item ){
-                    _repo.view.addCollection( item);
-                });
-                _repo.view.switchTab( );
-            });
-            
-        //this.ajax( 'default' , {'message':'Hello!'} , function( response ){
-        //    console.log(response);
-        //});
-
+            _repo.view = new CodersView( new CodersModel( ) );
             
         });
-        
-        //console.log( this.url( false ,true));
-        
+                
         return this;
     };
     
