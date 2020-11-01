@@ -8,6 +8,8 @@ abstract class Model{
     const TYPE_NUMBER = 'number';
     const TYPE_FLOAT = 'float';
     const TYPE_CURRENCY = 'currency';
+    const TYPE_DATE = 'date';
+    const TYPE_DATETIME = 'datetime';
     
     /**
      * @var array

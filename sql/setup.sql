@@ -1,5 +1,5 @@
 /*ACCOUNTS TABLE*/
-CREATE TABLE `{{TABLE_PREFIX}}_coders_account` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_account` (
  `ID` int(11) NOT NULL,
  `token` varchar(32) NOT NULL,
  `name` varchar(16) NOT NULL,
@@ -13,10 +13,10 @@ CREATE TABLE `{{TABLE_PREFIX}}_coders_account` (
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
  PRIMARY KEY (`ID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*PAYMENTS TABLE*/
-CREATE TABLE `{{TABLE_PREFIX}}_coders_checkout` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_checkout` (
  `ID` int(11) NOT NULL,
  `account_id` int(11) NOT NULL,
  `subscription_id` int(11) NOT NULL,
@@ -33,10 +33,10 @@ CREATE TABLE `{{TABLE_PREFIX}}_coders_checkout` (
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
  PRIMARY KEY (`ID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*SUBSCRIPTIONS TABLE*/
-CREATE TABLE `{{TABLE_PREFIX}}_coders_subscription` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_subscription` (
  `ID` int(11) NOT NULL,
  `account_id` int(11) NOT NULL,
  `tier_id` varchar(32) NOT NULL,
@@ -45,10 +45,10 @@ CREATE TABLE `{{TABLE_PREFIX}}_coders_subscription` (
  `date_updated` datetime NOT NULL,
  `date_terminated` datetime NOT NULL,
  PRIMARY KEY (`ID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*PROJECTS TABLE*/
-CREATE TABLE `{{TABLE_PREFIX}}_coders_project` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_project` (
  `ID` varchar(12) NOT NULL,
  `title` varchar(64) NOT NULL,
  `content` longtext NOT NULL,
@@ -56,10 +56,10 @@ CREATE TABLE `{{TABLE_PREFIX}}_coders_project` (
  `image_id` bigint(20) NOT NULL COMMENT 'wordpress gallery',
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*TIERS TABLE*/
-CREATE TABLE `{{TABLE_PREFIX}}_coders_tier` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_tier` (
  `ID` varchar(32) NOT NULL COMMENT 'project_id + tier_id',
  `title` varchar(32) NOT NULL,
  `description` longtext NOT NULL,
@@ -68,4 +68,14 @@ CREATE TABLE `{{TABLE_PREFIX}}_coders_tier` (
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
  PRIMARY KEY (`ID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+/*LOGS TABLE*/
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_logs` (
+ `timestamp` datetime NOT NULL,
+ `source` varchar(32) NOT NULL,
+ `message` varchar(128) NOT NULL,
+ `type` tinyint(1) NOT NULL,
+ `status` tinyint(1) NOT NULL DEFAULT 0,
+ `account_id` varchar(32) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;

@@ -4,6 +4,10 @@
  */
 final class Request{
     
+    const FORMAT_TIMESTAMP = 'YmdHis';
+    const FORMAT_DATETIME = 'Y-m-d H:i:s';
+    const FORMAT_DATE = 'Y-m-d';
+    
     const ACTION = '_action';
     const CONTROLLER = '_controller';
     const MODULE = '_module';
@@ -23,7 +27,7 @@ final class Request{
     private $_module = '';
     
     private $_fingerprint;
-    private $_ts = '';
+    private $_ts = 0;
     
     /**
      * 
@@ -31,7 +35,8 @@ final class Request{
      */
     private function __construct( array $input ) {
         
-        $this->_ts = date('YmdHis');
+        $this->_ts = time();
+        //$this->_ts = date('YmdHis');
         
         $this->unpack($input)->readFP();
     }
@@ -130,6 +135,19 @@ final class Request{
      */
     public final function ts(){
         return $this->_ts;
+    }
+    /**
+     * @param string $format
+     * @return string
+     */
+    public final function time( $format = self::FORMAT_DATETIME ){
+        return date( $format ,$this->_ts );
+    }
+    /**
+     * @return string
+     */
+    public final function ID(){
+        return sprintf('[%s::%s]',$this->_fingerprint,$this->time(self::FORMAT_TIMESTAMP));
     }
     /**
      * @return array

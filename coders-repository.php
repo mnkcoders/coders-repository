@@ -302,53 +302,39 @@ class CodersRepo{
             CodersRepo::module('Admin');
             
             add_action('admin_menu', function() {
-                add_menu_page(
-                        __('Artist Pad', 'coders_repository'),
-                        __('Artist Pad', 'coders_repository'),
-                        'administrator', 'coders-repository',
-                        function() {
-                            CodersRepo::instance()->run('admin.main');
-                        }, 'dashicons-art'  ,51);
-                add_submenu_page(
-                        'coders-repository',
-                        __('Projects', 'coders_repository'),
-                        __('Projects', 'coders_repository'),
-                        'administrator','coders-repository-projects',
-                        function(){
-                            CodersRepo::instance()->run('admin.projects');
+            
+                $root = '';
+                /*describe menu items*/
+                $pages = array(
+                    'main' => __( 'Artist Pad' , 'coders_repository' ),
+                    'projects' => __( 'Projects' , 'coders_repository' ),
+                    'accounts' => __( 'Accounts' , 'coders_repository' ),
+                    'subscriptions' => __( 'Subscriptions' , 'coders_repository' ),
+                    'payments' => __( 'Payments' , 'coders_repository' ),
+                    'settings' => __( 'Settings' , 'coders_repository' ),
+                    'logs' => __( 'Logs' , 'coders_repository' ),
+                );
+                
+                foreach( $pages as $page => $title ){
+                    if(strlen($root)){
+                        add_submenu_page(
+                                $root, $title, $title,
+                                'administrator',
+                                $root . '-' . $page ,
+                                function() use( $page ) {
+                                    CodersRepo::instance()->run('admin.' . $page);
                         });
-                add_submenu_page(
-                        'coders-repository',
-                        __('Accounts', 'coders_repository'),
-                        __('Accounts', 'coders_repository'),
-                        'administrator','coders-repository-accounts',
-                        function(){
-                            CodersRepo::instance()->run('admin.accounts');
-                        });
-                add_submenu_page(
-                        'coders-repository',
-                        __('Subscriptions', 'coders_repository'),
-                        __('Subscriptions', 'coders_repository'),
-                        'administrator','coders-repository-subscriptions',
-                        function(){
-                            CodersRepo::instance()->run('admin.subscriptions');
-                        });
-                add_submenu_page(
-                        'coders-repository',
-                        __('Payments', 'coders_repository'),
-                        __('Payments', 'coders_repository'),
-                        'administrator','coders-repository-payments',
-                        function(){
-                            CodersRepo::instance()->run('admin.payments');
-                        });
-                add_submenu_page(
-                        'coders-repository',
-                        __('Settings', 'coders_repository'),
-                        __('Settings', 'coders_repository'),
-                        'administrator','coders-repository-settings',
-                        function(){
-                            CodersRepo::instance()->run('admin.settings');
-                        });
+                    }
+                    else{
+                        $root = 'coders-' . $page;
+                        add_menu_page(
+                                $title, $title,
+                                'administrator', $root,
+                                function() use( $page ) {
+                                    CodersRepo::instance()->run('admin.' . $page);
+                        }, 'dashicons-art', 51);
+                    }
+                }
             }, 100000 );
             //register all ajax handlers
             add_action( 'wp_ajax_coders_admin' , function(){
@@ -436,14 +422,22 @@ class CodersRepo{
         //do only when activated
         register_activation_hook(__FILE__, function( ){
             global $wpdb,$table_prefix;
-            $script_path = sprintf('%s/sql/setup.sql',__DIR__);
+            $script_path = sprintf('%s/sql/setup.sql', preg_replace( '/\\\\/' , '/' , __DIR__ ) );
             if(file_exists($script_path)){
                 $script_file = file_get_contents($script_path);
-                if( $script_file !== FALSE && strlen($script_file)){
+                if( FALSE !== $script_file && strlen($script_file)){
                     $script_sql = preg_replace('/{{TABLE_PREFIX}}/',$table_prefix,$script_file);
-                    if($wpdb->query($script_sql)){
-                        return TRUE;
+                    $tables = explode(';', $script_sql);
+                    $counter = 0;
+                    foreach( $tables as $T ){
+                        if ($wpdb->query($T)) {
+                            $counter++;
+                        }
+                        else {
+                            //
+                        }
                     }
+                    return $counter === count( $tables );
                 }
             }
             return FALSE;
