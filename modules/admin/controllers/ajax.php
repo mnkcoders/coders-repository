@@ -6,17 +6,28 @@ final class AjaxController extends \CODERS\Repository\Response{
     
     protected function default_action(\CODERS\Repository\Request $request) {
         
-        $repo = \CODERS\Repository\Model::create('admin.repository');
+        $collections = \CODERS\Repository\Resource::storage();
         
-        return $this->ajax( $repo->list_collections );
+        return $this->ajax( $collections );
+    }
+    
+    protected function test_action( \CODERS\Repository\Request $request ){
+        
+        return $this->ajax( $request->input() );
     }
     
     protected function collection_action( \CODERS\Repository\Request $request ){
         
         $collection = \CodersRepo::collection($request->get('collection','default'));
         
-        
         return $this->ajax($collection);
     }
 
+    protected final function error(\CODERS\Repository\Request $request) {
+
+        return $this->ajax(array(
+            'action' => $request->action(),
+            'data' => $request->input(),
+        ), 400);
+    }
 }

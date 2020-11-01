@@ -69,15 +69,17 @@ abstract class Response {
     }
     /**
      * 
-     * @param type $output
+     * @param mixed $output
+     * @param int $status 200
      * @return type
      */
-    protected function ajax( $output ){
+    protected function ajax( $output , $status = 200 ){
         
         header('Content-type: application/json');
         
         $response = array(
             'ts' => $this->ts(),
+            'status' => $status
         );
         
         switch( TRUE ){
@@ -85,20 +87,20 @@ abstract class Response {
                 //null responses are considered as empty, nothing bad happened, then TRUE
                 break;
             case is_bool($output):
-                $response['response'] = intval($output);
+                $response['data'] = intval($output);
                 break;
             //case is_numeric($output):
             //case is_string($output):
             case is_array($output):
                 //serialize the whole array
-                $response['response'] = $output;
+                $response['data'] = $output;
                 break;
             case is_object($output) && method_exists($output, 'serialize' ):
                 //parse model result
-                $response['response'] = $output->data();
+                $response['data'] = $output->data();
                 break;
             default:
-                $response['response'] = $output;
+                $response['data'] = $output;
                 break;
         }
         
@@ -150,6 +152,27 @@ abstract class Response {
         }
         
         return FALSE;
+    }
+    /**
+     * @return \CODERS\Repository\Response | boolean
+     */
+    public static final function fromRequest( ){
+        
+        return self::create( Request::import() );
+    }
+    /**
+     * @return \CODERS\Repository\Response | boolean
+     */
+    public static final function fromRoute( $route = Request::_DEFAULT ){
+        
+        return self::create( Request::import( $route ) );
+    }
+    /**
+     * @return \CODERS\Repository\Response | boolean
+     */
+    public static final function fromAjax( $route = 'admin.ajax' ){
+        
+        return self::create( Request::ajax( $route ) );
     }
 }
 

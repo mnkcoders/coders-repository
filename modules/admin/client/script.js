@@ -30,7 +30,21 @@ function CodersView(){
                     [];
     };
     /**
-     * @returns {Element[]}
+     * @param {String} cls 
+     * @returns {Element|Boolean}
+     */
+    this.firstTab = function( cls ){
+        var tabs = this.tabs();
+        if( tabs.length ){
+            if( typeof cls !== 'undefined' ){
+                tabs[ 0 ].classList.add( cls );    
+            }
+            return tabs[ 0 ];
+        }
+        return false;
+    };
+    /**
+     * @returns {Element[]|Boolean}
      */
     this.panels = function(){
         return typeof _elements.collectionBox === 'object' ?
@@ -38,12 +52,31 @@ function CodersView(){
                     [];
     };
     /**
+     * @param {String} cls 
+     * @returns {Element[]|Boolean}
+     */
+    this.firstPanel = function( cls ){
+        var panels = this.panels();
+        if( panels.length ){
+            if( typeof cls !== 'undefined' ){
+                panels[ 0 ].classList.add( cls );
+            }
+            return panels[ 0 ];
+        }
+        return false;
+    };
+    /**
      * @param {String} tab
      * @returns {CodersView}
      */
     this.switchTab = function( selection ){
         
-        console.log(this.tabs());
+        if( typeof selection === 'undefined' ){
+            this.firstTab( 'active' );
+            this.firstPanel( 'active' );
+            return this;
+        }
+        
         this.tabs().forEach( function( tab ){
             if( tab.getAttribute('data-tab') === selection  && !tab.classList.contains('active')){
                 tab.classList.add('active');
@@ -63,6 +96,15 @@ function CodersView(){
         });
         
         return this;
+    };
+    /**
+     * @param {String} collection
+     * @returns {CodersView}
+     */
+    this.addCollection = function( collection ){
+        return this.addPanel( collection , this.element('ul',
+                {'class': 'collection ' + collection + ' inline'},
+                this.uploader( collection , function () {})));
     };
     /**
      * @param {String} collection
@@ -424,11 +466,17 @@ function CodersView(){
         return dropZone;
     };
     /**
+     * @param {array} collections 
      * @returns {CodersView}
      */
-    this.initialize = function(){
+    this.initialize = function( collections ){
         
         var container = this.getContainer();
+        
+        if( !Array.isArray( collections ) ){
+            collections = [];
+        }
+        
         if( null !== container ){
             _elements.tabs = this.element('ul',{
                 'class':'collection-tab inline container'
@@ -439,23 +487,19 @@ function CodersView(){
 
             container.appendChild( _elements.tabs );
             container.appendChild( _elements.collectionBox );
-            
-            this.addPanel( 'create-collection' , this.element('div',
-                {'class':'content','data-tab':'create-collection'},[
+
+            this.addPanel('create-collection', this.element('div',
+                    {'class': 'content', 'data-tab': 'create-collection'}, [
                 this.element('input',
-                    {'type':'text','name':'collection','placeholder':'Name your collection'}),
+                        {'type': 'text', 'name': 'collection', 'placeholder': 'Name your collection'}),
                 this.element('button',
-                    {'type':'submit','name':'action','value':'create'},'Create')
+                        {'type': 'submit', 'name': 'action', 'value': 'create'}, 'Create')
             ]));
-            this.addPanel( 'test1' , this.element('ul',
-                {'class':'collection test1 inline'},
-                this.uploader('test1',function(){})));
-            this.addPanel( 'test2' , this.element('ul',
-                {'class':'collection test2 inline'},
-                this.uploader('test2',function(){})));
-            this.addPanel( 'test3' , this.element('ul',
-                {'class':'collection test3 inline'},
-                this.uploader('test3',function(){})));
+            for( var c = 0 ; c < collections.length ; c++ ){
+                this.addPanel( collections[ c ] , this.element('ul',
+                    {'class':'collection ' + collections[ c ] +' inline'},
+                    this.uploader(collections[ c ],function(){})));
+            }
         }
         else{
             console.log('Container not found');
@@ -478,7 +522,8 @@ function CodersModel(){
         'queue':{
             'files':[],
             'current': 0
-        }
+        },
+        'debug':true
     };
         /**
      * @returns {File|Boolean}
@@ -498,97 +543,78 @@ function CodersModel(){
     /**
      * @returns {String}
      */
-    this.url = function( vars ){
+    this.url = function( ){
         
-        return 'http://localhost/WORDPRESS/artistpad/wp-admin/admin.php?page=coders-repository&action=main.default';
-        
-        var url = window.location.href;
-        
-        if( typeof vars === 'object' ){
-
-            var params = [];
-            
-            Object.keys( vars ).forEach(function(item){
-            
-                params.push( item + '=' + vars[ item ] );
-            });
-            
-            return url +
-                ( url.indexOf('?') > -1 ? '&' : '?' ) +
-                params.join('&');
+        if( _client.debug ){
+            console.log( ajaxurl );
         }
+       
+        /*
+         * defined in the admin header since version 2.8
+         * /wp-admin/admin-ajax.php
+         */
+        return ajaxurl;
+
+    };
+    /**
+     * @param {Object|Array} data
+     * @returns {String}
+     */
+    this.serialize = function( data ){
         
-        return url;
+        var serialized = [];
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+                serialized.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
+            }
+        }
+        if(_client.debug ){
+            console.log( serialized );
+        }
+        return serialized.join('&');
     };
     /**
      * @param {Object} data
      * @returns {CodersController}
      */
-    this.ajax = function( task , data , callback ){
-
+    this.ajax = function( action , data , callback ){
         var content = {
             'ts': ( new Date( ) ).getMilliseconds( ),
-            'status': 1,
+            //wordpress ajax action caller
+            'action': 'coders_admin',
+            //coders module action (controller.action)
+            '_action': action,
             'data': typeof data !== 'undefined' ? JSON.stringify(data) : false
         };
-
-        var url = this.url({'task':task});
-
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            if ( this.status == 200 ) {
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (this.status >= 200 && this.status < 400) {
                 if( this.readyState == 4 ){
                     if( typeof callback === 'function' ){
+                        //console.log( this.responseText );
                         callback( JSON.parse( this.responseText ) );
                     }
-                    //console.log( this.responseText );
+                    else if( _client.debug ){
+                        console.log( this.responseText );
+                    }
                 }
             }
             else{
-                if( _repo.debug ){
+                if( _client.debug ){
                    console.log( 'status: ' + this.status );
                 }
             }
         };
-        xhttp.open('POST', url , true );
-        xhttp.setRequestHeader("Content-type", "application/json");
-        xhttp.send( content );
-        
-        if( _repo.debug ){
-            console.log( url );
-        }
+        request.open('POST', this.url( true ) , true );
+        //required by WP_AJAX.PHP
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;');
+        request.send( this.serialize( content ) );
 
+        //request.setRequestHeader("Content-type", "application/json;charset=UTF-8");
+        //request.send( content );
+        //request.send( JSON.stringify( content ) );
         return this;
     };
-    /**
-     * @returns {String}
-     */
-    this.url = function( vars , root ){
-        
-        var url = window.location.href;
-        
-        if( root ){
-            url = url.substr( 0 , url.indexOf('/coders-repository/'));
-        }
-        
-        if( typeof vars === 'object' ){
-
-            var params = [];
-            
-            Object.keys( vars ).forEach(function(item){
-            
-                params.push( item + '=' + vars[ item ] );
-            });
-            
-            return url +
-                ( url.indexOf('?') > -1 ? '&' : '?' ) +
-                params.join('&');
-        }
-        
-        //return _repo.URL + '?page=coders-repository';
-        return url;
-    };
-    
     /**
      * @returns {Array}
      */
@@ -637,7 +663,7 @@ function CodersModel(){
                     _self.receive( ).attemptUpload();
                 }
             }).catch( function( error ){
-                if( _repo.debug ){
+                if( _client.debug ){
                     console.log(error);
                 }
             });
@@ -656,7 +682,7 @@ function CodersModel(){
             //console.log( item );
             this.repoContainer().appendChild( this.addItem( fileData ) );
             
-            if( _repo.debug ){
+            if( _client.debug ){
                 console.log( 'File received: ' + fileData.name );
             }
         }
@@ -664,10 +690,10 @@ function CodersModel(){
             //tag error
         }
 
-        _repo.queue.current++;
+        _client.queue.current++;
 
         //update progress bar
-        return this.updateProgressBar( _repo.queue.current / _repo.queue.files.length );
+        return this.updateProgressBar( _client.queue.current / _client.queue.files.length );
     };
     
     /**
@@ -740,6 +766,11 @@ function CodersModel(){
      * @returns {CodersModel}
      */
     this.initialize = function(){
+        //testing url
+        //console.log( this.url( ) );
+        //this.ajax( 'default' , {'message':'Hello!'} , function( response ){
+        //    console.log(response);
+        //});
         return this;
     };
     
@@ -775,6 +806,21 @@ function CodersModel(){
 
             _repo.view.initialize();
             
+            _repo.server.ajax( 'default' , {} , function( response ){ 
+                
+                var collections = response.data || [];
+                
+                collections.forEach( function( item ){
+                    _repo.view.addCollection( item);
+                });
+                _repo.view.switchTab( );
+            });
+            
+        //this.ajax( 'default' , {'message':'Hello!'} , function( response ){
+        //    console.log(response);
+        //});
+
+            
         });
         
         //console.log( this.url( false ,true));
@@ -784,5 +830,4 @@ function CodersModel(){
     
     return this.bind(/*setup client*/);
 })( /* autosetup */ );
-
 

@@ -21,7 +21,7 @@ class AdminModule extends \CodersRepo{
     /**
      * @param string $action
      */
-    public final function run( $action ) {
+    public final function run( $action = '' ) {
         
         parent::run( $action );
     }

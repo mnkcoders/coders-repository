@@ -40,6 +40,19 @@ abstract class View{
         return substr($class, 0 ,$suffix);
     }
     /**
+     * @param string $content
+     * @param string $module
+     * @return string
+     */
+    public static final function assetUrl( $content , $module ){
+            
+        return sprintf('%smodules/%s/client/%s',
+                CODERS__REPOSITORY__URL,
+                $module,
+                $content );
+
+    }
+    /**
      * Preload all required scripts
      * @param string $module Module name
      * @param array $style_list List of stylesets

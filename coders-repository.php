@@ -156,7 +156,7 @@ class CodersRepo{
      * @param string $endpoint
      * @throws \Exception
      */
-    public static final function endpoint( $endpoint ){
+    public static final function module( $endpoint ){
         
         try{
             if(strlen($endpoint) === 0){
@@ -260,6 +260,7 @@ class CodersRepo{
     }
     /**
      * @param string $action
+     * @param array $data
      * @return CodersRepo
      */
     protected function run( $action = '' ){
@@ -298,13 +299,7 @@ class CodersRepo{
         if(is_admin()){
             
             //initialize Admin
-            CodersRepo::endpoint('Admin');
-            
-            //register styles and scripts using the helper within the view
-            //\CODERS\Repository\View::attachScripts('admin',
-            //        array('style'),
-            //        array('script'=>array('jquery')));
-            //add_filter( 'admin_body_class', 'coders-repository' );
+            CodersRepo::module('Admin');
             
             add_action('admin_menu', function() {
                 add_menu_page(
@@ -313,8 +308,6 @@ class CodersRepo{
                         'administrator', 'coders-repository',
                         function() {
                             CodersRepo::instance()->run('admin.main');
-                            //$R = \CODERS\Repository\Request::import('admin');
-                            //\CODERS\Repository\Response::create($R);
                         }, 'dashicons-grid-view'  ,51);
                 add_submenu_page(
                         'coders-repository',
@@ -323,16 +316,22 @@ class CodersRepo{
                         'administrator','coders-repository-settings',
                         function(){
                             CodersRepo::instance()->run('admin.settings');
-                            //$R = \CODERS\Repository\Request::import('admin.settings');
-                            //\CODERS\Repository\Response::create($R);
                         });
             }, 100000 );
             //register all ajax handlers
             add_action( 'wp_ajax_coders_admin' , function(){
-                
-                CodersRepo::instance()->run('admin.ajax');
-                
+                //print json_encode(array('response'=>'OK'));
+                if(is_admin() ){
+                    \CODERS\Repository\Response::fromAjax('admin.ajax');
+                }
                 wp_die();
+                //die;
+            }, 100000 );
+            //register all ajax handlers
+            add_action( 'wp_ajax_nopriv_coders_admin' , function(){
+
+                wp_die();
+
             }, 100000 );
         }
         else{
@@ -372,7 +371,7 @@ class CodersRepo{
                         exit;
                     case array_key_exists(self::ENDPOINT, $query):
                         $wp_query->set('is_404', FALSE);
-                        $EP = CodersRepo::endpoint($query[self::ENDPOINT]);
+                        $EP = CodersRepo::module($query[self::ENDPOINT]);
                         if( FALSE !== $EP ){
                             $EP->run($query[self::ENDPOINT]);
                         }
@@ -389,12 +388,20 @@ class CodersRepo{
                 
                 wp_die();
             }, 100000 );
+            //register ajax handlers
+            add_action( 'wp_ajax_nopriv_coders_module' , function(){
+                
+                CodersRepo::instance()->run('ajax');
+                
+                wp_die();
+            }, 100000 );
         }
     }
     /**
      * Setup DB Activation Hook
      */
     private static final function setup(){
+        //do only when activated
         register_activation_hook(__FILE__, function( ){
             global $wpdb,$table_prefix;
             $script_path = sprintf('%s/sql/setup.sql',__DIR__);
