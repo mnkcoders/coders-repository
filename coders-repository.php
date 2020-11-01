@@ -303,12 +303,44 @@ class CodersRepo{
             
             add_action('admin_menu', function() {
                 add_menu_page(
-                        __('Repository', 'coders_repository'),
-                        __('Repository', 'coders_repository'),
+                        __('Artist Pad', 'coders_repository'),
+                        __('Artist Pad', 'coders_repository'),
                         'administrator', 'coders-repository',
                         function() {
                             CodersRepo::instance()->run('admin.main');
-                        }, 'dashicons-grid-view'  ,51);
+                        }, 'dashicons-art'  ,51);
+                add_submenu_page(
+                        'coders-repository',
+                        __('Projects', 'coders_repository'),
+                        __('Projects', 'coders_repository'),
+                        'administrator','coders-repository-projects',
+                        function(){
+                            CodersRepo::instance()->run('admin.projects');
+                        });
+                add_submenu_page(
+                        'coders-repository',
+                        __('Accounts', 'coders_repository'),
+                        __('Accounts', 'coders_repository'),
+                        'administrator','coders-repository-accounts',
+                        function(){
+                            CodersRepo::instance()->run('admin.accounts');
+                        });
+                add_submenu_page(
+                        'coders-repository',
+                        __('Subscriptions', 'coders_repository'),
+                        __('Subscriptions', 'coders_repository'),
+                        'administrator','coders-repository-subscriptions',
+                        function(){
+                            CodersRepo::instance()->run('admin.subscriptions');
+                        });
+                add_submenu_page(
+                        'coders-repository',
+                        __('Payments', 'coders_repository'),
+                        __('Payments', 'coders_repository'),
+                        'administrator','coders-repository-payments',
+                        function(){
+                            CodersRepo::instance()->run('admin.payments');
+                        });
                 add_submenu_page(
                         'coders-repository',
                         __('Settings', 'coders_repository'),

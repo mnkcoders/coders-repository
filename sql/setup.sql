@@ -19,6 +19,7 @@ CREATE TABLE `{{TABLE_PREFIX}}_coders_account` (
 CREATE TABLE `{{TABLE_PREFIX}}_coders_checkout` (
  `ID` int(11) NOT NULL,
  `account_id` int(11) NOT NULL,
+ `subscription_id` int(11) NOT NULL,
  `token` varchar(32) NOT NULL,
  `amount` int(11) NOT NULL,
  `status` tinyint(1) NOT NULL,
@@ -38,7 +39,7 @@ CREATE TABLE `{{TABLE_PREFIX}}_coders_checkout` (
 CREATE TABLE `{{TABLE_PREFIX}}_coders_subscription` (
  `ID` int(11) NOT NULL,
  `account_id` int(11) NOT NULL,
- `tier_id` int(11) NOT NULL,
+ `tier_id` varchar(32) NOT NULL,
  `satus` tinyint(1) NOT NULL,
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
@@ -46,9 +47,20 @@ CREATE TABLE `{{TABLE_PREFIX}}_coders_subscription` (
  PRIMARY KEY (`ID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8
 
+/*PROJECTS TABLE*/
+CREATE TABLE `{{TABLE_PREFIX}}_coders_project` (
+ `ID` varchar(12) NOT NULL,
+ `title` varchar(64) NOT NULL,
+ `content` longtext NOT NULL,
+ `status` tinyint(1) NOT NULL,
+ `image_id` bigint(20) NOT NULL COMMENT 'wordpress gallery',
+ `date_created` datetime NOT NULL,
+ `date_updated` datetime NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8
+
 /*TIERS TABLE*/
 CREATE TABLE `{{TABLE_PREFIX}}_coders_tier` (
- `ID` int(11) NOT NULL,
+ `ID` varchar(32) NOT NULL COMMENT 'project_id + tier_id',
  `title` varchar(32) NOT NULL,
  `description` longtext NOT NULL,
  `image_id` bigint(20) NOT NULL,
