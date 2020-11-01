@@ -6,6 +6,11 @@ final class AjaxController extends \CODERS\Repository\Response{
     
     protected function default_action(\CODERS\Repository\Request $request) {
         
+        return $this->list_collections_action($request);
+    }
+    
+    protected final function list_collections_action( \CODERS\Repository\Request $request ){
+        
         $collections = \CODERS\Repository\Resource::storage();
         
         return $this->ajax( $collections );

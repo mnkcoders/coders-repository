@@ -2,7 +2,7 @@
  * 
  * @returns {CodersView}
  */
-function CodersView( client ){
+function CodersView( ){
     
     var _elements = {
         'dropZone': null,
@@ -24,8 +24,43 @@ function CodersView( client ){
     /**
      * @type CodersModel
      */
-    var _server = client instanceof CodersModel ? client : null;
-    
+    var _server = new CodersModel();
+
+    /**
+     * Create a new HTML Element
+     * @param {String} element
+     * @param {Object|Array} attributes
+     * @param {String|Element} content
+     * @returns {Element|CodersController.element.E}
+     */
+    this.element = function ( element , attributes , content ){
+        var e = document.createElement(element);
+        //run over attributes
+        if(typeof attributes === 'object') {
+            for (var att in attributes) {
+                if (attributes.hasOwnProperty(att)) {
+                    e.setAttribute( att , attributes[ att ] );
+                    //e[att] = attributes[att];
+                }
+            }
+        }
+        switch( true ){
+            case ( typeof content === 'string' ):
+                e.innerHTML = content;
+                break;
+            case (typeof content === 'object' && content instanceof Element):
+                e.appendChild(content);
+                break;
+            case Array.isArray( content ):
+                for( var c = 0 ; c < content.length ; c++ ){
+                    if( typeof content[ c ] === 'object' && content[ c ] instanceof Element){
+                        e.appendChild( content [ c ] );
+                    }
+                }
+                break;
+        }
+        return e;
+    };
     /**
      * @returns {Element[]}
      */
@@ -112,11 +147,9 @@ function CodersView( client ){
         
         var uploader = this.appendUploader( collection );
         
-        var container = this.element('ul',
-                {'class': 'collection ' + collection + ' inline'},
-                uploader);
+        var container = this.element('ul',{'class': 'collection ' + collection + ' inline'});
         
-        return this.addPanel( collection , container );
+        return this.addPanel( collection , [ uploader , container ] );
     };
     /**
      * @param {String} collection
@@ -195,44 +228,6 @@ function CodersView( client ){
         document.querySelectorAll('');
         
         return this;
-    };
-    
-    /**
-     * Create a new HTML Element
-     * @param {String} element
-     * @param {Object|Array} attributes
-     * @param {String|Element} content
-     * @returns {Element|CodersController.element.E}
-     */
-    this.element = function ( element , attributes , content ){
-        var e = document.createElement(element);
-        //run over attributes
-        if(typeof attributes === 'object') {
-            for (var att in attributes) {
-                if (attributes.hasOwnProperty(att)) {
-                    e.setAttribute( att , attributes[ att ] );
-                    //e[att] = attributes[att];
-                }
-            }
-        }
-        
-        switch( true ){
-            case ( typeof content === 'string' ):
-                e.innerHTML = content;
-                break;
-            case (typeof content === 'object' && content instanceof Element):
-                e.appendChild(content);
-                break;
-            case Array.isArray( content ):
-                for( var c = 0 ; c < content.length ; c++ ){
-                    if( typeof content[ c ] === 'object' && content[ c ] instanceof Element){
-                        e.appendChild( content [ c ] );
-                    }
-                }
-                break;
-        }
-        
-        return e;
     };
     /**
      * @param {Object} attributes
@@ -384,8 +379,33 @@ function CodersView( client ){
         var _view = this;
        
         //handle here the progressBar to attach a caller when required
-        var progressBar = this.progressBar('Upload','hidden content');
-
+        var progressBar = this.progressBar( 'Upload' , 'hidden content' );
+        
+        var inputFileSize = this.element('input',{'type':'hidden',
+                'name':'MAX_FILE_SIZE',
+                'value':CodersView.FileSize()});
+        var inputFiles = this.element('input',{
+                'class':'hidden',
+                'id': collection + '-files',
+                'type':'file',
+                'name':'upload',
+                'multiple':true,
+                //'accept':this.acceptedTypes().join(', '),
+                //'id': _repo.inputs.dropzone + '_input'
+            });
+        inputFiles.addEventListener( 'click', e => {
+                console.log('Selecting files...');
+                console.log(e);
+                return true;
+            });
+        var inputButton = this.element('button',{
+                'class':'button button-large icon-upload hidden',
+                'id': ( collection + '-upload' ),
+                'type':'submit',
+                'name':'action',
+                'value':'upload'
+            }, 'Upload' );
+         
         var formData = this.element('form',{
             //FORM DECLARATION
             'name': 'collection',
@@ -394,29 +414,9 @@ function CodersView( client ){
             'enctype':'multipart/form-data'
         },[
             //FORM ELEMENTS
-            this.element('input',{'type':'hidden',
-                'name':'MAX_FILE_SIZE',
-                'value':CodersView.FileSize()}),
-            this.element('input',{
-                'class':'hidden',
-                'id': collection + '-files',
-                'type':'file',
-                'name':'upload',
-                'multiple':true,
-                //'accept':this.acceptedTypes().join(', '),
-                //'id': _repo.inputs.dropzone + '_input'
-            }).addEventListener( 'click', e => {
-                console.log('Selecting files...');
-                console.log(e);
-                return true;
-            })
-            /*this.element('button',{
-                'class':'button button-large icon-upload hidden',
-                'id': ( collection + '-upload' ),
-                'type':'submit',
-                'name':'action',
-                'value':'upload'
-            }, progressBar )*/
+            inputFileSize,
+            inputFiles,
+            inputButton
         ]);
         
         var files = [];
@@ -425,14 +425,14 @@ function CodersView( client ){
             e.preventDefault();
             progressBar.setLabel('Uploading...');
             console.log(e);
-            _server.ajax('upload', files ,function( response ){
-                //progressBar.update( progress );
-            });
+            //_server.upload( files , function( response ){
+            //    console.log( response );
+            //});
             //avoid bubbling over form
             return true;
         });
         
-        var dropZone = this.element('li',{'class':'uploader item'},[
+        var dropZone = this.element('div',{'class':'uploader item'},[
             formData,
             this.element('label',{
                 'class':'icon-upload large-icon content',
@@ -466,11 +466,10 @@ function CodersView( client ){
                         var files = e.dataTransfer.files;
                         if (files.length) {
                             progressBar.setLabel('Uploading ...');
-                            _server.ajax( 'upload' , files , function( response ){
+                            _server.upload( files , function( response ){
                                 //get all registered file metadata to append
                                 //them into the collection
                                 console.log( response ) ;
-                                
                             });
                         }
                         else{
@@ -527,13 +526,12 @@ function CodersView( client ){
             ]));
             
             var _view = this;
-            _server.ajax( 'default' , {} , function( response ){                 
-                var collections = response.data || [];
+            _server.listCollections( function( collections ){
                 collections.forEach( function( item ){
                     _view.addCollection( item);
                 });
                 _view.switchTab( );
-            });
+            } );
         }
         else{
             console.log('Container not found');
@@ -665,6 +663,16 @@ function CodersModel(){
         ];
     };
     /**
+     * @param {Array} files
+     * @param {Function} callback
+     * @returns {CodersModel}
+     */
+    this.upload = function( files , callback ){
+        
+        
+        return this;
+    };
+    /**
      * @param {File} fileData
      * @param {Function} callback
      * @returns {CodersController}
@@ -773,6 +781,19 @@ function CodersModel(){
         return [];
     };
     /**
+     * @param {Function} callback
+     * @returns {CodersModel}
+     */
+    this.listCollections = function( callback ){
+            this.ajax( 'list_collections' , {} , function( response ){
+                
+                var collections = response.data || [];
+                
+                callback( collections );
+            });
+            return this;
+    };
+    /**
      * @param {String} collection
      * @param {Function} callback
      * @returns {CodersModel}
@@ -833,7 +854,8 @@ function CodersModel(){
         /**
          * @type CodersView
          */
-        'view': new CodersView(),
+        //'view': new CodersView(),
+        'view': null,
         /**
          * @type CodersModel
          */
@@ -849,7 +871,7 @@ function CodersModel(){
 
         document.addEventListener('DOMContentLoaded',function(e){
 
-            _repo.view = new CodersView( new CodersModel( ) );
+            _repo.view = new CodersView( );
             
         });
                 
