@@ -195,6 +195,10 @@ final class Resource{
         return $this->exists() ? filesize($this->path()) : 0;
     }
     /**
+     * @return array
+     */
+    public final function meta(){ return $this->_meta; }
+    /**
      * Can be embedded in the webview?
      * @return boolean
      */
@@ -366,16 +370,14 @@ final class Resource{
             
             return $list;
     }
-
     /**
      * @param string $input
      * @param string $collection
-     * @return boolean
-     * @throws \Exception
+     * @return array
      */
     public static final function upload( $input , $collection = 'default' ){
         
-        $created = 0;
+        $created = array();
         
         foreach( self::parseUploadMeta($input) as $upload ) {
             try{
@@ -404,8 +406,9 @@ final class Resource{
 
                 if( $buffer !== FALSE ){
                     $upload['storage'] = $collection;
-                    if( self::create($upload , $buffer ) !== FALSE ){
-                        $created++;
+                    $resource = self::create($upload , $buffer );
+                    if( $resource !== FALSE ){
+                        $created[ $resource->ID ] = $resource;
                     }
                 }
             }

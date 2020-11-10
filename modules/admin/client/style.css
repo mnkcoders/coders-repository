@@ -11,7 +11,7 @@
 .coders-repository .hidden{ display: none !important; }
 .coders-repository .container{
     padding: 20px 0 20px;
-    margin: 40px auto;
+    margin: 20px auto;
     box-sizing: border-box;
     
     background-color: transparent;
@@ -24,18 +24,6 @@
 }
 .coders-repository .container select{
     min-width: 168px;
-}
-.coders-repository .container.dropzone{
-    border: 1px dashed rgba(0,0,0,0.25);
-    padding: 20px;
-    margin: 40px auto;
-    box-sizing: border-box;
-
-    text-transform: uppercase;
-    text-align: center;
-    font-weight: 600;
-    font-size: 15px;
-    letter-spacing: 1px;
 }
 .coders-repository ul.collection{
     width: 100%;
@@ -56,7 +44,18 @@
     width: 100%;
     height: auto;
 }
-.coders-repository .repository-box > .container{
+.coders-repository .tab > .uploader{
+    border: 1px dashed rgba(0,0,0,0.25);
+    padding: 20px;
+    box-sizing: border-box;
+
+    text-transform: uppercase;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+.coders-repository .repository-box > .tab{
     display: block;
     width: 100%;
     position: absolute;
@@ -65,7 +64,7 @@
     transition: ease-in 250ms;
     pointer-events: none;
 }
-.coders-repository .repository-box > .container.active{
+.coders-repository .repository-box > .tab.active{
     pointer-events: initial;
     opacity: 1;
 }
@@ -73,6 +72,7 @@
     width: 100%;
     min-height: 100px;
     display: block;
+    border: 1px solid rgba(0,0,0,0.15);
 }
 .coders-repository ul.collection:after{
     content: '';

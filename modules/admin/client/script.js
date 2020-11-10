@@ -161,7 +161,7 @@ function CodersView( ){
         var _view = this;
 
         var cls = item === 'create-collection' ?
-                'item create icon-plus button-primary' :
+                'item create button button-primary' :
                 'item button';
         var title = item === 'create-collection' ?
                 'New Collection' :
@@ -180,39 +180,10 @@ function CodersView( ){
         _elements.tabs.prepend( tab );
         
         _elements.collectionBox.prepend(this.element('div',{
-            'class':'container', 'data-tab':item
+            'class':'tab', 'data-tab':item
         }, panel ) );
         
         return this;
-    };
-    
-    /**
-     * @returns {String}
-     */
-    this.url = function( vars , root ){
-        
-        var url = window.location.href;
-        
-        if( root ){
-            url = url.substr( 0 , url.indexOf('/coders-repository/'));
-        }
-        
-        if( typeof vars === 'object' ){
-
-            var params = [];
-            
-            Object.keys( vars ).forEach(function(item){
-            
-                params.push( item + '=' + vars[ item ] );
-            });
-            
-            return url +
-                ( url.indexOf('?') > -1 ? '&' : '?' ) +
-                params.join('&');
-        }
-        
-        //return _repo.URL + '?page=coders-repository';
-        return url;
     };
     
     this.getContainer = function(){
@@ -377,7 +348,7 @@ function CodersView( ){
     this.appendUploader = function( collection ){
               
         var _view = this;
-       
+        
         //handle here the progressBar to attach a caller when required
         var progressBar = this.progressBar( 'Upload' , 'hidden content' );
         
@@ -393,13 +364,8 @@ function CodersView( ){
                 //'accept':this.acceptedTypes().join(', '),
                 //'id': _repo.inputs.dropzone + '_input'
             });
-        inputFiles.addEventListener( 'click', e => {
-                console.log('Selecting files...');
-                console.log(e);
-                return true;
-            });
         var inputButton = this.element('button',{
-                'class':'button button-large icon-upload hidden',
+                'class':'button button-large dashicons-upload hidden',
                 'id': ( collection + '-upload' ),
                 'type':'submit',
                 'name':'action',
@@ -410,7 +376,7 @@ function CodersView( ){
             //FORM DECLARATION
             'name': 'collection',
             'method':'POST',
-            'action':this.url({'action':'upload'}),
+            'action': _server.url(),
             'enctype':'multipart/form-data'
         },[
             //FORM ELEMENTS
@@ -432,22 +398,44 @@ function CodersView( ){
             return true;
         });
         
-        var dropZone = this.element('div',{'class':'uploader item'},[
+        var dropZone = this.element('div',{'class':'uploader item container' },[
             formData,
             this.element('label',{
-                'class':'icon-upload large-icon content',
+                'class':'dashicons-before dashicons-upload button button-primary',
                 'for': ( collection + '-files' )
             }, 'Upload' ),
             progressBar
 
         ]);
+
            
         dropZone.addEventListener( 'click', e => {
                 //e.preventDefault();
                 e.stopPropagation();
                 return false;
             });
-            
+        
+        //capture upload events
+        inputFiles.addEventListener( 'change', function(e){
+                dropZone.classList.add('uploading');
+                //pBarContainer.classList.add('current');
+                console.log('Selecting files...');
+                var fileList = this.files;
+                if ( typeof fileList !== 'undefined' && fileList.length ) {
+                    progressBar.setLabel('Uploading ...');
+                    _server.upload( fileList , function( response ){
+                        //get all registered file metadata to append
+                        //them into the collection
+                        console.log( response ) ;
+                    });
+                    return true;
+                }
+                else{
+                    progressBar.setLabel('No files to upload?');
+                }
+                return false;
+            });
+        
         ['dragenter','dragleave','dragover','drop'].forEach( function( event ){
             dropZone.addEventListener(event, function(e){
                 e.preventDefault();
@@ -461,7 +449,7 @@ function CodersView( ){
                         dropZone.classList.remove('highlight');
                         break;
                     case 'drop':
-                        dropZone.classList.remove('uploading');
+                        dropZone.classList.add('uploading');
                         //pBarContainer.classList.add('current');
                         var files = e.dataTransfer.files;
                         if (files.length) {
@@ -549,7 +537,7 @@ CodersView.FileSize = function(){ return 256 * 256 * 256; };
  * @returns {CodersUploader}
  */
 function CodersModel(){
-   
+    
     var _client = {
         'queue':{
             'files':[],
@@ -557,15 +545,17 @@ function CodersModel(){
         },
         'debug':true
     };
-        /**
+    /**
      * @returns {File|Boolean}
      */
-    this.currentFile = function(){
-        return _client.queue.files.length > _client.queue.current ?
-                _client.queue.files[ _client.queue.current ] :
-                        false;
+    this.nextFile = function(){
+        if( _client.queue.files.length > _client.queue.current ){
+            var file = _client.queue.files[ _client.queue.current ];
+            _client.queue.current++;
+            return file;
+        }
+        return false;
     };
-   
     /**
      * @returns {String}
      */
@@ -606,10 +596,32 @@ function CodersModel(){
         return serialized.join('&');
     };
     /**
+     * @param {String} action 
+     * @param {Object} data
+     * @returns {FormData}
+     */
+    this.formData = function( action , data ){
+        
+        var form = new FormData();
+
+        for( var key in data ){
+            if( data.hasOwnProperty( key ) ){
+                form.append( key , data[ key ] );
+            }
+        }
+
+        form.append('ts',( new Date( ) ).getMilliseconds( ));
+        form.append('action','coders_admin');
+        form.append('_action',action);
+        
+        return form;
+    };
+    /**
      * @param {Object} data
      * @returns {CodersController}
      */
     this.ajax = function( action , data , callback ){
+        
         var content = {
             'ts': ( new Date( ) ).getMilliseconds( ),
             //wordpress ajax action caller
@@ -664,28 +676,36 @@ function CodersModel(){
     };
     /**
      * @param {Array} files
-     * @param {Function} callback
      * @returns {CodersModel}
      */
-    this.upload = function( files , callback ){
-        
-        
-        return this;
+    this.upload = function( files ){
+        console.log( files );
+        _client.queue.files = files;
+        _client.queue.current = 0;
+        return this.enqueueUpload( files );
     };
     /**
      * @param {File} fileData
-     * @param {Function} callback
+     * @param {Function} fileHandle 
      * @returns {CodersController}
      */
-    this.transfer = function( fileData , callback ){
+    this.transfer = function( fileData , fileHandle ){
+        
+        console.log( typeof fileHandle );
+        if( typeof fileHandle !== 'function' ){
+            //console.log( 'No handler defined' );
+            //return this;
+        }
         
         var _self = this;
 
         var formData = new FormData();
         
         formData.append('upload', fileData);
+        formData.append('action','coders_admin');
+        formData.append('_action','upload');
 
-        var url = this.url({'task':'dragDrop'});
+        var url = this.url();
         //console.log( 'Uploading ' + JSON.stringify( fileData.name ) + ' to ' + url );
         fetch( url , { method: 'POST', body: formData } )
             .then( (response) => response.json( ) )
@@ -695,14 +715,15 @@ function CodersModel(){
                         data.forEach( function(item){
                             _self.receive( item );
                         });
-                        _self.attemptUpload();
+                        _self.enqueueUpload( fileHandle );
                     }
                     else{
-                        _self.receive( data ).attemptUpload();
+                        _self.receive( data ).enqueueUpload( fileHandle );
                     }
                 }
                 else{
-                    _self.receive( ).attemptUpload();
+                    //_self.receive( ).enqueueUpload( fileHandle );
+                    console.error( data );
                 }
             }).catch( function( error ){
                 if( _client.debug ){
@@ -712,12 +733,36 @@ function CodersModel(){
 
         return this;
     };
+    /**
+     * @param {Function} fileHandle 
+     * @returns {CodersController}
+     */
+    this.enqueueUpload = function( fileHandle ){
+        
+        var file = this.nextFile();
+        if( file !== false ){
+            //call event for next upload
+            this.transfer( file , fileHandle );
+        }
+        else{
+            //this.closeUploader();
+            console.log('Done!');
+        }
+
+        return this;
+    };
     
     /**
      * @param {Object} progress
      * @returns {CodersController}
      */
     this.receive = function( fileData ){
+        
+        if( _client.debug ){
+            console.log( 'Response Received' );
+            console.log( fileData );
+            return this;
+        }
         
         if( fileData ){
             //publish file data into collection
@@ -738,24 +783,6 @@ function CodersModel(){
         return this.updateProgressBar( _client.queue.current / _client.queue.files.length );
     };
     
-    /**
-     * @returns {CodersController}
-     */
-    this.attemptUpload = function( ){
-        
-        var upload = _client.queue.files[ _client.queue.current ];
-        
-        if( _client.queue.current < _client.queue.files.length ){
-            //call event for next upload
-
-            this.transfer( upload );
-        }
-        else{
-            this.closeUploader();
-        }
-
-        return this;
-    };
     /**
      * @param {File[]} fileCount
      * @returns {CodersController}
