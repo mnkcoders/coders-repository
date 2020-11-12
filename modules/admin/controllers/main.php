@@ -35,10 +35,19 @@ final class MainController extends \CODERS\Repository\Response{
         
         return TRUE;
     }
-    
+    /**
+     * 
+     * @param \CODERS\Repository\Request $request
+     * @return boolean
+     */
     protected final function upload_action( \CODERS\Repository\Request $request ){
         
-        return TRUE;
+        $files = \CODERS\Repository\Resource::upload('upload', $request->get('collection','default'));
+        $names = array();
+        foreach($files as $file ){
+            $names[] = $file->name;
+        }
+        return $this->default_action($request->redirect('admin.main.default',array('files'=>$names)));
     }
     
     protected final function collection_action( \CODERS\Repository\Request $request ){

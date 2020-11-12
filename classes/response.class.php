@@ -120,7 +120,7 @@ abstract class Response {
     public static final function create( Request $request ){
         
         try{
-
+            
             $path = sprintf('%s/modules/%s/controllers/%s.php',
                     preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR ),
                     strtolower( $request->module() ), strtolower( $request->controller() ) );
@@ -165,7 +165,9 @@ abstract class Response {
      */
     public static final function fromRoute( $route = Request::_DEFAULT ){
         
-        return self::create( Request::import( $route ) );
+        $request = Request::route( $route );
+
+        return self::create( $request );
     }
     /**
      * @return \CODERS\Repository\Response | boolean

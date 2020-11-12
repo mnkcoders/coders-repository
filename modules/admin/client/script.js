@@ -25,6 +25,8 @@ function CodersView( ){
      * @type CodersModel
      */
     var _server = new CodersModel();
+    
+    var _self = this;
 
     /**
      * Create a new HTML Element
@@ -59,6 +61,22 @@ function CodersView( ){
                 }
                 break;
         }
+        
+        e.element = function( className ){
+            var children = [].slice.call( this.children );
+            for( var c = 0 ; c < children.length ; c++ ){
+                if( children[ c ].className === className || children[ c ].classList.contains( className ) ){
+                    return children[ c ];
+                }
+            }
+            return false;
+        };
+        
+        e.clear = function(){
+            this.innerHTML = '';
+        };
+        
+        
         return e;
     };
     /**
@@ -84,9 +102,49 @@ function CodersView( ){
         return false;
     };
     /**
+     * @param {String} selection
+     * @returns {Element|Boolean}
+     */
+    this.collection = function( selection ){
+        
+        var container = this.panels( selection );
+        //console.log( container.childNodes );
+        
+        for( var c = 0 ; c < container.childNodes.length ; c++ ){
+            if( container.childNodes[ c ].classList.contains('collection') ){
+                return container.childNodes[ c ];
+            }
+        }
+        
+        return false;
+    };
+    /**
+     * @returns {String}
+     */
+    this.selectedTab = function(){
+        var tabs = this.tabs();
+        for( var t = 0 ; t < tabs.length ; t++ ){
+            if( tabs[ t ].classList.contains('active')){
+                return tabs[t].getAttribute('data-tab');
+            }
+        }
+        return '';
+    };
+    /**
+     * @param {String} selection 
      * @returns {Element[]|Boolean}
      */
-    this.panels = function(){
+    this.panels = function( selection ){
+        
+        if( typeof selection === 'string' && selection.length ){
+            var panels = this.panels();
+            for( var p = 0 ; p < panels.length ; p++ ){
+                if( panels[p].getAttribute('data-tab') === selection ){
+                    return panels[p];
+                }
+            }
+        }
+        
         return typeof _elements.collectionBox === 'object' ?
             [].slice.call( _elements.collectionBox.children ) :
                     [];
@@ -118,8 +176,10 @@ function CodersView( ){
         }
         
         this.tabs().forEach( function( tab ){
-            if( tab.getAttribute('data-tab') === selection  && !tab.classList.contains('active')){
-                tab.classList.add('active');
+            if( tab.getAttribute('data-tab') === selection ){
+                if( !tab.classList.contains('active')) {
+                    tab.classList.add('active');
+                }
             }
             else{
                 tab.classList.remove('active');
@@ -128,13 +188,60 @@ function CodersView( ){
 
         this.panels().forEach( function( panel ){
             if( panel.getAttribute('data-tab') === selection  && !panel.classList.contains('active')){
-                panel.classList.add('active');
+                if( !panel.classList.contains('active')) {
+                    panel.classList.add('active');
+                }
             }
             else{
                 panel.classList.remove('active');
             }
         });
         
+        if( selection !== 'create-collection' ){
+            var _view = this;
+            _server.listResources( selection , _view.listPosts );
+        }
+        
+        return this;
+    };
+    /**
+     * @param {Number} ms
+     * @returns {CodersView}
+     */
+    this.wait = function( ms ){
+        if( typeof ms !== 'number' ){
+            ms = 1200;
+        }
+        console.log( 'waiting ' + (ms/1000) + ' seconds...' );
+        for(var i = 0 ; i < ms ; i++ );
+        return this;
+    };
+    /**
+     * 
+     * @param {String} collection
+     * @param {Array} resources
+     * @returns {CodersView}
+     */
+    this.listPosts = function( collection , resources ){
+        
+        var panel = _self.panels( collection );
+                
+        if( panel.hasOwnProperty('element') ){
+            var gallery = panel.element('collection');
+            //var panel = _self.collection( collection );
+            if( gallery !== false ){
+                gallery.clear();
+            }
+            for( var r = 0 ; r < resources.length ; r++ ){
+                if( r % 4 === 0 ){
+                    _self.wait();
+                }
+                gallery.appendChild( _self.addItem( resources[ r ] ) );
+            }
+            //resources.forEach( function( r ){
+            //    gallery.appendChild( _self.addItem( r ) );
+            //});
+        }
         return this;
     };
     /**
@@ -143,13 +250,15 @@ function CodersView( ){
      */
     this.addCollection = function( collection ){
         
-        console.log( typeof this.appendUploader );
+        //console.log( typeof this.appendUploader );
         
         var uploader = this.appendUploader( collection );
         
+        var path = this.element('ul',{'class':'path inline'} , '<li>#root path</li>');
+        
         var container = this.element('ul',{'class': 'collection ' + collection + ' inline'});
         
-        return this.addPanel( collection , [ uploader , container ] );
+        return this.addPanel( collection , [ path, uploader , container ] );
     };
     /**
      * @param {String} collection
@@ -238,33 +347,28 @@ function CodersView( ){
      */
     this.addItem = function( itemData ){
 
-        if( this.acceptedTypes().includes( itemData.type ) ){
-            //var img = document.createElement('img');
+        var elements = [
+            this.element('span',false,itemData.name),
+            this.element('a',{'class':'action open dashicons-admin-links'}),
+            this.element('a',{
+                'class':'action remove dashicons-trash',
+                'href':_server.url({'task':'remove','id':itemData.ID})})
+        ];
+
+        if( _server.acceptedTypes( true ).includes( itemData.type ) ){
             var img = this.image({
+                //'class': '',
                 'alt':itemData.name,
                 'title':itemData.name,
-                'src':this.url({'resource_id':itemData.ID},true)
+                'src':_server.resourceURL(itemData.public_id)
             });
-            
+            elements.unshift( img );
         }
-        
-        var caption = this.element('span',false,itemData.name);
-        var link = this.element('a',{'className':'action open icon-link'});
-        var remove = this.element('a',{
-            'className':'action remove icon-remove',
-            'href':this.url({'task':'remove','id':itemData.ID})});
 
-        var content = this.element('div',{'className':'content'});
-        content.appendChild(img);
-        content.appendChild(caption);
-        content.appendChild(link);
-        content.appendChild(remove);
-
-        var item = this.element('li',{'className':'item'});
-        //item.href = itemData.url;
-        item.appendChild(content);
-        
-        return item;
+        //console.log(_server.urlRoot());
+        return this.element('li',{'class':'item'},
+            this.element('div',{'class':'content'},
+                elements) );
     };
     /**
      * @param {Function} caller
@@ -359,24 +463,27 @@ function CodersView( ){
                 'class':'hidden',
                 'id': collection + '-files',
                 'type':'file',
-                'name':'upload',
+                'name':'upload[]',
                 'multiple':true,
                 //'accept':this.acceptedTypes().join(', '),
                 //'id': _repo.inputs.dropzone + '_input'
             });
         var inputButton = this.element('button',{
-                'class':'button button-large dashicons-upload hidden',
+                'class':'button button-large',
                 'id': ( collection + '-upload' ),
                 'type':'submit',
                 'name':'action',
-                'value':'upload'
+                'value':'main.upload'
             }, 'Upload' );
+            
+        var url = 'http://localhost/WORDPRESS/artistpad/wp-admin/admin.php?page=coders-main&_action=admin.main.upload&collection=' + collection;
          
         var formData = this.element('form',{
             //FORM DECLARATION
             'name': 'collection',
             'method':'POST',
-            'action': _server.url(),
+            //'action': _server.url(),
+            'action': url,
             'enctype':'multipart/form-data'
         },[
             //FORM ELEMENTS
@@ -384,13 +491,12 @@ function CodersView( ){
             inputFiles,
             inputButton
         ]);
-        
-        var files = [];
-        
+        //console.log( formData.element( 'button' ) );
+        //var files = [];
         formData.addEventListener( 'change', e => {
-            e.preventDefault();
-            progressBar.setLabel('Uploading...');
-            console.log(e);
+            //e.preventDefault();
+            //progressBar.setLabel('Uploading...');
+            //console.log(e);
             //_server.upload( files , function( response ){
             //    console.log( response );
             //});
@@ -407,22 +513,23 @@ function CodersView( ){
             progressBar
 
         ]);
-
-           
+        
         dropZone.addEventListener( 'click', e => {
                 //e.preventDefault();
                 e.stopPropagation();
                 return false;
             });
-        
+
         //capture upload events
         inputFiles.addEventListener( 'change', function(e){
+                return true;
                 dropZone.classList.add('uploading');
                 //pBarContainer.classList.add('current');
                 console.log('Selecting files...');
                 var fileList = this.files;
                 if ( typeof fileList !== 'undefined' && fileList.length ) {
                     progressBar.setLabel('Uploading ...');
+                    var collection = _self.selectedTab();
                     _server.upload( fileList , function( response ){
                         //get all registered file metadata to append
                         //them into the collection
@@ -435,7 +542,7 @@ function CodersView( ){
                 }
                 return false;
             });
-        
+
         ['dragenter','dragleave','dragover','drop'].forEach( function( event ){
             dropZone.addEventListener(event, function(e){
                 e.preventDefault();
@@ -454,6 +561,7 @@ function CodersView( ){
                         var files = e.dataTransfer.files;
                         if (files.length) {
                             progressBar.setLabel('Uploading ...');
+                            var collection = _self.selectedTab();
                             _server.upload( files , function( response ){
                                 //get all registered file metadata to append
                                 //them into the collection
@@ -557,10 +665,23 @@ function CodersModel(){
         return false;
     };
     /**
+     * @param {Boolean} admin
      * @returns {String}
      */
-    this.urlRoot = function(  ){
-        return window.location.pathname;
+    this.urlRoot = function( admin ){
+        
+        var url = window.location.pathname;
+        
+        return url.substr( 0 , url.indexOf( 'wp-admin/' ) );
+        
+        return url;
+    };
+    /**
+     * @param {String} resource_id
+     * @returns {String}
+     */
+    this.resourceURL = function( resource_id ){
+        return this.urlRoot() + '?resource=' + resource_id;
     };
     /**
      * @returns {String}
@@ -570,7 +691,7 @@ function CodersModel(){
         if( _client.debug ){
             //console.log( ajaxurl );
         }
-       
+
         /*
          * defined in the admin header since version 2.8
          * /wp-admin/admin-ajax.php
@@ -660,9 +781,20 @@ function CodersModel(){
         return this;
     };
     /**
+     * @param {Boolean} mediaonly 
      * @returns {Array}
      */
-    this.acceptedTypes = function(){
+    this.acceptedTypes = function( mediaonly ){
+        
+        if( typeof mediaonly === 'boolean' && mediaonly ){
+            return [
+                'image/png',
+                'image/gif',
+                'image/jpeg',
+                'image/bmp',
+            ];
+        }
+        
         return [
             'image/png',
             'image/gif',
@@ -802,10 +934,20 @@ function CodersModel(){
         
         return [];
     };
-    
-    this.resources = function( collection ){
-        
-        return [];
+    /**
+     * @param {String} collection
+     * @param {Function} handler
+     * @returns {CodersModel}
+     */
+    this.listResources = function( collection , handler ){
+        //console.log( typeof handler );
+        if( typeof handler === 'function' ){
+            return this.ajax( 'collection' , {'collection':collection } , function( response ){
+                //console.log( response );
+                handler( collection , response.data );
+
+            } );
+        }
     };
     /**
      * @param {Function} callback

@@ -4,14 +4,19 @@
  */
 final class Resource{
     
-    const DEFAULT_CHUNK_SIZE = 1024 * 1024;
+    //1024 * 1024
+    const DEFAULT_CHUNK_SIZE = 1048576;
     
     private $_meta = array(
         'ID'=>0,
         'public_id'=>'',
+        'parent_id' => 0,
         'name'=>'',
         'type'=>'',
-        'storage'=>'default',
+        'collection'=>'default',
+        'title' => '',
+        'tier_id' => 0,
+        'content' => '',
         'date_created'=>NULL,
         'date_updated'=>NULL,
     );
@@ -72,7 +77,7 @@ final class Resource{
             }
         }
         
-        $query = sprintf("SELECT * FROM `%scoders_repository`",$table_prefix);
+        $query = sprintf("SELECT * FROM `%scoders_post`",$table_prefix);
         
         if( count($where)){
             $query .= " WHERE " . implode(' AND ', $where);
@@ -112,8 +117,8 @@ final class Resource{
     /**
      * @return string
      */
-    private final function path(){
-        return sprintf('%s/%s/%s', \CodersRepo::base(),$this->storage,$this->public_id);
+    public final function path(){
+        return sprintf('%s/%s/%s', \CodersRepo::base(),$this->collection,$this->public_id);
     }
     /**
      * 
@@ -145,7 +150,7 @@ final class Resource{
     public final function headers( $attach = FALSE ){
         
         $header = array(
-            sprintf('Content-Type: ' , $this->type),
+            sprintf('Content-Type: %s' , $this->type ),
             sprintf( 'Content-Disposition: %s; filename="%s"',
                     //mark as attachment if cannot be embedded or not required as download
                     $attach || !$this->embeddable() ? 'attachment' : 'inline',
@@ -178,7 +183,6 @@ final class Resource{
         
         while( !feof($handle)){
             $buffer = fread($handle, $chunk_size );
-            print $buffer;
             ob_flush();
             flush();
             $cnt += strlen($buffer);
@@ -226,7 +230,9 @@ final class Resource{
         
         global $wpdb,$table_prefix;
         
-        $inserted = $wpdb->insert(sprintf('%scoders_repository',$table_prefix),$R->_meta);
+        $inserted = $wpdb->insert(sprintf('%scoders_post',$table_prefix),$R->_meta);
+        
+        //$wpdb->show_errors();
         
         return $inserted !== FALSE && $inserted > 0;
     }
@@ -262,7 +268,7 @@ final class Resource{
         
         global $wpdb,$table_prefix;
         
-        $deleted = $wpdb->delete(sprintf('%scoders_repository',$table_prefix), array( 'ID' => $id ) );
+        $deleted = $wpdb->delete(sprintf('%scoders_post',$table_prefix), array( 'ID' => $id ) );
 
         return $deleted !== FALSE && $deleted > 0;
     }
@@ -281,7 +287,7 @@ final class Resource{
      */
     public static final function collection( $collection ){
         
-        return self::query( array( 'storage' => $collection ) );
+        return self::query( array( 'collection' => $collection ) );
     }
     /**
      * @return array
@@ -317,24 +323,33 @@ final class Resource{
                 case !array_key_exists('type', $meta):
                     throw new \Exception('EMPTY_FILETYPE_ERROR');
                     //break;
-                case !array_key_exists('storage', $meta):
-                    $meta['storage'] = 'default';
+                case !array_key_exists('collection', $meta):
+                    $meta['collection'] = 'default';
                     break;
             }
             
-            $meta['public_id'] = self::GenerateID( $meta['storage'] );
-            
-            $R = new Resource( $meta , $buffer );
+            $meta['public_id'] = self::GenerateID( $meta['collection'] );
+                        
+            $R = new Resource( $meta );
             
             if(strlen($buffer) && !$R->exists( ) ){
                 
-                if( !self::createCollection($meta['storage']) || !$R->write($buffer) ){
-                   
-                    return FALSE;
-                }
             }
-            
-            return self::register($R) ? $R : FALSE;
+            if( !self::createCollection($meta['collection'])){
+                throw new \Exception('Cannot create a new collection. Check file permissions.' );
+            }
+            if( $R->exists()){
+                throw new \Exception(sprintf('File ID:%s already exists.',$meta['public_id']));
+            }
+            if( !$R->write($buffer)){
+                throw new \Exception(sprintf('Cannot write file %s. Check file permissions.',$meta['name']));
+            }
+            if( self::register($R)){
+                return $R;
+            }
+            else{
+                throw new \Exception('Cannot register new resource in database');
+            }
         }
         catch (\Exception $ex) {
             print( $ex->getMessage() );
@@ -405,7 +420,7 @@ final class Resource{
                 unlink($upload['tmp_name']);
 
                 if( $buffer !== FALSE ){
-                    $upload['storage'] = $collection;
+                    $upload['collection'] = $collection;
                     $resource = self::create($upload , $buffer );
                     if( $resource !== FALSE ){
                         $created[ $resource->ID ] = $resource;

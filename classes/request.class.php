@@ -276,7 +276,15 @@ final class Request{
         
         $input = self::read();
         
-        $input[ self::ACTION ] = $route;
+        
+        if( isset( $input[self::ACTION ] ) ){
+            $input[ self::ACTION ] = self::override($input[self::ACTION], $route);
+        }
+        else{
+            $input[ self::ACTION ] = $route;
+        }
+
+        //var_dump($input);
         
         return self::create($input);
     }
@@ -304,6 +312,25 @@ final class Request{
         return self::create( self::read( ) );
     }
     /**
+     * @param array $base
+     * @param arary $override
+     * @return array
+     */
+    private static final function override( $base , $override ){
+        $A = explode('.', $base);
+        $B = explode('.', $override);
+        
+        if( count($B ) < count($A)){
+            $C = $B;
+            for( $var = count($B) ; $var < count($A) ; $var++){
+                $C[] = $A[$var];
+            }
+            return implode('.', $C);
+        }
+        
+        return $override;
+    }
+    /**
      * @return array
      */
     public static final function read( $input = INPUT_REQUEST ){
@@ -325,6 +352,24 @@ final class Request{
         }
         
         return array();
+    }
+    /**
+     * @param string $route
+     * @return \CODERS\Repository\Request
+     */
+    public final function redirect( $route = self::_DEFAULT , array $input = array( ) ){
+        $action = explode('.', $route);
+        $this->_module = $action[0];
+        if( count( $action ) > 1 ){
+            $this->_controller = $action[1];
+        }
+        if( count( $action ) > 2 ){
+            $this->_action = $action[2];
+        }
+        
+        $this->_input = $input;
+        
+        return $this;
     }
 }
 

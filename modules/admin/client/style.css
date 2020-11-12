@@ -25,11 +25,6 @@
 .coders-repository .container select{
     min-width: 168px;
 }
-.coders-repository ul.collection{
-    width: 100%;
-    border-top: 2px rgba(0,0,0,0.1);
-}
-
 .coders-repository ul.inline > li{ display: inline-block; vertical-align: top; margin: 0 10px 0 0; }
 
 .coders-repository ul.collection-tab{
@@ -68,11 +63,11 @@
     pointer-events: initial;
     opacity: 1;
 }
-.coders-repository .repository-box ul.collection{
+.coders-repository ul.collection{
     width: 100%;
     min-height: 100px;
     display: block;
-    border: 1px solid rgba(0,0,0,0.15);
+    /*border: 1px solid rgba(0,0,0,0.15);*/
 }
 .coders-repository ul.collection:after{
     content: '';
@@ -82,7 +77,7 @@
 }
 .coders-repository ul.collection > li.item{
     width: 22%;
-    margin-right: 4%;
+    margin: 0 4% 4% 0;
     float:left;
 }
 .coders-repository ul.collection > li.item:nth-child(4n){
@@ -98,6 +93,17 @@
     background-color: rgba(255,255,255,0.15);
     border-radius: 2px;
     box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.coders-repository ul.collection > li.item > .content > img{
+    width: auto;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+}
+.coders-repository ul.collection > li.item > .content > img.portrait{
+    width: 100%;
+    height: auto;
 }
 
 .coders-repository .separator{

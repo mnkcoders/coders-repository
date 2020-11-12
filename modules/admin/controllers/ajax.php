@@ -37,7 +37,7 @@ final class AjaxController extends \CODERS\Repository\Response{
         
         $collection = \CodersRepo::collection($request->get('collection','default'));
         
-        return $this->ajax($collection);
+        return $this->ajax( $collection );
     }
     /**
      * @param \CODERS\Repository\Request $request

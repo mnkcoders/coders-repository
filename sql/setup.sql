@@ -58,6 +58,21 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_project` (
  `date_updated` datetime NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `{{TABLE_PREFIX}}coders_post` (
+ `ID` int(11) NOT NULL AUTO_INCREMENT,
+ `public_id` varchar(32) NOT NULL,
+ `parent_id` int(11) NOT NULL DEFAULT '0',
+ `name` varchar(32) NOT NULL,
+ `type` varchar(12) NOT NULL,
+ `collection` varchar(24) NOT NULL,
+ `title` varchar(64) NOT NULL,
+ `content` longtext NOT NULL,
+ `tier_id` int(11) NOT NULL,
+ `date_created` datetime NOT NULL,
+ `date_updated` datetime NOT NULL,
+ PRIMARY KEY (`ID`)
+) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8
+
 /*TIERS TABLE*/
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_tier` (
  `ID` varchar(32) NOT NULL COMMENT 'project_id + tier_id',

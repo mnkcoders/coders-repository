@@ -125,6 +125,7 @@ class CodersRepo{
         $resources = \CODERS\Repository\Resource::collection($collection);
         
         return $resources;
+        //return array( $collection => $resources );
     }
     /**
      * @return array
@@ -207,14 +208,14 @@ class CodersRepo{
             }
             
             $file = self::import( $file_id );
-
             if( $file !== FALSE ){
+                //var_dump($file->path());
                 foreach( $file->headers( $attach ) as $header ){
                     header( $header ); 
                 }
-                //print $file->read();
-                //output strream
-                $file->stream( /*default chunk size*/ );
+                print $file->read();
+                //output strream (not working with WP)
+                //$file->stream( /*default chunk size*/ );
             }
             else {
                 throw new Exception(sprintf('INVALID RID#%s',$file_id));
@@ -322,7 +323,8 @@ class CodersRepo{
                                 'administrator',
                                 $root . '-' . $page ,
                                 function() use( $page ) {
-                                    CodersRepo::instance()->run('admin.' . $page);
+                                    //CodersRepo::instance()->run('admin.' . $page);
+                                    \CODERS\Repository\Response::fromRoute('admin.' . $page );
                         });
                     }
                     else{
@@ -331,7 +333,8 @@ class CodersRepo{
                                 $title, $title,
                                 'administrator', $root,
                                 function() use( $page ) {
-                                    CodersRepo::instance()->run('admin.' . $page);
+                                    \CODERS\Repository\Response::fromRoute('admin.' . $page );
+                                    //CodersRepo::instance()->run('admin.' . $page);
                         }, 'dashicons-art', 51);
                     }
                 }
@@ -382,9 +385,11 @@ class CodersRepo{
                 switch( TRUE ){
                     case array_key_exists(self::RESOURCE, $query):
                         $wp_query->set('is_404', FALSE);
+                        $resource = filter_input(INPUT_GET, self::RESOURCE );
+                        $attachment = filter_input(INPUT_GET, 'attachment');
                         CodersRepo::download(
-                                filter_input(INPUT_GET, self::RESOURCE ),
-                                filter_input(INPUT_GET, 'attachment') );
+                                $resource !== NULL ? $resource : '#INVALID',
+                                $attachment !== NULL ? $attachment : FALSE );
                         //hooked repository app, exit WP framework
                         exit;
                     case array_key_exists(self::ENDPOINT, $query):
