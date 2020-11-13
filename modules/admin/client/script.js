@@ -250,15 +250,9 @@ function CodersView( ){
      */
     this.addCollection = function( collection ){
         
-        //console.log( typeof this.appendUploader );
-        
-        var uploader = this.appendUploader( collection );
-        
-        var path = this.element('ul',{'class':'path inline'} , '<li>#root path</li>');
-        
-        var container = this.element('ul',{'class': 'collection ' + collection + ' inline'});
-        
-        return this.addPanel( collection , [ path, uploader , container ] );
+        return this.addPanel( collection , [
+            this.appendUploader( collection ) ,
+            this.element('ul',{'class': 'collection ' + collection + ' inline'}) ] );
     };
     /**
      * @param {String} collection
@@ -347,11 +341,22 @@ function CodersView( ){
      */
     this.addItem = function( itemData ){
 
+        var titleClass = ['action','center','cover'];
+        if( _server.isDocument( itemData.type )){
+            titleClass.push('dashicons dashicons-text');
+        }
+
         var elements = [
-            this.element('span',false,itemData.name),
-            this.element('a',{'class':'action open dashicons-admin-links'}),
+            this.element('span',{'class': titleClass.join(' ') } , itemData.name ),
             this.element('a',{
-                'class':'action remove dashicons-trash',
+                'class':'action open dashicons dashicons-admin-links top-right rounded',
+                'target':'_blank',
+                'title':'Display',
+                'href': _server.resourceURL(itemData.public_id)}),
+            this.element('a',{
+                'class':'action remove dashicons dashicons-trash bottom-left rounded',
+                'target':'_self',
+                'title':'Remove',
                 'href':_server.url({'task':'remove','id':itemData.ID})})
         ];
 
@@ -450,9 +455,7 @@ function CodersView( ){
      * @returns {Element}
      */
     this.appendUploader = function( collection ){
-              
-        var _view = this;
-        
+
         //handle here the progressBar to attach a caller when required
         var progressBar = this.progressBar( 'Upload' , 'hidden content' );
         
@@ -587,14 +590,16 @@ function CodersView( ){
         var container = this.getContainer();
         
         if( null !== container ){
+
             _elements.tabs = this.element('ul',{
                 'class':'collection-tab inline container'
             });
             _elements.collectionBox = this.element('div',{
-                'class': 'repository-box'
+                'class': 'repository-box grid-4'
             } );
 
             container.appendChild( _elements.tabs );
+            container.appendChild( this.element('div',{'class':'toolbox'},'#toolbox'));
             container.appendChild( _elements.collectionBox );
             
             var txtCollection = this.element('input',{
@@ -805,6 +810,22 @@ function CodersModel(){
             'text/json',
             'application/json'
         ];
+    };
+    /**
+     * @param {type} type
+     * @returns {Boolean}
+     */
+    this.isImage = function( type ){
+        
+        return typeof type === 'string' && type.indexOf('image/') === 0;
+    };
+    /**
+     * @param {type} type
+     * @returns {Boolean}
+     */
+    this.isDocument = function( type ){
+        
+        return typeof type === 'string' && type.indexOf('text/') === 0;
     };
     /**
      * @param {Array} files

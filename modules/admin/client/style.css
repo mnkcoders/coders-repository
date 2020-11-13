@@ -38,6 +38,7 @@
     display: block;
     width: 100%;
     height: auto;
+    min-height: 100%;
 }
 .coders-repository .tab > .uploader{
     border: 1px dashed rgba(0,0,0,0.25);
@@ -75,12 +76,25 @@
     height: 0;
     clear: both;
 }
-.coders-repository ul.collection > li.item{
+
+.coders-repository .repository-box.grid-4 ul.collection > li.item{
     width: 22%;
     margin: 0 4% 4% 0;
     float:left;
+    font-size: 15px;
+    line-height: 15px;
 }
-.coders-repository ul.collection > li.item:nth-child(4n){
+.coders-repository .repository-box.grid-4 ul.collection > li.item:nth-child(4n){
+    margin-right: 0;
+}
+.coders-repository .repository-box.grid-6 ul.collection > li.item{
+    width: 15%;
+    margin: 0 2% 2% 0;
+    float:left;
+    font-size: 10px;
+    line-height: 10px;
+}
+.coders-repository .repository-box.grid-6 ul.collection > li.item:nth-child(6n){
     margin-right: 0;
 }
 
@@ -100,11 +114,52 @@
     height: 100%;
     position: absolute;
     top: 0; left: 0;
+    transition: ease-in 850ms;
 }
 .coders-repository ul.collection > li.item > .content > img.portrait{
     width: 100%;
     height: auto;
 }
+.coders-repository ul.collection > li.item > .content:hover > img{
+    transform: scale(1.1);
+}
+.coders-repository ul.collection > li.item > .content .action{
+    position: absolute;
+
+    color: rgba(0,0,0,0.15);
+    background-color: transparent;
+    transition: ease-in 250ms;
+    cursor: pointer;
+}
+.coders-repository ul.collection > li.item > .content .action:hover{
+    background-color: rgba(255,255,255,0.85);
+    color: rgba(24,24,24,0.85);
+}
+.coders-repository ul.collection > li.item > .content .action.rounded{
+    border-radius: 50%;
+    padding: 4px;
+    margin: 2px;
+}
+.coders-repository ul.collection > li.item > .content .action.center{
+    text-align: center;
+}
+.coders-repository ul.collection > li.item > .content .action.cover{
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    color: transparent;
+    transition: ease-in 250ms;
+    padding: 50% 10px 0;
+    margin: -8px 0 0 0;
+    text-align: center;
+    font-weight: 500;
+    word-wrap: break-word;
+}
+.coders-repository ul.collection > li.item > .content:hover .action{
+    color: rgba(0,0,0,1);
+    text-shadow: 0 0 8px rgba(0,0,0,0.1);
+}
+.coders-repository ul.collection > li.item > .content .action.top-right{ top: 0; right: 0; }
+.coders-repository ul.collection > li.item > .content .action.bottom-left{ bottom: 0; left: 0; }
 
 .coders-repository .separator{
     border-bottom: 1px solid rgba(0,0,0,0.15);

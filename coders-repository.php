@@ -449,6 +449,60 @@ class CodersRepo{
         });
     }
     /**
+     * Register Resource Post Type
+     */
+    private static final function register(){
+        add_action( 'init' , function(){
+            
+            $labels = array(
+                'name' => _x('Repository', 'Repo', 'textdomain'),
+                'singular_name' => _x('Resource', 'Post type singular name', 'textdomain'),
+                'menu_name' => _x('Repository', 'Admin Menu text', 'textdomain'),
+                'name_admin_bar' => _x('Resource', 'Add New on Toolbar', 'textdomain'),
+                'add_new' => __('Create', 'textdomain'),
+                'add_new_item' => __('Add New Resource', 'textdomain'),
+                'new_item' => __('New Resource', 'textdomain'),
+                'edit_item' => __('Edit Resource', 'textdomain'),
+                'view_item' => __('View Resource', 'textdomain'),
+                'all_items' => __('Repository', 'textdomain'),
+                'search_items' => __('Search Resource', 'textdomain'),
+                'parent_item_colon' => __('Parent Resource:', 'textdomain'),
+                'not_found' => __('No resources found.', 'textdomain'),
+                'not_found_in_trash' => __('No resources found in Trash.', 'textdomain'),
+                'featured_image' => _x('Resource Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'textdomain'),
+                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'textdomain'),
+                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'textdomain'),
+                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'textdomain'),
+                'archives' => _x('Resource archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'textdomain'),
+                'insert_into_item' => _x('Insert into Resource', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'textdomain'),
+                'uploaded_to_this_item' => _x('Uploaded to this Resource', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'textdomain'),
+                'filter_items_list' => _x('Filter Resources', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'textdomain'),
+                'items_list_navigation' => _x('Repository Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'textdomain'),
+                'items_list' => _x('Resource List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'textdomain'),
+            );
+            
+            $supports = array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' );
+            
+            $resource = array(
+                   'labels'             => $labels,
+                   'public'             => FALSE,
+                   'publicly_queryable' => FALSE,
+                   'show_ui'            => FALSE,
+                   'show_in_menu'       => FALSE,
+                   'query_var'          => FALSE,
+                   'rewrite'            => array( 'slug' => 'resource' ),
+                   'capability_type'    => 'post',
+                   'has_archive'        => FALSE,
+                   'hierarchical'       => TRUE,
+                   'menu_position'      => null,
+                   'supports'           => $supports,
+            );
+            
+            register_post_type( 'resource', $resource );
+            
+        } );
+    }
+    /**
      * Send a message through the admin notifier
      * @param string $message
      * @param string $type (success, info, warning, error)
@@ -476,6 +530,7 @@ class CodersRepo{
             if(self::setup()){
                 self::notice(__('Coders Repository Database registered!','coders_repository'));
             }
+            self::register();
             self::init();
         }
         return self::$_INSTANCE;
