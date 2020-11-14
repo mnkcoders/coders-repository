@@ -251,7 +251,7 @@ function CodersView( ){
     this.addCollection = function( collection ){
         
         return this.addPanel( collection , [
-            this.appendUploader( collection ) ,
+            //this.appendUploader( collection ) ,
             this.element('ul',{'class': 'collection ' + collection + ' inline'}) ] );
     };
     /**
@@ -454,6 +454,79 @@ function CodersView( ){
      * @param {String} collection 
      * @returns {Element}
      */
+    this.uploader = function( collection ){
+
+        var inputFileSize = this.element('input',{'type':'hidden',
+                'name':'MAX_FILE_SIZE',
+                'value':CodersView.FileSize()});
+        var inputFiles = this.element('input',{
+                'class':'hidden',
+                'id': collection + '-files',
+                'type':'file',
+                'name':'upload[]',
+                'multiple':true,
+                //'accept':this.acceptedTypes().join(', '),
+                //'id': _repo.inputs.dropzone + '_input'
+            });
+        var inputButton = this.element('button',{
+                'class':'button button-primary dashicons-before dashicons-upload',
+                'id': ( collection + '-upload' ),
+                'type':'submit',
+                'name':'collection',
+                'value':'default'
+            }, 'Upload' );
+            
+        inputButton.addEventListener( 'click', function(e){
+            //e.preventDefault();
+            this.value = _self.selectedTab();
+            console.log( this.name + ':' + this.value );
+            return true;
+        });
+            
+        //capture upload events
+        inputFiles.addEventListener( 'change', function(e){
+                var fileList = this.files;
+                console.log( fileList );
+                return true;
+            });
+        var url = 'http://localhost/WORDPRESS/artistpad/wp-admin/admin.php?page=coders-main&_action=admin.main.upload';
+         
+        var formData = this.element('form',{
+            //FORM DECLARATION
+            'name': 'collection',
+            'method':'POST',
+            //'action': _server.url(),
+            'action': url,
+            'enctype':'multipart/form-data'
+        },[
+            //FORM ELEMENTS
+            inputFileSize,
+            inputFiles,
+            inputButton
+        ]);
+        
+        var uploader = this.element('div',{'class':'uploader item container' },[
+            formData,
+            this.element('label',{
+                'class':'dashicons-before dashicons-media-default button',
+                'for': ( collection + '-files' )
+            }, 'Select files' ),
+            this.progressBar( 'Upload' , 'hidden content' )
+        ]);
+        
+        uploader.addEventListener( 'click', e => {
+                //e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+
+
+        return uploader;
+    };
+    /**
+     * @param {String} collection 
+     * @returns {Element}
+     */
     this.appendUploader = function( collection ){
 
         //handle here the progressBar to attach a caller when required
@@ -600,6 +673,7 @@ function CodersView( ){
 
             container.appendChild( _elements.tabs );
             container.appendChild( this.element('div',{'class':'toolbox'},'#toolbox'));
+            container.appendChild( this.uploader());
             container.appendChild( _elements.collectionBox );
             
             var txtCollection = this.element('input',{
