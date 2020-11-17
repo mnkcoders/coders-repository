@@ -12,9 +12,8 @@ class AdminModule extends \CodersRepo{
         parent::__construct();
 
         //register styles and scripts using the helper within the view
-        \CODERS\Repository\View::attachScripts('admin',
-                array('style'),
-                array('script'=>array()));
+        \CODERS\Repository\View::attachStyles(array('style.css'),'admin');
+        \CODERS\Repository\View::attachScripts(array('script.js'=>array()),'admin');
         //add_filter( 'admin_body_class', 'coders-repository' );
     }
     

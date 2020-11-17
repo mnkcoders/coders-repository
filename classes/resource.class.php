@@ -162,10 +162,12 @@ final class Resource{
     }
     /**
      * Stream out the file content in a buffered loop
+     * 
+     * @param boolean $attach
      * @param int $chunk_size default to 1MB (1024 * 1024)
      * @return boolean
      */
-    public final function stream( $chunk_size = self::DEFAULT_CHUNK_SIZE ){
+    public final function stream( $attach = FALSE , $chunk_size = self::DEFAULT_CHUNK_SIZE ){
         
         if( !$this->exists()){
             return FALSE;
@@ -181,10 +183,16 @@ final class Resource{
             return FALSE;
         }
         
+        $headers = $this->headers($attach);
+        foreach ( $headers as $header) {
+            header($header);
+        }
+
         while( !feof($handle)){
             $buffer = fread($handle, $chunk_size );
             ob_flush();
             flush();
+            print $buffer;
             $cnt += strlen($buffer);
         }
         

@@ -10,7 +10,8 @@ final class MainView extends \CODERS\Repository\View{
         parent::__construct();
         
         //register public view styles and scripts
-        parent::attachScripts('posts',array('style'),array('script'=>array('jquery')));
+        parent::attachStyles(array('style'),'posts');
+        parent::attachScripts( array( 'script' => array('jquery' ) ),'posts' );
     }
 }
 

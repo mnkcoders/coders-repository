@@ -4,6 +4,7 @@ abstract class Model{
     
     const TYPE_CHECKBOX = 'checkbox';
     const TYPE_TEXT = 'text';
+    const TYPE_EMAIL = 'email';
     const TYPE_TEXTAREA = 'textarea';
     const TYPE_NUMBER = 'number';
     const TYPE_FLOAT = 'float';
@@ -45,6 +46,14 @@ abstract class Model{
                 //RETURN BOOLEAN
                 $is = preg_replace('/_/', '', $name);
                 return method_exists($this, $is) ? $this->$is( ) : FALSE;
+            case preg_match(  '/^type_/' , $name ):
+                //RETURN LIST
+                $type = substr($name, strlen('type_'));
+                return $this->get($type, 'type', self::TYPE_TEXT);
+            case preg_match(  '/^label_/' , $name ):
+                //RETURN LIST
+                $label = substr($name, strlen('label_'));
+                return $this->get($label, 'label', $label );
             case preg_match(  '/^list_/' , $name ):
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
@@ -53,7 +62,7 @@ abstract class Model{
                 //RETURN CUSTOMIZER GETTER
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
                 //OR DEFAULT FALLBACK IF DEFINED IN THE DICTIONARY
-                return method_exists($this, $get) ? $this->$get() : $this->get($name,'value','');
+                return method_exists($this, $get) ? $this->$get() : $this->value($name);
         }
     }
     /**
@@ -63,18 +72,22 @@ abstract class Model{
      */
     public final function __call($name, $arguments) {
         switch( TRUE ){
+            case preg_match(  '/^label_/' , $name ):
+                //RETURN LIST
+                $input = substr($name, strlen('label_'));
+                return $this->get($input, 'label', $input);
             case preg_match(  '/^is_/' , $name ):
                 //RETURN BOOLEAN
-                $is = sprintf('is%s', preg_replace('/_/', '', $name));
+                $is = preg_replace('/_/', '', $name);
                 return method_exists($this, $is) ? $this->$is( $arguments ) : FALSE;
             case preg_match(  '/^list_/' , $name ):
                 //RETURN LIST
-                $list = sprintf('list%s', preg_replace('/_/', '', $name));
+                $list = preg_replace('/_/', '', $name);
                 return method_exists($this, $list) ? $this->$list( $arguments ) : array();
             default:
                 //RETURN STRING
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
-                return method_exists($this, $get) ? $this->$get( $arguments ) : '';
+                return method_exists($this, $get) ? $this->$get( $arguments ) : $this->value($name);
         }
     }
     
@@ -98,13 +111,16 @@ abstract class Model{
         
         if( !array_key_exists($element, $this->_dictionary)){
             $this->_dictionary[$element] = array(
-                'type' => $type
+                'type' => $type,
             );
             foreach( $attributes as $att => $val ){
                 switch( $att ){
                     case 'value':
                         //force value parsing
-                        $this->set($element,$val);
+                        $this->setValue($element,$val);
+                        break;
+                    default:
+                        $this->set($element, $att, $val);
                         break;
                 }
             }
@@ -131,7 +147,7 @@ abstract class Model{
     public function import( \CODERS\Repository\Model $model ){
         
         foreach( $model->elements() as $element ){
-            $this->set($element,$model->get($element, 'value'));
+            $this->set($element,$model->value($element));
         }
         
         return $this;
@@ -140,8 +156,25 @@ abstract class Model{
      * @param string $element
      * @return boolean
      */
-    protected function exists( $element ){
-        return array_key_exists($element, $this->_dictionary);
+    public function exists( $element ){
+        //return array_key_exists($element, $this->_dictionary);
+        return $this->has($element);
+    }
+    /**
+     * @param string $element
+     * @param string $attribute
+     * @return boolean
+     */
+    public final function has( $element , $attribute = '' ){
+        
+        if( array_key_exists($element, $this->_dictionary) ){
+            if(strlen($attribute) ){
+                return array_key_exists( $attribute, $this->_dictionary[$element]);
+            }
+            return TRUE;
+        }
+        
+        return FALSE;
     }
     /**
      * @param string $element
@@ -150,12 +183,29 @@ abstract class Model{
      * @return mixed
      */
     protected function get( $element , $attribute , $default = FALSE ){
-        if( $this->exists($element)){
-            if( array_key_exists($attribute, $this->_dictionary[$element][$attribute] ) ){
-                return $this->_dictionary[$element][$attribute];
-            }
+        if( $this->has($element, $attribute)){
+            return $this->_dictionary[$element][$attribute];
         }
         return $default;
+    }
+    /**
+     * @param string $element
+     * @param mixed $default
+     */
+    public function value( $element , $default = FALSE ){
+        return $this->get($element, 'value', $default );
+    }
+    /**
+     * @param string $element
+     * @param string $attribute
+     * @param mixed $value
+     * @return \CODERS\Repository\Model
+     */
+    protected final function set( $element , $attribute , $value ){
+        if(array_key_exists($element, $this->_dictionary)){
+            $this->_dictionary[$element][ $attribute ] = $value;
+        }
+        return $this;
     }
     /**
      * 
@@ -163,7 +213,7 @@ abstract class Model{
      * @param type $value
      * @return \CODERS\Repository\Model
      */
-    protected function set( $element , $value = FALSE ){
+    protected function setValue( $element , $value = FALSE ){
         $customSetter = sprintf('set%s',$element);
         if(method_exists($this, $customSetter)){
             //define a custom setter for a more extended behavior
@@ -183,21 +233,16 @@ abstract class Model{
                     if( !is_string($value)){ $value = ''; }
                     break;
             }
-            return $this->attribute($element, 'value', $value);
+            return $this->set($element, 'value', $value);
         }
         return $this;
     }
     /**
      * @param string $element
-     * @param string $attribute
-     * @param mixed $value
-     * @return \CODERS\Repository\Model
+     * @return string|boolean
      */
-    protected final function attribute( $element , $attribute , $value ){
-        if(array_key_exists($element, $this->_dictionary)){
-            $this->_dictionary[$element][ $attribute ] = $value;
-        }
-        return $this;
+    public final function type( $element ){
+        return $this->has($element) ? $this->_dictionary[$element]['type'] : FALSE;
     }
     /**
      * @return array
@@ -213,7 +258,7 @@ abstract class Model{
     public final function values(){
         $output = array();
         foreach( $this->elements() as $element ){
-            $output[$element] = $this->get($element, 'value');
+            $output[$element] = $this->value($element , '' );
         }
         return $output;
     }

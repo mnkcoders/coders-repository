@@ -16,7 +16,7 @@
 //final class CodersRepo{
 class CodersRepo{
     
-    const ENDPOINT = 'repository';
+    const ENDPOINT = 'coderepo';
     const RESOURCE = 'resource';
     /**
      * @var \CodersRepo
@@ -131,17 +131,11 @@ class CodersRepo{
      * @return array
      */
     public static final function collections(){
-        return array();
-    }
-    /**
-     * @return boolean
-     */
-    /*public static final function route(){
         
-        $request = \CODERS\Repository\Request::import();
-
-        return \CODERS\Repository\Response::create($request);
-    }*/
+        $collections = \CODERS\Repository\Resource::storage();
+        
+        return $collections;
+    }
     /**
      * 
      * @global \wpdb $wpdb
@@ -210,12 +204,12 @@ class CodersRepo{
             $file = self::import( $file_id );
             if( $file !== FALSE ){
                 //var_dump($file->path());
-                foreach( $file->headers( $attach ) as $header ){
-                    header( $header ); 
-                }
-                print $file->read();
+                //foreach( $file->headers( $attach ) as $header ){
+                //    header( $header ); 
+                //}
+                //print $file->read();
                 //output strream (not working with WP)
-                //$file->stream( /*default chunk size*/ );
+                $file->stream( /*default chunk size*/ );
             }
             else {
                 throw new Exception(sprintf('INVALID RID#%s',$file_id));
@@ -241,7 +235,7 @@ class CodersRepo{
      * @param String $file_id
      * @return String
      */
-    public final function attach( $file_id ){
+    public static final function attach( $file_id ){
         
         $file = self::import( $file_id );
         

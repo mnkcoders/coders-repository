@@ -369,11 +369,53 @@ function CodersView( ){
             });
             elements.unshift( img );
         }
-
+        
         //console.log(_server.urlRoot());
-        return this.element('li',{'class':'item'},
-            this.element('div',{'class':'content'},
-                elements) );
+        var item = this.element('li',{
+            'class':'item',
+            'draggable':'true',
+            'data-id':itemData.ID},
+            //'data-id':itemData.public_id},
+            this.element('div',{'class':'content'},elements) );
+
+        ['drag','dragenter','dragleave','dragover','drop'].forEach( function( event ){
+            item.addEventListener( event , function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                var key = 'text/plain';
+                switch( event ){
+                    case 'dragstart':
+                    case 'dragenter':
+                        //drag(event)
+                        var ID = this.getAttribute('data-id');
+                        e.dataTransfer.setData( key, ID );
+                        _elements.drag = ID;
+                        console.log( 'Moving item [ ' + ID + ' ]' );
+                        return true;
+                    case 'dragleave':
+                        var ID = this.getAttribute('data-id');
+                        console.log( 'Leaving [ ' + ID  + ' ] ...');
+                        return true;
+                    case 'dragover':
+                        //allowDrop(event)
+                        //console.log( e.dataTransfer );
+                        var ID = this.getAttribute('data-id');
+                        var child_id = e.dataTransfer.getData(key);
+                        console.log( '[ ' + child_id + ' ] is over [ ' + ID + ' ] ...' );
+                        return true;
+                    case 'drop':
+                        //drop(event)
+                        //var child_id = e.dataTransfer.getData(key);
+                        var child_id = _elements.drag || 0;
+                        var ID = this.getAttribute('data-id');
+                        console.log( 'Dropping [ ' + child_id  + ' ] over [ ' + ID + ' ] ...');
+                        return true;
+                }
+            });
+        });
+
+
+        return item;
     };
     /**
      * @param {Function} caller
