@@ -3,14 +3,10 @@
  * 
  */
 final class SubscriptionsController extends \CODERS\Repository\Response{
-    
-    protected final function __construct() {
-        
-        parent::__construct();
-        
-    }
 
     protected function default_action(\CODERS\Repository\Request $request) {
+        
+        $this->importView('admin.subscriptions')->setLayout('subscriptions')->display();
         
         var_dump($request);
         

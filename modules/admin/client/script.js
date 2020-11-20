@@ -22,6 +22,20 @@ function CodersView( ){
         //'uploader':null
     };
     /**
+     * @type Object
+     */
+    var _draggable = {
+        'ID':0,
+        'candrop':false,
+        'moving':false,
+        'reset': function(){
+            this.ID = 0;
+            this.candrop = false;
+            this.moving = false;
+            return this;
+        }
+    };
+    /**
      * @type CodersModel
      */
     var _server = new CodersModel();
@@ -246,29 +260,36 @@ function CodersView( ){
     };
     /**
      * @param {String} collection
+     * @param {String} title
      * @returns {CodersView}
      */
-    this.addCollection = function( collection ){
+    this.addCollection = function( collection , project_title ){
+
+        var cls = ['inline','collection',collection];
         
         return this.addPanel( collection , [
             //this.appendUploader( collection ) ,
-            this.element('ul',{'class': 'collection ' + collection + ' inline'}) ] );
+            this.element('ul', {'class': cls.join(' ') }) ], project_title );
     };
     /**
      * @param {String} collection
      * @param {Element} panel
+     * @param {String} title
      * @returns {CodersView}
      */
-    this.addPanel = function( item , panel ){
+    this.addPanel = function( item , panel , title ){
 
         var _view = this;
 
         var cls = item === 'create-collection' ?
                 'item create button button-primary' :
                 'item button';
-        var title = item === 'create-collection' ?
-                'New Collection' :
-                        item;
+        if( typeof title === 'undefined' ){
+            title = item;
+        }
+        //var title = item === 'create-collection' ?
+        //        'New Collection' :
+        //                item;
 
         var tab = this.element('li',{'class':cls,'data-tab':item},title );
         
@@ -387,28 +408,38 @@ function CodersView( ){
                     case 'dragstart':
                     case 'dragenter':
                         //drag(event)
-                        var ID = this.getAttribute('data-id');
-                        e.dataTransfer.setData( key, ID );
-                        _elements.drag = ID;
-                        console.log( 'Moving item [ ' + ID + ' ]' );
+                        //e.dataTransfer.setData( key, ID );
+                        _draggable.ID = this.getAttribute('data-id');
+                        _draggable.candrop = false;
+                        _draggable.moving = true;
+                        console.log( 'Moving item [ ' + _draggable.ID + ' ]' );
                         return true;
                     case 'dragleave':
-                        var ID = this.getAttribute('data-id');
-                        console.log( 'Leaving [ ' + ID  + ' ] ...');
+                        var target_id = this.getAttribute('data-id');
+                        _draggable.candrop = false;
+                        console.log( 'Leaving [ ' + target_id  + ' ] ...');
                         return true;
                     case 'dragover':
-                        //allowDrop(event)
-                        //console.log( e.dataTransfer );
-                        var ID = this.getAttribute('data-id');
-                        var child_id = e.dataTransfer.getData(key);
-                        console.log( '[ ' + child_id + ' ] is over [ ' + ID + ' ] ...' );
-                        return true;
+                        var target_id = this.getAttribute('data-id');
+                        if( _draggable.ID !== target_id ){
+                            _draggable.candrop = true;
+                            //var child_id = e.dataTransfer.getData(key);
+                            var source_id = _draggable.ID;
+                            console.log( '[ ' + source_id + ' ] is over [ ' + target_id + ' ] ...' );
+                            return true;
+                        }
+                        else{
+                            _draggable.candrop = false;
+                        }
+                        return false;
                     case 'drop':
-                        //drop(event)
                         //var child_id = e.dataTransfer.getData(key);
-                        var child_id = _elements.drag || 0;
-                        var ID = this.getAttribute('data-id');
-                        console.log( 'Dropping [ ' + child_id  + ' ] over [ ' + ID + ' ] ...');
+                        if( _draggable.candrop ){
+                            var target_id = this.getAttribute('data-id');
+                            var source_id = _draggable.ID;
+                            console.log( 'Dropping [ ' + source_id  + ' ] over [ ' + target_id + ' ] ...');
+                            _draggable.reset();
+                        }
                         return true;
                 }
             });
@@ -739,15 +770,30 @@ function CodersView( ){
 
             this.addPanel('create-collection', this.element('div',
                     {'class': 'content', 'data-tab': 'create-collection'}, [
-                txtCollection, btnCollection
-            ]));
+                    txtCollection, btnCollection
+                    ] ) , 'New Collection' );
             
             var _view = this;
             _server.listCollections( function( collections ){
-                collections.forEach( function( item ){
-                    _view.addCollection( item);
-                });
-                _view.switchTab( );
+                //console.log( collections );
+                switch( true ){
+                    case typeof collections === 'object':
+                        for( var c in collections ){
+                            if( collections.hasOwnProperty( c ) ){
+                                console.log( c + ':' + collections[ c ] );
+                                _view.addCollection( c , collections[ c ] );
+                            }
+                        }
+                        _view.switchTab( );
+                        break;
+                    case Array.isArray( collections ):
+                        collections.forEach( function( item ){
+                            //console.log( collection );
+                            _view.addCollection( item );
+                        });
+                        _view.switchTab( );
+                        break;
+                }
             } );
         }
         else{

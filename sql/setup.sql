@@ -1,6 +1,6 @@
 /*ACCOUNTS TABLE*/
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_account` (
- `ID` int(11) NOT NULL,
+ `ID` int(11) NOT NULL AUTO_INCREMENT,
  `token` varchar(32) NOT NULL,
  `name` varchar(16) NOT NULL,
  `alias` varchar(32) NOT NULL,

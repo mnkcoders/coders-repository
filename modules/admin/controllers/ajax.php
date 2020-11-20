@@ -17,9 +17,10 @@ final class AjaxController extends \CODERS\Repository\Response{
      */
     protected final function list_collections_action( \CODERS\Repository\Request $request ){
         
-        $collections = \CODERS\Repository\Resource::storage();
+        //$collections = \CODERS\Repository\Resource::storage();
+        $repo = $this->importModel('admin.repository');
         
-        return $this->ajax( $collections );
+        return $this->ajax( $repo->list_collections );
     }
     /**
      * @param \CODERS\Repository\Request $request

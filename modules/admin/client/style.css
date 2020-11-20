@@ -359,3 +359,66 @@
     .coders-repository ul.collection.resource > li{ width: 15%; margin: 0 2% 2% 0; }
     .coders-repository ul.collection.resource > li:nth-child(6n){ margin-right: 0; }
 }
+
+
+.coders-repository.projects-view .projects:after{
+    content: '';
+    display: block;
+    height: 0;
+    clear: both;
+}
+.coders-repository.projects-view .projects > li{
+    display: inline-block;
+    width: 32%;
+}
+.coders-repository.projects-view .projects > li > .project{
+    display: block;
+    width: 100%;
+    height: 0;
+    padding-bottom: 40%;
+    position: relative;
+    overflow: hidden;
+}
+.coders-repository.projects-view .projects > li > .project img{
+    position: absolute;
+    left:0; top:0;
+    height: 100%;
+    width: auto;
+    transition: ease-in 1200ms;
+}
+.coders-repository.projects-view .projects > li > .project img.portrait{
+    width: 100%;
+    height: auto;
+}
+.coders-repository.projects-view .projects > li > .project:hover img{
+    transform: scale( 1.1 );
+}
+.coders-repository.projects-view .projects > li > .project .title{
+    color: rgba(255,255,255,1);
+    text-shadow: 0 0 8px rgba(0,0,0,.25);
+    text-align: center;
+    display: block;
+    font-size: 24px;
+    letter-spacing: 1px;
+    text-decoration: none;
+    font-weight: 500;
+    
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    
+    transition: ease-out 450ms;
+    padding: calc(20% - 12px) 0;
+    background-color: rgba(0,0,0,0.1);
+}
+.coders-repository.projects-view .projects > li > .project:hover .title{
+    background-color: rgba(0,12,24,0.55);
+    letter-spacing: 1.5px;
+    text-shadow: 0 0 0 32px rgba(0,0,0,.5);
+}
+
+
+
+
+
+
+

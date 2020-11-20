@@ -8,12 +8,12 @@ final class DashboardView extends \CODERS\Repository\View{
     const MAX_FILE_SIZE = 'coders.repository.max_file_size';
     
     private $_selected = 'default';
-    
-    protected final function __construct() {
+
+    public final function display() {
         
-        parent::__construct();
-        
+        return parent::display()->attachScript('script.js');
     }
+    
     /**
      * @param array $resource
      * @return string
@@ -26,15 +26,17 @@ final class DashboardView extends \CODERS\Repository\View{
             case 'image/jpeg':
             case 'image/jpg':
                 $link = $this->getResourceLink($resource['public_id']);
-                return sprintf('<img class="content media" src="%s" alt="%s" title="%s" />',
-                        $link,
-                        $resource['name'],
-                        $resource['name']);
+                return parent::__HTML( 'img', array(
+                    'class' => 'content media',
+                    'src' => $link,
+                    'alt' => $resource['name'],
+                    'title' => $resource['name']
+                ) );
             case 'text/html':
-                return sprintf('<span class="content html">%s</span>',$resource['name']);
+                return self::__HTML('span', array('class'=>'content html'), $resource['name']);
             case 'text/plain':
             default:
-                return sprintf('<span class="content text">%s</span>',$resource['name']);
+                return self::__HTML('span', array('class'=>'content text'), $resource['name']);
         }
     }
     

@@ -3,17 +3,15 @@
  * 
  */
 final class SettingsController extends \CODERS\Repository\Response{
-    
-    
-    protected final function __construct() {
-        
-        parent::__construct();
-        
-    }
 
     protected function default_action(\CODERS\Repository\Request $request) {
+
+        //$settings = $this->importModel('admin.settings');
+        
+        $this->importView('admin.settings')->display();
         
         var_dump($request);
         
+        return TRUE;
     }
 }

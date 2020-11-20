@@ -1,3 +1,3 @@
 <?php defined ('ABSPATH') or die; ?>
 <h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
-<p>settings view</p>
+<p>Subscriptions view</p>

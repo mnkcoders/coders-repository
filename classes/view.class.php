@@ -36,15 +36,34 @@ abstract class View{
      */
     public final function __get($name) {
         switch( TRUE ){
+            case preg_match(  '/^action_/' , $name ):
+                $action = substr($name, strlen('action_'));
+                return self::__HTML('button', array(
+                    'type' => 'button',
+                    'name' => 'action',
+                    'value' => $action,
+                    'id' => 'id_'.$action,
+                    'class' => 'button button-primary ' . $action,
+                ), $this->__label($action));
             case preg_match(  '/^input_/' , $name ):
-                $input = substr($name, strlen('input_'));
-                return $this->__input($input);
+                $method = preg_replace('/_/', '', $name);
+                return method_exists($this, $method) ?
+                        $this->$method( ) :
+                        $this->__input(substr($name, strlen('input_')));
             case preg_match(  '/^label_/' , $name ):
-                $label = $this->_model->$name;
+                $element = substr($name, strlen('label_'));
+                $label = $this->__label($element);
                 return self::__HTML('label', array(
                         'class' => 'label',
-                        'for' => 'id_' . $input
+                        'for' => 'id_' . $element
                     ), $label);
+            case preg_match(  '/^fieldset_/' , $name ):
+                $element = substr($name, strlen('fieldset_'));
+                $label = sprintf('label_%s',$element);
+                $input = sprintf('input_%s',$element);
+                return self::__HTML('fieldset',
+                        array('class'=>'form-input'),
+                        array($this->$label,$this->$input));
             case preg_match(  '/^display_/' , $name ):
                 $display = preg_replace('/_/', '', $name);
                 return method_exists($this, $display) ?
@@ -77,6 +96,18 @@ abstract class View{
     public final function __call($name, $arguments) {
         $params = is_array( $arguments ) ? $arguments[0] : $arguments;
         switch( TRUE ){
+            case preg_match(  '/^action_/' , $name ):
+                $action = substr($name, strlen('action_'));
+                $label = is_array($arguments) && count( $arguments ) ?
+                        $arguments[0] :
+                        $this->__label($action);
+                return self::__HTML('button', array(
+                    'type' => 'button',
+                    'name' => 'action',
+                    'value' => $action,
+                    'id' => 'id_'.$action,
+                    'class' => 'button button-primary ' . $action,
+                ), $label );
             case preg_match(  '/^display_/' , $name ):
                 $display = preg_replace('/_/', '', $name);
                 return method_exists($this, $display) ?
@@ -102,93 +133,103 @@ abstract class View{
         }
     }
     /**
-     * @param string $input
+     * @param string $element
      * @return string
      */
-    protected function __input( $input ){
+    protected function __input( $element ){
         
-        if( $this->_model->has( $input ) ){
+        if( $this->_model->has( $element ) ){
+
+            $id = 'id_' . $element;
+            $value = $this->_model->getValue($element,FALSE);
             
-            switch( $this->_model->type($input) ){
+            switch( $this->_model->type($element) ){
                 case Model::TYPE_CHECKBOX:
                     $checkbox = array(
                         'type' => 'checkbox',
-                        'name' => $input,
-                        'id' => 'id_' . $input,
+                        'name' => $element,
                         'value' => '1',
+                        'id' => $id,
                         'class' => 'form-input'
                     );
-                    $label = 'label_' . $input;
-                    if( $this->_model->getValue($input,FALSE)){
+                    if( $value ){
                         $checkbox['checked'] = 'ckecked';
                     }
-                    return self::__HTML('label',
+                    return self::__HTML( 'label',
+                            array( 'class' => 'form-input', 'for' => $id ),
                             array(
-                                'class' => 'form-input',
-                                'for'=>'id_'.$input),
-                            array(
-                                self::__HTML('input', $checkbox ),
-                                $this->_model->$label));
+                                self::__HTML('input', $checkbox),
+                                $this->__label( $element )
+                            ));
+                    //$this->__label( $input ) . self::__HTML('input', $checkbox );
                 case Model::TYPE_NUMBER:
                     return self::__HTML('input', array(
                         'type' => 'number',
-                        'name' => $input,
-                        'value' => $this->_model->getValue($input,0),
+                        'name' => $element,
+                        'value' => $this->_model->getValue($element,0),
+                        'id' => $id,
                         'class' => 'form-input'
                     ));
                 case Model::TYPE_CURRENCY:
                     return self::__HTML('input', array(
                         'type' => 'number',
-                        'name' => $input,
-                        'value' => $this->_model->getValue($input,0),
+                        'name' => $element,
+                        'value' => $this->_model->getValue($element,0),
+                        'id' => $id,
                         'class' => 'form-input'
                     ));
                 case Model::TYPE_FLOAT:
                     return self::__HTML('input', array(
                         'type' => 'number',
-                        'name' => $input,
-                        'value' => $this->_model->getValue($input,0),
+                        'name' => $element,
+                        'value' => $this->_model->getValue($element,0),
+                        'id' => $id,
                         'class' => 'form-input'
                     ));
                 case Model::TYPE_DATE:
                     return self::__HTML('input', array(
                         'type' => 'date',
-                        'name' => $input,
-                        'value' => $this->_model->getValue($input,''),
+                        'name' => $element,
+                        'value' => $this->_model->getValue($element,''),
+                        'id' => $id,
                         'class' => 'form-input'
                     ));
                 case Model::TYPE_DATETIME:
                     return self::__HTML('input', array(
                         'type' => 'date',
-                        'name' => $input,
-                        'value' => $this->_model->getValue($input,''),
+                        'name' => $element,
+                        'value' => $this->_model->getValue($element,''),
+                        'id' => $id,
                         'class' => 'form-input'
                     ));
                 case Model::TYPE_TEXTAREA:
                     return self::__HTML('textarea', array(
-                        'name' => $input,
-                        'value' => $this->_model->getValue($input,''),
+                        'name' => $element,
+                        'value' => $this->_model->getValue($element,''),
+                        'id' => $id,
                         'class' => 'form-input'
                     ));
                 case Model::TYPE_EMAIL:
                     return self::__HTML('input', array(
                         'type' => 'email',
-                        'name' => $input,
-                        'value' => $this->_model->getValue($input,''),
+                        'name' => $element,
+                        'value' => $this->_model->getValue($element,''),
+                        'id' => $id,
                         'class' => 'form-input'
                     ));
                 case Model::TYPE_TEXT:
                 default:
                     return self::__HTML('input', array(
                         'type' => 'text',
-                        'name' => $input,
-                        'id' => 'id_' . $input,
+                        'name' => $element,
+                        'value' => $this->_model->getValue($element,''),
+                        'id' => 'id_' . $element,
                         'class' => 'form-input'
                     ) );
             }
         }
         
-        return sprintf('<!-- INVALID INPUT [%s] -->',$input);
+        return sprintf('<!-- INVALID INPUT [%s] -->',$element);
     }
     /**
      * @param string $input
@@ -198,17 +239,14 @@ abstract class View{
         
         $method = sprintf('label%s',$input);
         
-        if(method_exists($this, $method)){
-            return self::__HTML('label', array(
-                'class' => 'label',
-                'for' => 'id_' . $input
-                ), $this->$method() );
+        if(method_exists($this, $method) ){
+            return $this->$method();
         }
-        
-        return self::__HTML('label', array(
-            'class' => 'label',
-            'for' => 'id_' . $input
-            ),$input );
+        elseif($this->hasModel()){
+            $label = 'label_' . $input;
+            return $this->model()->$label;
+        }
+        return $input;
     }
     /**
      * <element />
@@ -324,6 +362,18 @@ abstract class View{
             $class[count($class) - 1 ]  ;
     }
     /**
+     * @return \CODERS\Repository\Model
+     */
+    protected final function model(){
+        return $this->_model;
+    }
+    /**
+     * @return boolean
+     */
+    protected final function hasModel(){
+        return $this->_model !== null;
+    }
+    /**
      * @param \CODERS\Repository\Model $model
      * @return \CODERS\Repository\View
      */
@@ -376,6 +426,19 @@ abstract class View{
                 CODERS__REPOSITORY__DIR,
                 strtolower( $this->module( true ) ),
                 $view );
+    }
+    /**
+     * @param String $url
+     * @return \CODERS\Repository\View
+     */
+    protected function attachScript( $url ){
+        
+        print self::__HTML('script', array(
+            'type' => 'text/javascript',
+            'src' => self::assetUrl($url, $this->module(TRUE)),
+        ));
+        
+        return $this;
     }
     /**
      * @param string $request

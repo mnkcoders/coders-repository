@@ -9,11 +9,13 @@ class AdminModule extends \CodersRepo{
     
     protected final function __construct() {
         
+        parent::component('Account', 'models' );
+        
         parent::__construct();
 
         //register styles and scripts using the helper within the view
         \CODERS\Repository\View::attachStyles(array('style.css'),'admin');
-        \CODERS\Repository\View::attachScripts(array('script.js'=>array()),'admin');
+        //\CODERS\Repository\View::attachScripts(array('script.js'=>array()),'admin');
         //add_filter( 'admin_body_class', 'coders-repository' );
     }
     

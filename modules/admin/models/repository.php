@@ -39,7 +39,23 @@ final class RepositoryModel extends \CODERS\Repository\Model{
      * @return array
      */
     protected final function listCollections(){
-        return \CODERS\Repository\Resource::storage();
+
+        $query = $this->newQuery();
+        
+        $storage = \CODERS\Repository\Resource::storage();
+        $projects = $query->select( 'project' , array('ID','title') , array() ,  'ID' );
+        $output = array();
+        
+        foreach( $storage as $collection ){
+            $output[ $collection ] = array_key_exists($collection, $projects) ?
+                    $storage[ $collection ] = $projects[$collection]['title'] :
+                    $collection;
+        }
+        
+        return $output;
     }
 }
+
+
+
 

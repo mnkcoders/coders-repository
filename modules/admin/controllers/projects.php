@@ -3,16 +3,14 @@
  * 
  */
 final class ProjectsController extends \CODERS\Repository\Response{
-    
-    protected final function __construct() {
-        
-        parent::__construct();
-        
-    }
 
     protected function default_action(\CODERS\Repository\Request $request) {
         
-        var_dump($request);
+        $project = $this->importModel('admin.project');
+        
+        $view = $this->importView('admin.projects');
+        
+        $view->setModel($project)->setLayout('projects')->display();
         
         return TRUE;
     }

@@ -3,13 +3,6 @@
  * 
  */
 final class MainController extends \CODERS\Repository\Response{
-    
-    
-    protected final function __construct() {
-        
-        parent::__construct();
-        
-    }
     /**
      * @param \CODERS\Repository\Request $request
      * @return boolean

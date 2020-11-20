@@ -71,14 +71,31 @@ class CodersRepo{
      */
     protected final function component( $component , $type = 'models' ){
         
-        $path = sprintf('%s/components/%s/%s.php',CODERS__REPOSITORY__DIR,$component,$component);
-        
+        $path = self::path(sprintf('components/%s/%s.php',
+                $type,
+                strtolower( $component) ) );
+
         if(file_exists($path)){
             require $path;
             return TRUE;
         }
         
         return FALSE;
+    }
+    /**
+     * @return array
+     */
+    public static final function listModules(){
+        $output = array();
+        $root = self::path('modules/');
+        var_dump($root);
+        foreach(scandir($root) as $module ){
+            $path = self::path( 'modules/' . $module );
+            if( $module !== '.' && $module !== '..' && is_dir($path) ){
+                $output[] = $module;
+            }
+        }
+        return $output;
     }
     /**
      * @param string $collection
@@ -105,6 +122,16 @@ class CodersRepo{
         return sprintf('%s?%s=%s', get_site_url(),self::ENDPOINT,$rid);
 
         //return sprintf('%s?template=%s&rid=%s', get_site_url(),self::ENDPOINT,$rid);
+    }
+    /**
+     * @param string $path
+     * @return string
+     */
+    public static final function path( $path = '' ){
+        
+        $root = preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR );
+        
+        return strlen($path) ? sprintf('%s/%s',$root,$path) : $root;
     }
     /**
      * @param string $rid
@@ -446,53 +473,93 @@ class CodersRepo{
      * Register Resource Post Type
      */
     private static final function register(){
+        
         add_action( 'init' , function(){
-            
-            $labels = array(
-                'name' => _x('Repository', 'Repo', 'textdomain'),
-                'singular_name' => _x('Resource', 'Post type singular name', 'textdomain'),
-                'menu_name' => _x('Repository', 'Admin Menu text', 'textdomain'),
-                'name_admin_bar' => _x('Resource', 'Add New on Toolbar', 'textdomain'),
-                'add_new' => __('Create', 'textdomain'),
-                'add_new_item' => __('Add New Resource', 'textdomain'),
-                'new_item' => __('New Resource', 'textdomain'),
-                'edit_item' => __('Edit Resource', 'textdomain'),
-                'view_item' => __('View Resource', 'textdomain'),
-                'all_items' => __('Repository', 'textdomain'),
-                'search_items' => __('Search Resource', 'textdomain'),
-                'parent_item_colon' => __('Parent Resource:', 'textdomain'),
-                'not_found' => __('No resources found.', 'textdomain'),
-                'not_found_in_trash' => __('No resources found in Trash.', 'textdomain'),
-                'featured_image' => _x('Resource Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'textdomain'),
-                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'textdomain'),
-                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'textdomain'),
-                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'textdomain'),
-                'archives' => _x('Resource archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'textdomain'),
-                'insert_into_item' => _x('Insert into Resource', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'textdomain'),
-                'uploaded_to_this_item' => _x('Uploaded to this Resource', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'textdomain'),
-                'filter_items_list' => _x('Filter Resources', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'textdomain'),
-                'items_list_navigation' => _x('Repository Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'textdomain'),
-                'items_list' => _x('Resource List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'textdomain'),
+            $post_labels = array(
+                'name' => _x('Repository', 'Repo', 'coders_repository'),
+                'singular_name' => _x('Resource', 'Post type singular name', 'coders_repository'),
+                'menu_name' => _x('Repository', 'Admin Menu text', 'coders_repository'),
+                'name_admin_bar' => _x('Resource', 'Add New on Toolbar', 'coders_repository'),
+                'add_new' => __('Create', 'coders_repository'),
+                'add_new_item' => __('Add New Resource', 'coders_repository'),
+                'new_item' => __('New Resource', 'coders_repository'),
+                'edit_item' => __('Edit Resource', 'coders_repository'),
+                'view_item' => __('View Resource', 'coders_repository'),
+                'all_items' => __('Repository', 'coders_repository'),
+                'search_items' => __('Search Resource', 'coders_repository'),
+                'parent_item_colon' => __('Parent Resource:', 'coders_repository'),
+                'not_found' => __('No resources found.', 'coders_repository'),
+                'not_found_in_trash' => __('No resources found in Trash.', 'coders_repository'),
+                'featured_image' => _x('Resource Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_repository'),
+                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
+                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
+                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
+                'archives' => _x('Resource archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_repository'),
+                'insert_into_item' => _x('Insert into Resource', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_repository'),
+                'uploaded_to_this_item' => _x('Uploaded to this Resource', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_repository'),
+                'filter_items_list' => _x('Filter Resources', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_repository'),
+                'items_list_navigation' => _x('Repository Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_repository'),
+                'items_list' => _x('Resource List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_repository'),
             );
-            
-            $supports = array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' );
-            
-            $resource = array(
-                   'labels'             => $labels,
+            $project_labels = array(
+                'name' => _x('Projects', 'Projects', 'coders_repository'),
+                'singular_name' => _x('Project', 'Project', 'coders_repository'),
+                'menu_name' => _x('Project', 'Project', 'coders_repository'),
+                'name_admin_bar' => _x('Project', 'New Project', 'coders_repository'),
+                'add_new' => __('Create', 'coders_repository'),
+                'add_new_item' => __('Add New Project', 'coders_repository'),
+                'new_item' => __('New Project', 'coders_repository'),
+                'edit_item' => __('Edit Project', 'coders_repository'),
+                'view_item' => __('View Project', 'coders_repository'),
+                'all_items' => __('Projects', 'coders_repository'),
+                'search_items' => __('Search Project', 'coders_repository'),
+                'parent_item_colon' => __('Parent Project:', 'coders_repository'),
+                'not_found' => __('No projects  found.', 'coders_repository'),
+                'not_found_in_trash' => __('No projects found in Trash.', 'coders_repository'),
+                'featured_image' => _x('Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_repository'),
+                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
+                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
+                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
+                'archives' => _x('Archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_repository'),
+                'insert_into_item' => _x('Insert into Project', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_repository'),
+                'uploaded_to_this_item' => _x('Uploaded to this Project', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_repository'),
+                'filter_items_list' => _x('Filter Projects', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_repository'),
+                'items_list_navigation' => _x('Projects Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_repository'),
+                'items_list' => _x('Project List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_repository'),
+            );
+                        
+            $coderepo_post = array(
+                   'labels'             => $post_labels,
                    'public'             => FALSE,
                    'publicly_queryable' => FALSE,
                    'show_ui'            => FALSE,
                    'show_in_menu'       => FALSE,
                    'query_var'          => FALSE,
-                   'rewrite'            => array( 'slug' => 'resource' ),
+                   'rewrite'            => array( 'slug' => 'coderepo-post' ),
                    'capability_type'    => 'post',
                    'has_archive'        => FALSE,
                    'hierarchical'       => TRUE,
                    'menu_position'      => null,
-                   'supports'           => $supports,
+                   'supports'           => array( 'title', 'editor', 'author', 'excerpt', 'comments' ),
             );
             
-            register_post_type( 'resource', $resource );
+            $coderepo_project = array(
+                   'labels'             => $project_labels,
+                   'public'             => FALSE,
+                   'publicly_queryable' => FALSE,
+                   'show_ui'            => FALSE,
+                   'show_in_menu'       => FALSE,
+                   'query_var'          => FALSE,
+                   'rewrite'            => array( 'slug' => 'coderepo-project' ),
+                   'capability_type'    => 'post',
+                   'has_archive'        => FALSE,
+                   'hierarchical'       => FALSE,
+                   'menu_position'      => null,
+                   'supports'           => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' ),
+            );
+            
+            register_post_type( 'coderepo_post', $coderepo_post );
+            register_post_type( 'coderepo_project', $coderepo_project );
             
         } );
     }

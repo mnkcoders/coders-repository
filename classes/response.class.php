@@ -28,7 +28,7 @@ abstract class Response {
      * @return \CODERS\Repository\Model
      */
     protected final function importModel( $model ){
-        return Model::create($model );
+        return Model::create( $model );
     }
     /**
      * @param string $view

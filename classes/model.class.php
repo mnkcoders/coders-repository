@@ -11,12 +11,13 @@ abstract class Model{
     const TYPE_CURRENCY = 'currency';
     const TYPE_DATE = 'date';
     const TYPE_DATETIME = 'datetime';
+    //
     
     /**
      * @var array
      */
     private $_dictionary = array(
-        
+        //define model data
     );
     /**
      * @param array $data
@@ -90,7 +91,12 @@ abstract class Model{
                 return method_exists($this, $get) ? $this->$get( $arguments ) : $this->value($name);
         }
     }
-    
+    /**
+     * @return string
+     */
+    protected function __ts(){
+        return date('Y-m-d H:i:s');
+    }
     
     /**
      * @return string
@@ -113,6 +119,21 @@ abstract class Model{
             $this->_dictionary[$element] = array(
                 'type' => $type,
             );
+            switch($type){
+                case self::TYPE_CHECKBOX:
+                    $this->set($element, 'value', FALSE);
+                case self::TYPE_NUMBER:
+                case self::TYPE_CURRENCY:
+                case self::TYPE_FLOAT:
+                    $this->set($element, 'value', 0);
+                    break;
+                case self::TYPE_TEXT:
+                case self::TYPE_TEXTAREA:
+                    //others
+                default;
+                    $this->set($element, 'value', '');
+                    break;
+            }
             foreach( $attributes as $att => $val ){
                 switch( $att ){
                     case 'value':
@@ -129,6 +150,18 @@ abstract class Model{
         return $this;
     }
     /**
+     * @param \CODERS\Repository\Model $source
+     * @return \CODERS\Repository\Model
+     */
+    protected final function __copy(Model $source ){
+        if( count( $this->_dictionary) === 0 ){
+            foreach( $source->_dictionary as $element => $meta ){
+                $this->_dictionary[ $element ] = $meta;
+            }
+        }
+        return $this;
+    }
+    /**
      * Import all default values
      * @param array $input
      * @return \CODERS\Repository\Model
@@ -138,6 +171,34 @@ abstract class Model{
             $this->set($element, $value);
         }
         return $this;
+    }
+    /**
+     * @return boolean
+     */
+    protected function validate( $element ){
+        
+        if( $this->get($element, 'required', FALSE)){
+            $value = $this->value($element);
+            switch( $this->type($element)){
+                case self::TYPE_CHECKBOX:
+                    return TRUE; //always true, as it holds FALSE vaule by default
+                case self::TYPE_NUMBER:
+                case self::TYPE_CURRENCY:
+                case self::TYPE_FLOAT:
+                    return FALSE !== $value; //check it's a number
+                case self::TYPE_EMAIL:
+                    //validate email
+                    return preg_match( self::EmailMatch() , $value) > 0;
+                //case self::TYPE_TEXT:
+                default:
+                    $size = $this->get($element, 'size' , 1 );
+                    if( FALSE !== $value && strlen($value) >= $size ){
+                        return TRUE;
+                    }
+                    break;
+            }
+        }
+        return FALSE;
     }
     /**
      * Combine elements from
@@ -262,10 +323,12 @@ abstract class Model{
         }
         return $output;
     }
-    
-    
-    
-    
+    /**
+     * @return \CODERS\Repository\Query
+     */
+    protected final function newQuery(){
+        return new Query();
+    }
     
     /**
      * @param string $request
@@ -305,6 +368,227 @@ abstract class Model{
         }
         
         return FALSE;
+    }
+    
+    /**
+     * @return string
+     */
+    protected static final function EmailMatch(){
+    
+        return "/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,})$/i";
+    }
+}
+/**
+ * WPDB Query Handler
+ */
+final class Query {
+    
+    private $_table = array();
+    
+    private $_where = array();
+    
+    private $_columns = array();
+    
+    public final function __construct() {
+        
+    }
+    /**
+     * @global \wpdb $wpdb
+     * @return \wpdb
+     */
+    private static final function db(){
+        global $wpdb;
+        return $wpdb;
+    }
+    /**
+     * @global string $table_prefix
+     * @return string
+     */
+    public static final function prefix(){
+        global $table_prefix;
+        return $table_prefix;
+    }
+    /**
+     * @param string $table
+     * @return string
+     */
+    private static final function table( $table ){
+        return sprintf('%scoders_%s',self::prefix(),$table);
+    }
+    
+    /**
+     * @param array $filters
+     * @return array
+     */
+    private final function where(array $filters) {
+        
+        $where = array();
+
+        foreach ($filters as $var => $val) {
+            switch (TRUE) {
+                case is_string($val):
+                    $where[] = sprintf("`%s`='%s'", $var, $val);
+                    break;
+                case is_object($val):
+                    $where[] = sprintf("`%s`='%s'", $var, $val->toString());
+                    break;
+                case is_array($val):
+                    $where[] = sprintf("`%s` IN ('%s')", $var, implode("','", $val));
+                    break;
+                default:
+                    $where[] = sprintf('`%s`=%s', $var, $val);
+                    break;
+            }
+        }
+
+        return $where;
+    }
+
+    /**
+     * @param string $table
+     * @param array $columns
+     * @param array $filters
+     * @param string $index
+     * @return array
+     */
+    public final function select( $table, $columns = '*', array $filters = array() , $index = '' ) {
+        
+        $select = array();
+        
+        switch( TRUE ){
+            case is_array($columns):
+                if( count( $columns ) ){
+                    $select[] = sprintf("SELECT %s"  , implode(',', $columns) );
+                }
+                else{
+                    $select[] = "SELECT *";
+                }
+                break;
+            case is_string($columns) && strlen($columns):
+                $select[] = sprintf("SELECT %s"  , $columns );
+                break;
+            default:
+                $select[] = "SELECT *";
+                break;
+        }
+        
+        $select[] = sprintf("FROM `%s`", self::table($table) );
+        
+        if (count($filters)) {
+            $select[] .= "WHERE " . implode(' AND ', self::where($filters ) );
+        }
+        
+        return $this->query( implode(' ', $select) , $index );
+    }
+    /**
+     * @param string $table
+     * @param array $data
+     * @return int
+     */
+    public final function insert( $table , array $data ){
+        
+        $db = self::db();
+        
+        $columns = array_keys($data);
+
+        $values = array();
+        
+        foreach( $data as $val ){
+            if(is_array($val)){
+                //listas
+                $values[] = sprintf("'%s'",  implode(',', $val));
+            }
+            elseif(is_numeric($val)){
+                //numerico
+                $values[] = $val;
+            }
+            else{
+                //texto
+                $values[] = sprintf("'%s'",$val);
+            }
+        }
+        
+        $sql_insert = sprintf('INSERT INTO `%s` (%s) VALUES (%s)',
+                self::table($table),
+                implode(',', $columns),
+                implode(',', $values));
+        
+        $result = $db->query($sql_insert);
+        
+        return FALSE !== $result ? $result : 0;
+    }
+    /**
+     * @param string $table
+     * @param array $data
+     * @param array $filters
+     * @return int
+     */
+    public final function update( $table , array $data , array $filters ){
+
+        $db = self::db();
+
+        $values = array();
+        
+        foreach( $data as $field => $content ){
+            
+            if(is_numeric( $content)){
+                $value = $content;
+            }
+            elseif(is_array($content)){
+                $value = implode(',',$content);
+            }
+            else{
+                $value = sprintf("'%s'",$content);
+            }
+            
+            $values[] .= sprintf("`%s`=%s",$field,$value);
+        }
+        
+        $sql_update = sprintf( "UPDATE %s SET %s WHERE %s",
+                self::table($table),
+                implode(',', $values),
+                $this->set_filters($filters));
+        
+        $result = $db->query($sql_update);
+        
+        return FALSE !== $result ? $result : 0;
+    }
+    /**
+     * @param string $table
+     * @param array $filters
+     * @return int
+     */
+    public final function delete( $table, array $filters ){
+               
+        $db = self::db();
+
+        $result = $db->delete(self::table($table), $filters);
+
+        return FALSE !== $result ? $result : 0;
+    }
+    /**
+     * @param string $SQL_QUERY
+     * @param string $index
+     * @return array
+     */
+    public final function query( $SQL_QUERY , $index = '' ){
+        
+        $db = self::db();
+        //var_dump($query);
+
+        $result = $db->get_results($SQL_QUERY, ARRAY_A);
+
+        if( strlen($index) ){
+            $output = array();
+            foreach( $result as $row ){
+                if( isset( $row[$index])){
+                    $output[ $row[ $index ] ] = $row;
+                }
+            }
+            return $output;
+        }
+
+        return ( count($result)) ? $result : array();
     }
 }
 
