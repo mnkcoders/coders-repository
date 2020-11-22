@@ -239,29 +239,38 @@ final class Request{
         
         return '';
     }
+    /**
+     * @param string $request
+     * @param array $args
+     * @return string
+     */
     public static final function url( $request = self::_DEFAULT , $args = array( ) ){
 
-        $var = explode('.',$request);
-        
-        if( $var[ 0 ] === 'admin' ){
-            
-            $params = array(
-                'page' => 'coders-repository',
-                self::ACTION => $request
-                );
-            
-            foreach( $args as $var => $val ){
-                if( $var !== self::ACTION ){
-                    $params[] = sprintf('%s=%s',$var,$val);
-                }
-            }
+        $serialized = array();
 
-            return sprintf('%s?%s', admin_url() , implode('&', $params ) );
+        $action = explode('.',$request);
+        $is_admin = $action[ 0 ] === 'admin';
+        $url = $is_admin ? admin_url() . 'admin.php' : get_site_url();
+
+        if( $is_admin ){
+            //admin module
+            $page =  count($action)> 1 ? self::mapAdminPage($action[1]) : self::mapAdminPage('main');
+            //return $page;
+            $serialized[] = 'page=' . $page;
         }
         else{
-            
-            return sprintf('%s?%s=%s' , get_site_url( ) , \CodersRepo::ENDPOINT );
+            //public modules
+                $serialized[] = sprintf('%s=%s',\CodersRepo::ENDPOINT,$action[0]);
         }
+        if( count( $action) > 2  && $action[2] !== 'default' ){
+            $serialized[] = sprintf('%s=%s',self::ACTION, $action[2]);
+        }
+        
+        foreach( $args as $var => $val ){
+            $serialized[ ] = sprintf('%s=%s',$var,$val);
+        }
+
+        return sprintf('%s?%s', $url , implode('&', $serialized ) );
     }
     /**
      * @param array $request
@@ -276,14 +285,23 @@ final class Request{
         
         $input = self::read();
         
-        
-        if( isset( $input[self::ACTION ] ) ){
-            $input[ self::ACTION ] = self::override($input[self::ACTION], $route);
+            if( isset( $input[self::ACTION ] ) ){
+                $input[ self::ACTION ] = self::override($input[self::ACTION], $route);
+            }
+            else{
+                $input[ self::ACTION ] = $route;
+            }
+        /*if(is_admin() && array_key_exists('page', $input)){
+
+            $action = self::mapAdminAction($input['page']);
+            
+            $input[ self::ACTION ] = array_key_exists(self::ACTION, $input) ?
+                sprintf('%s.%s',$action,$input[self::ACTION]) :
+                $action;
         }
         else{
-            $input[ self::ACTION ] = $route;
-        }
-
+        }*/
+        
         //var_dump($input);
         
         return self::create($input);
@@ -331,6 +349,34 @@ final class Request{
         return $override;
     }
     /**
+     * @param string $action
+     * @return string
+     */
+    private static final function mapAdminPage( $action ){
+
+        $page = $action === 'main' ? 'coders-main' : 'coders-main-' . $action;
+
+        return $page;
+    }
+    /**
+     * @param string $page
+     * @return string
+     */
+    private static final function mapAdminAction( $page ){
+        
+        $actions = array(
+            'coders-main' => 'admin.main',
+            'coders-main-projects' => 'admin.projects',
+            'coders-main-accounts' => 'admin.accounts',
+            'coders-main-subscriptions' => 'admin.subscriptions',
+            'coders-main-payments' => 'admin.payments',
+            'coders-main-settings' => 'admin.settings',
+            'coders-main-logs' => 'admin.logs',
+        );
+        
+        return array_key_exists($page, $actions) ?  $actions[ $page ] : $page;
+    }
+    /**
      * @return array
      */
     public static final function read( $input = INPUT_REQUEST ){
@@ -341,11 +387,32 @@ final class Request{
                 return is_array($post) ? $post : array();
             case INPUT_GET:
                 $get = filter_input_array( INPUT_GET );
+                //merge action keys?
+                if( is_admin() && array_key_exists( 'page' , $get )){
+                    //parse requested action from page ID
+                    $action = self::mapAdminAction($get['page']);
+                    //attach the requested action
+                    if( array_key_exists(self::ACTION, $get) ){
+                        $get[self::ACTION] = sprintf('%s.%s',$action,$get[self::ACTION]);
+                    }
+                    unset($get['page']);
+                }
                 return is_array($get) ? $get : array();
             case INPUT_REQUEST:
                 $post = self::read(INPUT_POST);
                 $get = self::read(INPUT_GET);
-                return array_merge( $get , $post );
+                foreach( $post as $var => $val ){
+                    if( $var === self::ACTION ){
+                        $get[ self::ACTION ] = array_key_exists(self::ACTION, $get) ?
+                            sprintf('%s.%s',$get[self::ACTION],$val) :
+                            $val;
+                    }
+                    else{
+                        $get[ $var ] = $val;
+                    }
+                }
+                return $get;
+                //return array_merge( $get , $post );
             case INPUT_COOKIE:
                 $cookie = filter_input_array(INPUT_COOKIE );
                 return is_array($cookie) ? $cookie : array();

@@ -1,14 +1,18 @@
 <?php defined ('ABSPATH') or die; ?>
 <h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
-<div>
-    <form name="new-account" method="post" action="<?php print $this->form_url ?>">
-        <?php print $this->fieldset_name ?>
-        <?php print $this->fieldset_email_address ?>
-        <?php print $this->action_create(__('Create', 'coders_repository')) ?>
-    </form>
-</div>
 <table class="accounts widefat fixed">
     <thead>
+        <tr class="new">
+            <td class="inline" colspan="4">
+                <form name="new-account" method="post" action="<?php print $this->form_url ?>">
+                    <?php print $this->input_name ?>
+                    <?php print $this->error_name ?>
+                    <?php print $this->input_email_address ?>
+                    <?php print $this->error_email_address ?>
+                    <?php print $this->action_create(__('Create', 'coders_repository'),'button-primary') ?>
+                </form>
+            </td>
+        </tr>
         <tr>
             <th><?php print __('Name', 'coders_repository') ?></th>
             <th><?php print __('Email', 'coders_repository') ?></th>

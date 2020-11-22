@@ -741,7 +741,8 @@ function CodersView( ){
                 'class':'collection-tab inline container'
             });
             _elements.collectionBox = this.element('div',{
-                'class': 'repository-box grid-4'
+                //'class': 'repository-box grid-4'
+                'class': 'repository-box grid-6'
             } );
 
             container.appendChild( _elements.tabs );

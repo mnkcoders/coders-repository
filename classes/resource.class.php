@@ -295,7 +295,8 @@ final class Resource{
      */
     public static final function collection( $collection ){
         
-        return self::query( array( 'collection' => $collection ) );
+        return self::query( array( 'parent_id' => 0 ) );
+        //return self::query( array( 'collection' => $collection ) );
     }
     /**
      * @return array

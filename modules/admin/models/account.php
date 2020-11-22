@@ -6,19 +6,40 @@ final class AccountModel extends \CODERS\Repository\Model{
     
     protected final function __construct(array $data = array()) {
         
-        $this->define('ID', parent::TYPE_NUMBER , array('value'=>0))
-                ->define('token', parent::TYPE_TEXT, array('size'=>32))
-                ->define('name', parent::TYPE_TEXT, array('size'=>16, __('Name', 'coders_repository')))
-                ->define('status', parent::TYPE_NUMBER, array('value'=>0, __('Status', 'coders_repository')))
-                ->define('email_address', parent::TYPE_EMAIL, array('size'=>128, __('Name', 'Email')))
-                ->define('date_created', parent::TYPE_DATETIME, array( __('Created', 'coders_repository')))
-                ->define('date_updated', parent::TYPE_DATETIME, array( __('Updated', 'coders_repository')));
+        $this->define('name', parent::TYPE_TEXT,
+                array('size'=>16, 'label' => __('Name', 'coders_repository'),'required' => TRUE))
+            ->define('email_address', parent::TYPE_EMAIL,
+                array('size'=>128, 'label' => __('Email', 'coders_repository'),'required' => TRUE));
         
         parent::__construct($data);
+    }
+    /**
+     * @return array
+     */
+    protected final function listSubscriptions(){
+        return array(
+            'copper'=>'Copper',
+            'silver'=>'Silver',
+            'gold'=>'Gold',
+            'diamond'=>'Diamond',
+        );
+    }
+    /**
+     * @param string $element
+     * @return boolean
+     */
+    public final function validate($element) {
+        if( !parent::validate($element) ){
+            $this->set($element, 'error', 'wrong value');
+            return FALSE;
+        }
+        return TRUE;
     }
     
     public static final function listAccounts(){
 
+        return \CODERS\Repository\Account::List();
+        
         $output = array();
         
         $date = date('Y-m-d H:i:s');

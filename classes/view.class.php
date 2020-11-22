@@ -38,18 +38,16 @@ abstract class View{
         switch( TRUE ){
             case preg_match(  '/^action_/' , $name ):
                 $action = substr($name, strlen('action_'));
-                return self::__HTML('button', array(
-                    'type' => 'button',
-                    'name' => 'action',
-                    'value' => $action,
-                    'id' => 'id_'.$action,
-                    'class' => 'button button-primary ' . $action,
-                ), $this->__label($action));
+                return $this->__action(
+                        $action,
+                        $this->__label($action),
+                        'button-primary');
             case preg_match(  '/^input_/' , $name ):
                 $method = preg_replace('/_/', '', $name);
+                $element = substr($name, strlen('input_'));
                 return method_exists($this, $method) ?
                         $this->$method( ) :
-                        $this->__input(substr($name, strlen('input_')));
+                        $this->__input( $element );
             case preg_match(  '/^label_/' , $name ):
                 $element = substr($name, strlen('label_'));
                 $label = $this->__label($element);
@@ -74,18 +72,24 @@ abstract class View{
                 $is = preg_replace('/_/', '', $name);
                 return method_exists($this, $is) ?
                         $this->$is( ) :
-                        $this->_model->$name();
+                        $this->__model($name, FALSE );
             case preg_match(  '/^list_/' , $name ):
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
                 return method_exists($this, $list) ?
                         $this->$list() :
-                        $this->_model->$name();
+                        $this->__model($name, array());
+            case preg_match(  '/^error_/' , $name ):
+                //RETURN LIST
+                $error = $this->hasModel() ? $this->model()->$name : '';
+                return strlen($error) ? self::__HTML('span', array(
+                    'class' => 'error'
+                ), $error) : '';
             default:
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
                 return method_exists($this, $get) ?
                         $this->$get( ) :
-                        $this->_model->$name();
+                        $this->__model($name, sprintf('<!-- INVALID DATA-SOURCE %s -->',$name));
         }
     }
     /**
@@ -101,13 +105,10 @@ abstract class View{
                 $label = is_array($arguments) && count( $arguments ) ?
                         $arguments[0] :
                         $this->__label($action);
-                return self::__HTML('button', array(
-                    'type' => 'button',
-                    'name' => 'action',
-                    'value' => $action,
-                    'id' => 'id_'.$action,
-                    'class' => 'button button-primary ' . $action,
-                ), $label );
+                return $this->__action(
+                        $action,
+                        $label,
+                        count( $arguments ) > 1 ? $arguments[1] : 'button-primary');
             case preg_match(  '/^display_/' , $name ):
                 $display = preg_replace('/_/', '', $name);
                 return method_exists($this, $display) ?
@@ -118,18 +119,18 @@ abstract class View{
                 $is = preg_replace('/_/', '', $name);
                 return method_exists($this, $is) ?
                         $this->$is( $params ) :
-                        $this->_model->$name( $params );
+                        $this->__model($name, FALSE );
             case preg_match(  '/^list_/' , $name ):
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
                 return method_exists($this, $list) ?
                         $this->$list( $params ) :
-                        $this->_model->$name( $params );
+                        $this->__model($name, array());
             default:
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
                 return method_exists($this, $get) ?
                         $this->$get( $params ) :
-                        $this->_model->$name( $params );
+                        $this->__model($name, sprintf('<!-- INVALID DATA-SOURCE %s -->',$name));
         }
     }
     /**
@@ -141,7 +142,8 @@ abstract class View{
         if( $this->_model->has( $element ) ){
 
             $id = 'id_' . $element;
-            $value = $this->_model->getValue($element,FALSE);
+            $value = $this->_model->value($element,'');
+            $label = $this->__label($element);
             
             switch( $this->_model->type($element) ){
                 case Model::TYPE_CHECKBOX:
@@ -157,11 +159,7 @@ abstract class View{
                     }
                     return self::__HTML( 'label',
                             array( 'class' => 'form-input', 'for' => $id ),
-                            array(
-                                self::__HTML('input', $checkbox),
-                                $this->__label( $element )
-                            ));
-                    //$this->__label( $input ) . self::__HTML('input', $checkbox );
+                            array( self::__HTML('input', $checkbox), $label ));
                 case Model::TYPE_NUMBER:
                     return self::__HTML('input', array(
                         'type' => 'number',
@@ -190,7 +188,8 @@ abstract class View{
                     return self::__HTML('input', array(
                         'type' => 'date',
                         'name' => $element,
-                        'value' => $this->_model->getValue($element,''),
+                        'value' => $value,
+                        'placeholder' => $label,
                         'id' => $id,
                         'class' => 'form-input'
                     ));
@@ -198,14 +197,17 @@ abstract class View{
                     return self::__HTML('input', array(
                         'type' => 'date',
                         'name' => $element,
-                        'value' => $this->_model->getValue($element,''),
+                        'value' => $value,
+                        'placeholder' => $label,
                         'id' => $id,
                         'class' => 'form-input'
                     ));
                 case Model::TYPE_TEXTAREA:
+                    $label = sprintf('label_',$element);
                     return self::__HTML('textarea', array(
                         'name' => $element,
-                        'value' => $this->_model->getValue($element,''),
+                        'value' => $value,
+                        'placeholder' => $label,
                         'id' => $id,
                         'class' => 'form-input'
                     ));
@@ -213,7 +215,8 @@ abstract class View{
                     return self::__HTML('input', array(
                         'type' => 'email',
                         'name' => $element,
-                        'value' => $this->_model->getValue($element,''),
+                        'value' => $value,
+                        'placeholder' => $label,
                         'id' => $id,
                         'class' => 'form-input'
                     ));
@@ -222,7 +225,8 @@ abstract class View{
                     return self::__HTML('input', array(
                         'type' => 'text',
                         'name' => $element,
-                        'value' => $this->_model->getValue($element,''),
+                        'value' => $value,
+                        'placeholder' => $label,
                         'id' => 'id_' . $element,
                         'class' => 'form-input'
                     ) );
@@ -230,6 +234,34 @@ abstract class View{
         }
         
         return sprintf('<!-- INVALID INPUT [%s] -->',$element);
+    }
+    /**
+     * @param string $request
+     * @param mixed $default
+     * @param arary $args
+     * @return mixed
+     */
+    protected final function __model( $request , $default = '' , array $args = array( ) ){
+        if( $this->hasModel() ){
+            //pass request rightaway
+            return $this->model()->$request( $args );
+        }
+        return $default;
+    }
+    /**
+     * @param string $action
+     * @param string $label
+     * @param string|array $class
+     * @return string
+     */
+    protected final function __action( $action , $label , $class = '' ){
+        return self::__HTML('button', array(
+            'type' => 'submit',
+            'name' => Request::ACTION,
+            'value' => $action,
+            'id' => 'id_'.$action,
+            'class' => sprintf('button %s %s',$action,$class),
+        ), $label );
     }
     /**
      * @param string $input

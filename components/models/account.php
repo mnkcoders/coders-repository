@@ -9,11 +9,11 @@ final class Account extends \CODERS\Repository\Model{
     protected final function __construct(array $data = array()) {
         $this->define('ID', parent::TYPE_NUMBER , array('value'=>0))
                 ->define('token', parent::TYPE_TEXT, array('size'=>32))
-                ->define('name', parent::TYPE_TEXT, array('size'=>16))
-                ->define('status', parent::TYPE_NUMBER, array('value'=>0))
-                ->define('email_address', parent::TYPE_EMAIL, array('size'=>128))
-                ->define('date_created', parent::TYPE_DATETIME)
-                ->define('date_updated', parent::TYPE_DATETIME);
+                ->define('name', parent::TYPE_TEXT, array('size'=>16,'label' => __('Name','coders_repository')))
+                ->define('status', parent::TYPE_NUMBER, array('value'=>0,'label' => __('Status','coders_repository')))
+                ->define('email_address', parent::TYPE_EMAIL, array('size'=>128,'label' => __('Email','coders_repository')))
+                ->define('date_created', parent::TYPE_DATETIME, array('label' => __('Created','coders_repository')))
+                ->define('date_updated', parent::TYPE_DATETIME, array('label' => __('Updated','coders_repository')));
         
         parent::__construct($data);
     }
@@ -21,7 +21,7 @@ final class Account extends \CODERS\Repository\Model{
      * @param string $element
      * @return boolean
      */
-    protected final function validate($element): boolean {
+    protected final function validate($element) {
         
         if( $element === 'email_address' ){
             $email = $this->value($element);
@@ -35,7 +35,7 @@ final class Account extends \CODERS\Repository\Model{
             }
         }
         elseif( !parent::validate($element) ){
-            $this->set($element, 'error', sprintf('%s is missing!!',$element));
+            $this->set($element, 'error', sprintf('%s wrong value',$element));
             return FALSE;
         }
         
@@ -67,10 +67,11 @@ final class Account extends \CODERS\Repository\Model{
 
             if( $ID === 0 ){
                 //create
+                $ts = $this->__ts();
+                $this->setValue('date_created',$ts)->setValue('date_updated',$ts);
+
                 $values = $this->values();
-                $values['email'] = self::normalizeEmail($values['email']);
-                $values['token'] = self::generateHash($values['email']);
-                $values['date_created'] = $values['date_updated'] = $this->__ts();
+
                 $result += $query->insert( 'account' , $values );
             }
             else{//update
@@ -142,10 +143,13 @@ final class Account extends \CODERS\Repository\Model{
         return $output;
     }
     /**
-     * @param int $token_id
+     * @param int $token
+     * @param boolean $hash
      * @return boolean|\CODERS\Repository\Account
      */
-    public static final function LoadByToken( $token_id ){
+    public static final function LoadByToken( $token , $hash = FALSE ){
+        
+        $token_id = $hash ? self::generateHash(self::normalizeEmail($token)) : $token;
         
         $query = new Query();
         
@@ -168,7 +172,7 @@ final class Account extends \CODERS\Repository\Model{
         $data = $query->select('account', '*', array( 'ID' => $account_id ) );
         
         if( count( $data ) ){
-            return new Account($data );
+            return new Account($data[0] );
         }
         
         return FALSE;
@@ -180,18 +184,13 @@ final class Account extends \CODERS\Repository\Model{
     public static final function New( array $data ){
         
         $data['ID'] = 0; //just override if any, this is a blank new account
-        
+        $data['email_address'] = self::normalizeEmail($data['email_address']);
+        $data['token'] = self::generateHash($data['email_address']);
+        //$data['date_created'] = $data['date_updated'] = $this->__ts();
+
         $account = new Account($data);
         
-        foreach( $account->elements() as $element ){
-            if( !$account->validate($element)){
-                return FALSE;
-            }
-        }
-        
-        $account->save();
-        
-        return $account;
+        return $account->validateData() ? $account->save() : FALSE;
     }
 }
 

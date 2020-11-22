@@ -344,7 +344,6 @@ class CodersRepo{
                                 'administrator',
                                 $root . '-' . $page ,
                                 function() use( $page ) {
-                                    //CodersRepo::instance()->run('admin.' . $page);
                                     \CODERS\Repository\Response::fromRoute('admin.' . $page );
                         });
                     }
@@ -355,7 +354,6 @@ class CodersRepo{
                                 'administrator', $root,
                                 function() use( $page ) {
                                     \CODERS\Repository\Response::fromRoute('admin.' . $page );
-                                    //CodersRepo::instance()->run('admin.' . $page);
                         }, 'dashicons-art', 51);
                     }
                 }

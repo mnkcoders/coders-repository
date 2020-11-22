@@ -25,10 +25,11 @@ abstract class Response {
     }
     /**
      * @param string $model
+     * @param array $data
      * @return \CODERS\Repository\Model
      */
-    protected final function importModel( $model ){
-        return Model::create( $model );
+    protected final function importModel( $model , array $data = array() ){
+        return Model::create( $model , $data );
     }
     /**
      * @param string $view

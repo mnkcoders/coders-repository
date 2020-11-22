@@ -10,8 +10,6 @@ final class SettingsController extends \CODERS\Repository\Response{
         
         $this->importView('admin.settings')->display();
         
-        var_dump($request);
-        
         return TRUE;
     }
 }

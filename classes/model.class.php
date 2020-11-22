@@ -59,6 +59,10 @@ abstract class Model{
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
                 return method_exists($this, $list) ? $this->$list() : array();
+            case preg_match(  '/^error_/' , $name ):
+                //RETURN LIST
+                $element = substr($name, strlen('error_'));
+                return $this->get($element, 'error', '');
             default:
                 //RETURN CUSTOMIZER GETTER
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
@@ -85,6 +89,13 @@ abstract class Model{
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
                 return method_exists($this, $list) ? $this->$list( $arguments ) : array();
+            case preg_match(  '/^error_/' , $name ):
+                if( count( $arguments )){
+                    $element = substr($name, strlen('error_'));
+                    $this->set($element, 'error', $arguments[0] );
+                    return TRUE;
+                }
+                return FALSE;
             default:
                 //RETURN STRING
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
@@ -121,17 +132,17 @@ abstract class Model{
             );
             switch($type){
                 case self::TYPE_CHECKBOX:
-                    $this->set($element, 'value', FALSE);
+                    $this->_dictionary[$element]['value'] = FALSE;
                 case self::TYPE_NUMBER:
                 case self::TYPE_CURRENCY:
                 case self::TYPE_FLOAT:
-                    $this->set($element, 'value', 0);
+                    $this->_dictionary[$element]['value'] = 0;
                     break;
                 case self::TYPE_TEXT:
                 case self::TYPE_TEXTAREA:
                     //others
                 default;
-                    $this->set($element, 'value', '');
+                    $this->_dictionary[$element]['value'] = '';
                     break;
             }
             foreach( $attributes as $att => $val ){
@@ -168,9 +179,20 @@ abstract class Model{
      */
     protected function populate( array $input ){
         foreach( $input as $element => $value ){
-            $this->set($element, $value);
+            $this->setValue($element, $value);
         }
         return $this;
+    }
+    /**
+     * @return boolean
+     */
+    public function validateData(){
+        foreach( $this->elements() as $element ){
+            if( !$this->validate($element)){
+                return FALSE;
+            }
+        }
+        return TRUE;
     }
     /**
      * @return boolean
@@ -192,13 +214,14 @@ abstract class Model{
                 //case self::TYPE_TEXT:
                 default:
                     $size = $this->get($element, 'size' , 1 );
-                    if( FALSE !== $value && strlen($value) >= $size ){
+                    if( FALSE !== $value && strlen($value) <= $size ){
                         return TRUE;
                     }
                     break;
             }
+            return FALSE;
         }
-        return FALSE;
+        return TRUE;
     }
     /**
      * Combine elements from
@@ -208,7 +231,7 @@ abstract class Model{
     public function import( \CODERS\Repository\Model $model ){
         
         foreach( $model->elements() as $element ){
-            $this->set($element,$model->value($element));
+            $this->setValue($element,$model->value($element));
         }
         
         return $this;
@@ -251,10 +274,20 @@ abstract class Model{
     }
     /**
      * @param string $element
-     * @param mixed $default
+     * @return mixed
      */
-    public function value( $element , $default = FALSE ){
-        return $this->get($element, 'value', $default );
+    public function value( $element ){
+        switch( $this->type($element)){
+            case self::TYPE_CHECKBOX:
+                return $this->get($element, 'value' );
+            case self::TYPE_CURRENCY:
+            case self::TYPE_FLOAT:
+            case self::TYPE_NUMBER:
+                return $this->get($element, 'value' , 0 );
+            default:
+                return $this->get($element, 'value', '');
+        }
+        //return $this->get($element, 'value', $default );
     }
     /**
      * @param string $element
@@ -275,26 +308,25 @@ abstract class Model{
      * @return \CODERS\Repository\Model
      */
     protected function setValue( $element , $value = FALSE ){
-        $customSetter = sprintf('set%s',$element);
+        $customSetter = sprintf('set%sValue',$element);
         if(method_exists($this, $customSetter)){
             //define a custom setter for a more extended behavior
             $this->$customSetter( $value );
         }
         elseif( $this->exists($element)){
-            switch( $this->_dictionary[$element]){
+            switch( $this->type($element)){
                 case self::TYPE_CHECKBOX:
-                    if( !is_bool($value)){ $value = FALSE; }
-                    break;
+                    return $this->set($element,
+                            'value',
+                            is_bool($value) ? $value : FALSE );
                 case self::TYPE_CURRENCY:
                 case self::TYPE_FLOAT:
+                    return $this->set($element,'value',floatval($value));
                 case self::TYPE_NUMBER:
-                    if( !is_numeric($value)){ $value = 0; }
-                    break;
+                    return $this->set($element,'value',intval($value));
                 default:
-                    if( !is_string($value)){ $value = ''; }
-                    break;
+                    return $this->set($element,'value',strval($value));
             }
-            return $this->set($element, 'value', $value);
         }
         return $this;
     }
@@ -308,7 +340,7 @@ abstract class Model{
     /**
      * @return array
      */
-    public final function dictionary(){ return $this->_dictionary; }
+    protected final function dictionary(){ return $this->_dictionary; }
     /**
      * @return array
      */
@@ -319,7 +351,7 @@ abstract class Model{
     public final function values(){
         $output = array();
         foreach( $this->elements() as $element ){
-            $output[$element] = $this->value($element , '' );
+            $output[$element] = $this->value( $element );
         }
         return $output;
     }
@@ -332,10 +364,11 @@ abstract class Model{
     
     /**
      * @param string $request
+     * @param array $data
      * @return \CODERS\Repository\Model | boolean
      * @throws \Exception
      */
-    public static final function create( $request ){
+    public static final function create( $request , $data = array() ){
         
         try{
             $extract = explode('.', $request);
@@ -352,7 +385,7 @@ abstract class Model{
             if(file_exists($path)){
                 require_once $path;
                 if(class_exists($class) && is_subclass_of($class, self::class)){
-                    return new $class();
+                    return new $class( $data );
                 }
                 else{
                     throw new \Exception(sprintf('Invalid Model %s',$class) );
