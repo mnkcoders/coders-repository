@@ -47,6 +47,10 @@ abstract class Model{
                 //RETURN BOOLEAN
                 $is = preg_replace('/_/', '', $name);
                 return method_exists($this, $is) ? $this->$is( ) : FALSE;
+            case preg_match(  '/^value_/' , $name ):
+                //RETURN VALUE
+                $element = substr($name, strlen('value_'));
+                return $this->value($element);
             case preg_match(  '/^type_/' , $name ):
                 //RETURN LIST
                 $type = substr($name, strlen('type_'));
@@ -358,7 +362,7 @@ abstract class Model{
     /**
      * @return \CODERS\Repository\Query
      */
-    protected final function newQuery(){
+    protected static final function newQuery(){
         return new Query();
     }
     

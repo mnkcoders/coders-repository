@@ -2,7 +2,7 @@
 /**
  * 
  */
-final class RepositoryModel extends \CODERS\Repository\Model{
+final class CollectionModel extends \CODERS\Repository\Model{
     
     /**
      * @param string $resource_id

@@ -338,16 +338,16 @@ final class Resource{
                     break;
             }
             
-            $meta['public_id'] = self::GenerateID( $meta['collection'] );
+            $meta['public_id'] = self::GenerateID( $meta['name'] );
                         
             $R = new Resource( $meta );
             
             if(strlen($buffer) && !$R->exists( ) ){
                 
             }
-            if( !self::createCollection($meta['collection'])){
-                throw new \Exception('Cannot create a new collection. Check file permissions.' );
-            }
+            //if( !self::createCollection($meta['collection'])){
+            //    throw new \Exception('Cannot create a new collection. Check file permissions.' );
+            //}
             if( $R->exists()){
                 throw new \Exception(sprintf('File ID:%s already exists.',$meta['public_id']));
             }
@@ -397,10 +397,10 @@ final class Resource{
     }
     /**
      * @param string $input
-     * @param string $collection
+     * @param int $parent_id
      * @return array
      */
-    public static final function upload( $input , $collection = 'default' ){
+    public static final function upload( $input , $parent_id = 0 ){
         
         $created = array();
         
@@ -430,7 +430,7 @@ final class Resource{
                 unlink($upload['tmp_name']);
 
                 if( $buffer !== FALSE ){
-                    $upload['collection'] = $collection;
+                    $upload['parent_id'] = $parent_id;
                     $resource = self::create($upload , $buffer );
                     if( $resource !== FALSE ){
                         $created[ $resource->ID ] = $resource;

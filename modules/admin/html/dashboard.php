@@ -8,24 +8,31 @@
         </tr>
     </thead-->
     <tbody class="projects">
+        <tr>
+            <td>
+                <h2><?php print __('Dashboard','coders_repository') ?></h2>
+            </td>
+            <td>
+                <div class="panel right inline">
+                    <?php print $this->display_new(__('New project title','coders_repository')) ?>
+                    <?php print $this->action_create(__('Create','coders_repository'),'button-primary'); ?>
+                </div>
+            </td>
+        </tr>
         <?php foreach( $this->list_projects  as $id => $project) : ?>
         <tr>
             <td>
-                <a class="project" href="<?php print $this->url($id) ?>" target="_self">
+                <a class="project" href="<?php print $this->project_url($id) ?>" target="_self">
                     <?php print $this->display_image($project['image_id']) ?>
                 </a>
-                <!--div class="project">
-                        <?php print $this->display_image($project['image_id']) ?>
-                        <a class="title" href="<?php print $this->url($id) ?>" target="_self"><?php print $project['title'] ?></a>
-                </div-->
             </td>
             <td class="container">
-                <div class="container solid centered">
-                    <h2>
-                        <a class="link" href="<?php print $this->url($id) ?>" target="_self">
-                            <?php print $project['title'] ?>
-                        </a>
+                <a class="link" href="<?php print $this->project_url($id) ?>" target="_self">
+                    <h2 class="title center pad-sm">
+                        <?php print $project['title'] ?>
                     </h2>
+                </a>
+                    <div class="container solid centered">
                     <h4><?php print $this->status($project['status']) ?></h4>
                     <h4><?php printf('%s Subscribers', $project['subscribers']) ?></h4>
                     <?php print $this->display_progress_bar($project['progress']) ?>

@@ -30,7 +30,27 @@ final class Project extends \CODERS\Repository\Model{
             
         );
     }
+    /**
+     * @param string $ID
+     * @return boolean|\CODERS\Repository\Project
+     */
+    public static final function load( $ID ){
+        
+        if(strlen($ID)){
+            $query = self::newQuery();
+
+            $data = $query->select('project','*',array('ID' => $ID ));
+
+            if( count( $data )){
+                return new Project($data[0]);
+            }
+        }
+        
+        return FALSE;
+    }
 }
+
+
 
 
 

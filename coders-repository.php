@@ -26,6 +26,7 @@ class CodersRepo{
      * @var array
      */
     private static $_dependencies = array(
+        //'text',
         'view',
         'model',
         'request',
@@ -330,10 +331,11 @@ class CodersRepo{
                 /*describe menu items*/
                 $pages = array(
                     'main' => __( 'Artist Pad' , 'coders_repository' ),
-                    'projects' => __( 'Projects' , 'coders_repository' ),
+                    'collection' => __( 'Collections' , 'coders_repository' ),
+                    //'projects' => __( 'Projects' , 'coders_repository' ),
                     'accounts' => __( 'Accounts' , 'coders_repository' ),
-                    'subscriptions' => __( 'Subscriptions' , 'coders_repository' ),
-                    'payments' => __( 'Payments' , 'coders_repository' ),
+                    //'subscriptions' => __( 'Subscriptions' , 'coders_repository' ),
+                    //'payments' => __( 'Payments' , 'coders_repository' ),
                     'settings' => __( 'Settings' , 'coders_repository' ),
                     'logs' => __( 'Logs' , 'coders_repository' ),
                 );
@@ -595,8 +597,20 @@ class CodersRepo{
         }
         return self::$_INSTANCE;
     }
+    /**
+     * @param string $text
+     * @return string
+     */
+    static final function __( $text ){
+        
+        return __( $text , 'coders_repository');
+
+        //return \CODERS\Repository\Text::__($text);
+    }
 }
 
 CodersRepo::init();
 
 
+//var_dump(CodersRepo::__('Test'));
+//die;

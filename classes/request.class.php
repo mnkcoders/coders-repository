@@ -262,6 +262,7 @@ final class Request{
             //public modules
                 $serialized[] = sprintf('%s=%s',\CodersRepo::ENDPOINT,$action[0]);
         }
+
         if( count( $action) > 2  && $action[2] !== 'default' ){
             $serialized[] = sprintf('%s=%s',self::ACTION, $action[2]);
         }
@@ -366,10 +367,11 @@ final class Request{
         
         $actions = array(
             'coders-main' => 'admin.main',
-            'coders-main-projects' => 'admin.projects',
+            'coders-main-collections' => 'admin.collection',
+            //'coders-main-projects' => 'admin.projects',
             'coders-main-accounts' => 'admin.accounts',
-            'coders-main-subscriptions' => 'admin.subscriptions',
-            'coders-main-payments' => 'admin.payments',
+            //'coders-main-subscriptions' => 'admin.subscriptions',
+            //'coders-main-payments' => 'admin.payments',
             'coders-main-settings' => 'admin.settings',
             'coders-main-logs' => 'admin.logs',
         );

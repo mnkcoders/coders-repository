@@ -42,6 +42,8 @@ abstract class View{
                         $action,
                         $this->__label($action),
                         'button-primary');
+            case preg_match(  '/^value_/' , $name ):
+                return $this->hasModel() ? $this->model()->$name : '';
             case preg_match(  '/^input_/' , $name ):
                 $method = preg_replace('/_/', '', $name);
                 $element = substr($name, strlen('input_'));
@@ -219,11 +221,10 @@ abstract class View{
                     $label = sprintf('label_',$element);
                     return self::__HTML('textarea', array(
                         'name' => $element,
-                        'value' => $value,
                         'placeholder' => $label,
                         'id' => $id,
                         'class' => 'form-input'
-                    ));
+                    ),$value);
                 case Model::TYPE_EMAIL:
                     return self::__HTML('input', array(
                         'type' => 'email',
@@ -452,7 +453,7 @@ abstract class View{
         
         $path = $this->getView( $this->getLayout( ) );
         $css_name = preg_replace('/\./', '-', $this->getLayout());
-        printf('<div class="coders-repository %s-view"><!-- CODERS REPO CONTAINER -->', $css_name );
+        printf('<div class="coders-repository %s-view wrap"><!-- CODERS REPO CONTAINER -->', $css_name );
         if( file_exists($path) ){
             require $path;
         }
@@ -484,6 +485,32 @@ abstract class View{
         return self::__HTML('span',
                 array('class' => 'progress-bar'),
                 array( $bar , $label ));
+    }
+    /**
+     * @param string|int $media_id
+     * @return string
+     */
+    protected function displayWPImage( $media_id ){
+        
+        $img = wp_get_attachment_image_src( intval($media_id) , 'full' );
+        
+        if( FALSE !== $img ){
+            $w= $img[1];
+            $h = $img[2];
+            /**
+             * 
+             */
+            $class = ($h/$w < 0.6) ? 'portrait' : 'landscape';
+            
+            return self::__HTML('img', array(
+                'src' => $img[0],
+                'class' => 'project-image ' . $class,
+            ) );
+        }
+
+        return self::__HTML('span', array(
+            'class' => 'no-image'
+        ) , 'No Image' );
     }
     /**
      * @param string $view
@@ -533,6 +560,7 @@ abstract class View{
         
         return self::__HTML('select', array(
             'name' => $name,
+            'id' => 'id_' . $name,
             'size' => $size,
             'class' => 'form-input '
         ), $items);

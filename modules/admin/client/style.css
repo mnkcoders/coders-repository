@@ -20,6 +20,9 @@
 .coders-repository > .header{
     margin: 40px 0 20px;
 }
+.coders-repository .center{
+    text-align: center;
+}
 .coders-repository .container{
     padding: 5px 10px;
     margin: 20px auto;
@@ -44,6 +47,12 @@
     clear: both;
     height: 0;
 }
+
+.coders-repository .container.pad-sm,.coders-repository .title.pad-sm{ padding: 10px 0; }
+.coders-repository .container.pad-md,.coders-repository .title.pad-md{ padding: 20px 0; }
+.coders-repository .container.pad-lg,.coders-repository .title.pad-lg{ padding: 40px 0; }
+.coders-repository .container.pad-xl,.coders-repository .title.pad-xl{ padding: 80px 0; }
+
 .coders-repository .container .control{
     
 }
@@ -439,17 +448,17 @@
 }
 
 
-.coders-repository.project-list-view .projects:after{
+.coders-repository.dashboard-view .projects:after{
     content: '';
     display: block;
     height: 0;
     clear: both;
 }
-.coders-repository.project-list-view .projects > li{
+.coders-repository.dashboard-view .projects > li{
     display: inline-block;
     width: 32%;
 }
-.coders-repository.project-list-view .projects .project{
+.coders-repository.dashboard-view .projects .project{
     display: block;
     width: 100%;
     height: 0;
@@ -457,24 +466,24 @@
     position: relative;
     overflow: hidden;
 }
-.coders-repository.project-list-view .projects .project img{
+.coders-repository.dashboard-view .projects .project img{
     position: absolute;
     left:0; top:0;
     height: 100%;
     width: auto;
     transition: ease-in 1200ms;
 }
-.coders-repository.project-list-view .projects .project img.portrait{
+.coders-repository.dashboard-view .projects .project img.portrait{
     width: 100%;
     height: auto;
 }
-.coders-repository.project-list-view .projects .project:hover img{
+.coders-repository.dashboard-view .projects .project:hover img{
     transform: scale( 1.1 );
 }
-.coders-repository.project-list-view .projects .project .title{
+.coders-repository.dashboard-view .projects .project .title{
     color: rgba(255,255,255,1);
     text-shadow: 0 0 8px rgba(0,0,0,.25);
-    text-align: center;
+    text-align: center; 
     display: block;
     font-size: 24px;
     letter-spacing: 1px;
@@ -488,10 +497,49 @@
     padding: calc(20% - 12px) 0;
     background-color: rgba(0,0,0,0.1);
 }
-.coders-repository.project-list-view .projects .project:hover .title{
+.coders-repository.dashboard-view .projects .project:hover .title{
     background-color: rgba(0,12,24,0.55);
     letter-spacing: 1.5px;
     text-shadow: 0 0 0 32px rgba(0,0,0,.5);
+}
+.coders-repository.dashboard-view .projects .container .title{
+    margin: 0;
+    background-color: #0071a1;
+    color: #ffffff;
+}
+
+
+input[type="text"].borderless{
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+}
+input[type="text"].borderless:focus{ outline: none !important; }
+input[type="text"].title{
+    font-weight: bold !important;
+    font-size: 24px !important;
+    letter-spacing: 1px !important;
+    color:#23282d !important;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2px 4px; 
+    transition: ease-in 240ms;
+}
+input[type="text"].title:focus{
+    background-color: rgba(0,0,0,0.05);
+}
+
+.coders-repository.project-view-view{
+    
+}
+
+.coders-repository.project-view-view .project .media{
+    overflow: hidden;
+    height: 200px;
+}
+.coders-repository.project-view-view .project .media > img{
+    width: 100%;
+    height: auto;
 }
 
 

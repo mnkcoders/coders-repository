@@ -4,91 +4,66 @@
  */
 final class DashboardView extends \CODERS\Repository\View{
     
-    const PAGE = 'coders-repository';    
-    const MAX_FILE_SIZE = 'coders.repository.max_file_size';
-    
-    private $_selected = 'default';
+    protected final function __construct() {
+        
+        parent::__construct();
+        
+    }
+    /**
+     * @param string $label
+     * @return string
+     */
+    protected final function displayNew( $label , $value = '' ){
+        return self::__HTML('input',array(
+            'type' => 'text',
+            'name' => 'title',
+            'value' => $value,
+            'class' => 'form-input',
+            'placeholder' => $label
+        ) );
+    }
+    /**
+     * @param string $id
+     * @return string
+     */
+    protected final function getProjectUrl( $id ){
 
-    public final function display() {
-        
-        return parent::display()->attachScript('script.js');
-    }
-    
-    /**
-     * @param array $resource
-     * @return string
-     */
-    protected final function displayResource( array $resource ){
-        //var_dump($resource);
-        switch( $resource[ 'type' ] ){
-            case 'image/png':
-            case 'image/gif':
-            case 'image/jpeg':
-            case 'image/jpg':
-                $link = $this->getResourceLink($resource['public_id']);
-                return parent::__HTML( 'img', array(
-                    'class' => 'content media',
-                    'src' => $link,
-                    'alt' => $resource['name'],
-                    'title' => $resource['name']
-                ) );
-            case 'text/html':
-                return self::__HTML('span', array('class'=>'content html'), $resource['name']);
-            case 'text/plain':
-            default:
-                return self::__HTML('span', array('class'=>'content text'), $resource['name']);
-        }
-    }
-    
-    /**
-     * @return int
-     */
-    protected final function getMaxFileSize(){
-        
-        return 255 * 255 * get_option( self::MAX_FILE_SIZE , 50 );
-    }
-    /**
-     * @param array $params
-     * @return string
-     */
-    protected final function getFormAction( array $params = array( ) ){
-        
-        $url = sprintf('%s?page=%s', get_admin_url( ) , self::PAGE );
-        
-        if( count ($params)){
-            foreach( $params as $var=>$val ){
-                $url .= sprintf('&%s=%s',$var,$val);
-            }
-        }
-        
-        return $url;
-    }
-    /**
-     * @param string $resource_id
-     * @return string
-     */
-    protected final function getResourceLink( $resource_id ){
-        
-        return \CodersRepo::resourceLink( $resource_id );
-    }
-    /**
-     * @param string $collection
-     * @return array
-     */
-    protected final function listCollection( $collection = '' ){
-        return strlen($collection) ?
-            \CODERS\Repository\Resource::collection( $collection ) :
-            array();
-    }
-    /**
-     * @return string|FALSE
-     */
-    protected final function listSelected(){
-        
-        $collection = $this->listCollection( $this->_selected );
+        return \CODERS\Repository\Request::url('admin.main.project',array('ID'=>$id));
 
-        return $collection;
+    }
+    /**
+     * @param int $status
+     * @return string
+     */
+    protected final function getStatus( $status = 0 ){
+
+        $status_list = \CODERS\Repository\Project::listStatus();
+        
+        return array_key_exists($status, $status_list) ?
+                $status_list[ $status ] :
+                __('Invalid','coders_repository');
+    }
+    /**
+     * @param int $media_id
+     * @return string
+     */
+    protected final function displayImage( $media_id ){
+        $img = wp_get_attachment_image_src( intval($media_id) , 'full' );
+        if( FALSE !== $img ){
+            $w= $img[1];
+            $h = $img[2];
+            /**
+             * 
+             */
+            $class = ($h/$w < 0.6) ? 'portrait' : 'landscape';
+            
+            return self::__HTML('img', array(
+                'src' => $img[0],
+                'class' => 'project-image ' . $class,
+            ) );
+        }
+        return self::__HTML('span', array(
+            'class' => 'no-image'
+        ) , 'No Image' );
     }
 }
-
-
