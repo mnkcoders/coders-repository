@@ -22,12 +22,6 @@ function CodersView( ){
         //'uploader':null
     };
     /**
-     * 
-     * @type CodersView
-     */
-    var _view = this;
-
-    /**
      * @type Object
      */
     var _draggable = {
@@ -100,6 +94,131 @@ function CodersView( ){
         return e;
     };
     /**
+     * @returns {Element[]}
+     */
+    this.tabs = function(){
+        return typeof _elements.tabs === 'object' ?
+            [].slice.call( _elements.tabs.children ) :
+                    [];
+    };
+    /**
+     * @param {String} cls 
+     * @returns {Element|Boolean}
+     */
+    this.firstTab = function( cls ){
+        var tabs = this.tabs();
+        if( tabs.length ){
+            if( typeof cls !== 'undefined' ){
+                tabs[ 0 ].classList.add( cls );    
+            }
+            return tabs[ 0 ];
+        }
+        return false;
+    };
+    /**
+     * @param {String} selection
+     * @returns {Element|Boolean}
+     */
+    this.collection = function( selection ){
+        
+        var container = this.panels( selection );
+        //console.log( container.childNodes );
+        
+        for( var c = 0 ; c < container.childNodes.length ; c++ ){
+            if( container.childNodes[ c ].classList.contains('collection') ){
+                return container.childNodes[ c ];
+            }
+        }
+        
+        return false;
+    };
+    /**
+     * @returns {String}
+     */
+    this.selectedTab = function(){
+        var tabs = this.tabs();
+        for( var t = 0 ; t < tabs.length ; t++ ){
+            if( tabs[ t ].classList.contains('active')){
+                return tabs[t].getAttribute('data-tab');
+            }
+        }
+        return '';
+    };
+    /**
+     * @param {String} selection 
+     * @returns {Element[]|Boolean}
+     */
+    this.panels = function( selection ){
+        
+        if( typeof selection === 'string' && selection.length ){
+            var panels = this.panels();
+            for( var p = 0 ; p < panels.length ; p++ ){
+                if( panels[p].getAttribute('data-tab') === selection ){
+                    return panels[p];
+                }
+            }
+        }
+        
+        return typeof _elements.collectionBox === 'object' ?
+            [].slice.call( _elements.collectionBox.children ) :
+                    [];
+    };
+    /**
+     * @param {String} cls 
+     * @returns {Element[]|Boolean}
+     */
+    this.firstPanel = function( cls ){
+        var panels = this.panels();
+        if( panels.length ){
+            if( typeof cls !== 'undefined' ){
+                panels[ 0 ].classList.add( cls );
+            }
+            return panels[ 0 ];
+        }
+        return false;
+    };
+    /**
+     * @param {String} tab
+     * @returns {CodersView}
+     */
+    this.switchTab = function( selection ){
+        
+        if( typeof selection === 'undefined' ){
+            this.firstTab( 'active' );
+            this.firstPanel( 'active' );
+            return this;
+        }
+        
+        this.tabs().forEach( function( tab ){
+            if( tab.getAttribute('data-tab') === selection ){
+                if( !tab.classList.contains('active')) {
+                    tab.classList.add('active');
+                }
+            }
+            else{
+                tab.classList.remove('active');
+            }
+        });
+
+        this.panels().forEach( function( panel ){
+            if( panel.getAttribute('data-tab') === selection  && !panel.classList.contains('active')){
+                if( !panel.classList.contains('active')) {
+                    panel.classList.add('active');
+                }
+            }
+            else{
+                panel.classList.remove('active');
+            }
+        });
+        
+        if( selection !== 'create-collection' ){
+            var _view = this;
+            _server.listResources( selection , _view.listPosts );
+        }
+        
+        return this;
+    };
+    /**
      * @param {Number} ms
      * @returns {CodersView}
      */
@@ -113,48 +232,86 @@ function CodersView( ){
     };
     /**
      * 
+     * @param {String} collection
      * @param {Array} resources
-     * @param {Number} parent_id 
      * @returns {CodersView}
      */
-    this.displayCollection = function( resources , parent_id ){
-
-        var collection = _view.getContainer('collection');
+    this.listPosts = function( collection , resources ){
         
-        if( collection !== false ){
-            collection.clear();
-            collection.setAttribute('data-id',parent_id);
+        var panel = _self.panels( collection );
+                
+        if( panel.hasOwnProperty('element') ){
+            var gallery = panel.element('collection');
+            //var panel = _self.collection( collection );
+            if( gallery !== false ){
+                gallery.clear();
+            }
             for( var r = 0 ; r < resources.length ; r++ ){
                 if( r % 4 === 0 ){
                     _self.wait();
                 }
-                collection.appendChild( _self.addItem( resources[ r ] ) );
+                gallery.appendChild( _self.addItem( resources[ r ] ) );
             }
+            //resources.forEach( function( r ){
+            //    gallery.appendChild( _self.addItem( r ) );
+            //});
         }
-        
         return this;
     };
     /**
-     * @param {String} childClass
-     * @returns {Element|Boolean}
+     * @param {String} collection
+     * @param {String} title
+     * @returns {CodersView}
      */
-    this.getContainer = function( childClass ){
+    this.addCollection = function( collection , project_title ){
+
+        var cls = ['inline','collection',collection];
         
-        var container = document.getElementById( 'repository' );
-        
-        if( container !== null ){
-            if( typeof childClass === 'string' && childClass.length ){
-                var children = [].slice.call( container.children );
-                for( var c = 0 ; c < children.length ; c++ ){
-                    if( children[ c ].className === childClass || children[ c ].classList.contains( childClass ) ){
-                        return children[ c ];
-                    }
-                }
-                return false;
-            }
+        return this.addPanel( collection , [
+            //this.appendUploader( collection ) ,
+            this.element('ul', {'class': cls.join(' ') }) ], project_title );
+    };
+    /**
+     * @param {String} collection
+     * @param {Element} panel
+     * @param {String} title
+     * @returns {CodersView}
+     */
+    this.addPanel = function( item , panel , title ){
+
+        var _view = this;
+
+        var cls = item === 'create-collection' ?
+                'item create button button-primary' :
+                'item button';
+        if( typeof title === 'undefined' ){
+            title = item;
         }
+        //var title = item === 'create-collection' ?
+        //        'New Collection' :
+        //                item;
+
+        var tab = this.element('li',{'class':cls,'data-tab':item},title );
         
-        return container;
+        tab.addEventListener( 'click' , e => {
+            e.preventDefault();
+            e.stopPropagation();
+            _view.switchTab( item );
+            console.log('clicked ' + item );
+            return false;
+        } );
+
+        _elements.tabs.prepend( tab );
+        
+        _elements.collectionBox.prepend(this.element('div',{
+            'class':'tab', 'data-tab':item
+        }, panel ) );
+        
+        return this;
+    };
+    
+    this.getContainer = function(){
+        return document.getElementById( 'repository' );
     };
     
     /**
@@ -205,7 +362,7 @@ function CodersView( ){
      */
     this.addItem = function( itemData ){
 
-        var titleClass = ['action','center','cover','title'];
+        var titleClass = ['action','center','cover'];
         if( _server.isDocument( itemData.type )){
             titleClass.push('dashicons dashicons-text');
         }
@@ -367,16 +524,17 @@ function CodersView( ){
         return formData;
     };
     /**
+     * @param {String} collection 
      * @returns {Element}
      */
-    this.uploader = function(  ){
+    this.uploader = function( collection ){
 
         var inputFileSize = this.element('input',{'type':'hidden',
                 'name':'MAX_FILE_SIZE',
                 'value':CodersView.FileSize()});
         var inputFiles = this.element('input',{
                 'class':'hidden',
-                'id': 'id_uploader',
+                'id': collection + '-files',
                 'type':'file',
                 'name':'upload[]',
                 'multiple':true,
@@ -385,8 +543,9 @@ function CodersView( ){
             });
         var inputButton = this.element('button',{
                 'class':'button button-primary dashicons-before dashicons-upload',
+                'id': ( collection + '-upload' ),
                 'type':'submit',
-                'name':'_action',
+                'name':'collection',
                 'value':'default'
             }, 'Upload' );
             
@@ -403,19 +562,13 @@ function CodersView( ){
                 console.log( fileList );
                 return true;
             });
-
-
-
         var url = 'http://localhost/WORDPRESS/artistpad/wp-admin/admin.php?page=coders-main&_action=admin.main.upload';
-        
-        //var container = _view.getContainer('collection');
-        //var parent_id = container.getAttribute('data-id');
-        //console.log( parent_id );
          
         var formData = this.element('form',{
             //FORM DECLARATION
             'name': 'collection',
             'method':'POST',
+            //'action': _server.url(),
             'action': url,
             'enctype':'multipart/form-data'
         },[
@@ -429,7 +582,7 @@ function CodersView( ){
             formData,
             this.element('label',{
                 'class':'dashicons-before dashicons-media-default button',
-                'for': 'id_collection',
+                'for': ( collection + '-files' )
             }, 'Select files' ),
             this.progressBar( 'Upload' , 'hidden content' )
         ]);
@@ -444,78 +597,205 @@ function CodersView( ){
         return uploader;
     };
     /**
+     * @param {String} collection 
      * @returns {Element}
      */
-    this.renderPostForm = function(){
+    this.appendUploader = function( collection ){
+
+        //handle here the progressBar to attach a caller when required
+        var progressBar = this.progressBar( 'Upload' , 'hidden content' );
         
-        //create here the post form
-        var txtTitle = _view.element('h2',{'class':'title panel center'},'Post Name');
-        var txtName = _view.element('input',{'type':'text','name':'name','id':'id_name'});
-        var txtContent = _view.element('textarea',{'name':'content','id':'id_content'});
-        var btnUpdate = _view.element('button',{'type':'submit','name':'_action','value':'save'});
+        var inputFileSize = this.element('input',{'type':'hidden',
+                'name':'MAX_FILE_SIZE',
+                'value':CodersView.FileSize()});
+        var inputFiles = this.element('input',{
+                'class':'hidden',
+                'id': collection + '-files',
+                'type':'file',
+                'name':'upload[]',
+                'multiple':true,
+                //'accept':this.acceptedTypes().join(', '),
+                //'id': _repo.inputs.dropzone + '_input'
+            });
+        var inputButton = this.element('button',{
+                'class':'button button-large',
+                'id': ( collection + '-upload' ),
+                'type':'submit',
+                'name':'action',
+                'value':'main.upload'
+            }, 'Upload' );
+            
+        var url = 'http://localhost/WORDPRESS/artistpad/wp-admin/admin.php?page=coders-main&_action=admin.main.upload&collection=' + collection;
+         
+        var formData = this.element('form',{
+            //FORM DECLARATION
+            'name': 'collection',
+            'method':'POST',
+            //'action': _server.url(),
+            'action': url,
+            'enctype':'multipart/form-data'
+        },[
+            //FORM ELEMENTS
+            inputFileSize,
+            inputFiles,
+            inputButton
+        ]);
+        //console.log( formData.element( 'button' ) );
+        //var files = [];
+        formData.addEventListener( 'change', e => {
+            //e.preventDefault();
+            //progressBar.setLabel('Uploading...');
+            //console.log(e);
+            //_server.upload( files , function( response ){
+            //    console.log( response );
+            //});
+            //avoid bubbling over form
+            return true;
+        });
         
-        var form = _view.element('div',{'class':'container post-data hidden solid'},[
-            txtTitle,
-            txtName,
-            txtContent,
-            btnUpdate
+        var dropZone = this.element('div',{'class':'uploader item container' },[
+            formData,
+            this.element('label',{
+                'class':'dashicons-before dashicons-upload button button-primary',
+                'for': ( collection + '-files' )
+            }, 'Upload' ),
+            progressBar
+
         ]);
         
-        
-        return form;
-    };
-    /**
-     * @param {String} cls
-     * @returns {Element}
-     */
-    this.renderGridResizer = function( cls ){
-        
-        var options = [];
-        
-        [4,6,10].forEach( function( size ){
-            var item = _view.element('li',{'class':'option button','data-size':size},'x' +  size.toString( ) );
-            item.addEventListener('click',function(e){
-                e.preventDefault();
-                //console.log('Clicked ' + this.getAttribute('data-size') );
-                var size = this.getAttribute('data-size');
-                var collection = _view.getContainer('collection');
-                var grid = 'grid-' + size.toString();
-                if( !collection.classList.contains(grid) ){
-                    collection.classList.remove('grid-4');
-                    collection.classList.remove('grid-6');
-                    collection.classList.remove('grid-10');
-                    collection.classList.add(grid);
-                }
+        dropZone.addEventListener( 'click', e => {
+                //e.preventDefault();
+                e.stopPropagation();
+                return false;
             });
-            options.push(item);
+
+        //capture upload events
+        inputFiles.addEventListener( 'change', function(e){
+                return true;
+                dropZone.classList.add('uploading');
+                //pBarContainer.classList.add('current');
+                console.log('Selecting files...');
+                var fileList = this.files;
+                if ( typeof fileList !== 'undefined' && fileList.length ) {
+                    progressBar.setLabel('Uploading ...');
+                    var collection = _self.selectedTab();
+                    _server.upload( fileList , function( response ){
+                        //get all registered file metadata to append
+                        //them into the collection
+                        console.log( response ) ;
+                    });
+                    return true;
+                }
+                else{
+                    progressBar.setLabel('No files to upload?');
+                }
+                return false;
+            });
+
+        ['dragenter','dragleave','dragover','drop'].forEach( function( event ){
+            dropZone.addEventListener(event, function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                switch( event ){
+                    case 'dragenter':
+                    case 'dragover':
+                        dropZone.classList.add('highlight');
+                        break;
+                    case 'dragleave':
+                        dropZone.classList.remove('highlight');
+                        break;
+                    case 'drop':
+                        dropZone.classList.add('uploading');
+                        //pBarContainer.classList.add('current');
+                        var files = e.dataTransfer.files;
+                        if (files.length) {
+                            progressBar.setLabel('Uploading ...');
+                            var collection = _self.selectedTab();
+                            _server.upload( files , function( response ){
+                                //get all registered file metadata to append
+                                //them into the collection
+                                console.log( response ) ;
+                            });
+                        }
+                        else{
+                            progressBar.setLabel('No files to upload?');
+                        }
+                        break;
+                }
+            }, false);
         });
 
-        var resizer = _view.element('ul',{'class':'grid inline ' + cls}, options );
-                        
-        return resizer;
+        return dropZone;
     };
     /**
      * @param {array} collections 
      * @returns {CodersView}
      */
     this.initialize = function( ){
-
-        var container = _view.getContainer();
+        
+        var container = this.getContainer();
         
         if( null !== container ){
-            
-            container.appendChild( _view.element('div',{'class': 'toolbox container inline solid clearfix centered'},[
-                _view.element('ul',{'class':'navigator panel left inline'},_view.element('li',{'class':'home'},'#Home')),
-                _view.element('span',{'class':'panel title inline centered'},'Title'),
-                
-                this.renderGridResizer('panel right'),
-                _view.element('span',{'class':'panel button right'},'Post Data')
-            ]));
-            container.appendChild( _view.renderPostForm() );
-            container.appendChild( _view.uploader());
-            container.appendChild( _view.element('ul', {'class': 'collection grid-10' }));
 
-            _server.listResources( _view.displayCollection );
+            _elements.tabs = this.element('ul',{
+                'class':'collection-tab inline container'
+            });
+            _elements.collectionBox = this.element('div',{
+                //'class': 'repository-box grid-4'
+                'class': 'repository-box grid-6'
+            } );
+
+            container.appendChild( _elements.tabs );
+            container.appendChild( this.element('div',{'class':'toolbox'},'#toolbox'));
+            container.appendChild( this.uploader());
+            container.appendChild( _elements.collectionBox );
+            
+            var txtCollection = this.element('input',{
+                'type': 'text',
+                'name': 'collection',
+                'placeholder': 'Name your collection'});
+            var btnCollection = this.element('button',{
+                'class': 'button button-primary',
+                'type': 'submit',
+                'name': 'action',
+                'value': 'create'},
+            'Create');
+            
+            btnCollection.addEventListener('click', e => {
+                e.preventDefault();
+                var collection = txtCollection.value;
+                console.log('Create collection ' + collection );
+                _server.createCollection( collection , _view.addCollection );
+                return true;
+            });
+
+            this.addPanel('create-collection', this.element('div',
+                    {'class': 'content', 'data-tab': 'create-collection'}, [
+                    txtCollection, btnCollection
+                    ] ) , 'New Collection' );
+            
+            var _view = this;
+            _server.listCollections( function( collections ){
+                //console.log( collections );
+                switch( true ){
+                    case typeof collections === 'object':
+                        for( var c in collections ){
+                            if( collections.hasOwnProperty( c ) ){
+                                console.log( c + ':' + collections[ c ] );
+                                _view.addCollection( c , collections[ c ] );
+                            }
+                        }
+                        _view.switchTab( );
+                        break;
+                    case Array.isArray( collections ):
+                        collections.forEach( function( item ){
+                            //console.log( collection );
+                            _view.addCollection( item );
+                        });
+                        _view.switchTab( );
+                        break;
+                }
+            } );
         }
         else{
             console.log('Container not found');
@@ -535,58 +815,12 @@ CodersView.FileSize = function(){ return 256 * 256 * 256; };
 function CodersModel(){
     
     var _client = {
-        'self' : this,
         'queue':{
             'files':[],
             'current': 0
         },
         'debug':true
     };
-    
-    /**
-     * @param {Object} data
-     * @returns {CodersController}
-     */
-    function request( action , data , callback ){
-        
-        var content = {
-            'ts': ( new Date( ) ).getMilliseconds( ),
-            //wordpress ajax action caller
-            'action': 'coders_admin',
-            //coders module action (controller.action)
-            '_action': action,
-            'data': typeof data !== 'undefined' ? JSON.stringify(data) : false
-        };
-        var request = new XMLHttpRequest();
-        request.onreadystatechange = function () {
-            if (this.status >= 200 && this.status < 400) {
-                if( this.readyState == 4 ){
-                    if( typeof callback === 'function' ){
-                        //console.log( this.responseText );
-                        callback( JSON.parse( this.responseText ) );
-                    }
-                    else if( _client.debug ){
-                        console.log( this.responseText );
-                    }
-                }
-            }
-            else{
-                if( _client.debug ){
-                   //console.log( 'status: ' + this.status );
-                }
-            }
-        };
-        request.open('POST', _client.self.url( true ) , true );
-        //required by WP_AJAX.PHP
-        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;');
-        request.send( _client.self.serialize( content ) );
-
-        //request.setRequestHeader("Content-type", "application/json;charset=UTF-8");
-        //request.send( content );
-        //request.send( JSON.stringify( content ) );
-        return this;
-    };
-    
     /**
      * @returns {File|Boolean}
      */
@@ -670,6 +904,49 @@ function CodersModel(){
         form.append('_action',action);
         
         return form;
+    };
+    /**
+     * @param {Object} data
+     * @returns {CodersController}
+     */
+    this.ajax = function( action , data , callback ){
+        
+        var content = {
+            'ts': ( new Date( ) ).getMilliseconds( ),
+            //wordpress ajax action caller
+            'action': 'coders_admin',
+            //coders module action (controller.action)
+            '_action': action,
+            'data': typeof data !== 'undefined' ? JSON.stringify(data) : false
+        };
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (this.status >= 200 && this.status < 400) {
+                if( this.readyState == 4 ){
+                    if( typeof callback === 'function' ){
+                        //console.log( this.responseText );
+                        callback( JSON.parse( this.responseText ) );
+                    }
+                    else if( _client.debug ){
+                        console.log( this.responseText );
+                    }
+                }
+            }
+            else{
+                if( _client.debug ){
+                   //console.log( 'status: ' + this.status );
+                }
+            }
+        };
+        request.open('POST', this.url( true ) , true );
+        //required by WP_AJAX.PHP
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;');
+        request.send( this.serialize( content ) );
+
+        //request.setRequestHeader("Content-type", "application/json;charset=UTF-8");
+        //request.send( content );
+        //request.send( JSON.stringify( content ) );
+        return this;
     };
     /**
      * @param {Boolean} mediaonly 
@@ -842,29 +1119,26 @@ function CodersModel(){
         return [];
     };
     /**
+     * @param {String} collection
      * @param {Function} handler
-     * @param {String} post
      * @returns {CodersModel}
      */
-    this.listResources = function( handler , post_id ){
+    this.listResources = function( collection , handler ){
         //console.log( typeof handler );
         if( typeof handler === 'function' ){
-            if( typeof post_id !== 'number' ){
-                post_id = 0;
-            }
-            request( 'collection' , {'ID':post_id } , function( response ){
+            return this.ajax( 'collection' , {'collection':collection } , function( response ){
                 //console.log( response );
-                handler( response.data , post_id );
+                handler( collection , response.data );
+
             } );
         }
-        return this;
     };
     /**
      * @param {Function} callback
      * @returns {CodersModel}
      */
     this.listCollections = function( callback ){
-            request( 'list_collections' , {} , function( response ){
+            this.ajax( 'list_collections' , {} , function( response ){
                 
                 var collections = response.data || [];
                 
@@ -879,7 +1153,7 @@ function CodersModel(){
      */
     this.createCollection = function( collection  , callback ){
         
-        request( 'create_collection', { 'collection': collection }, function( response ){
+        this.ajax( 'create_collection', { 'collection': collection }, function( response ){
             
             //console.log( response );
             var collection = response.data.hasOwnProperty('collection') ?
@@ -909,8 +1183,19 @@ function CodersModel(){
         
         return false;
     };
+    /**
+     * @returns {CodersModel}
+     */
+    this.initialize = function(){
+        //testing url
+        //console.log( this.url( ) );
+        //this.ajax( 'default' , {'message':'Hello!'} , function( response ){
+        //    console.log(response);
+        //});
+        return this;
+    };
     
-    return this;
+    return this.initialize();
 }
 
 /**

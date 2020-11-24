@@ -4,8 +4,48 @@
  */
 abstract class Response {
     
+    const NOTICE_ERROR = 'error';
+    const NOTICE_INFO = 'info';
+    const NOTICE_SUCCESS = 'success';
+    const NOTICE_WARNING = 'warning';
+    
     protected function __construct( ) {
 
+    }
+    /**
+     * @param string $message
+     * @param string $type
+     * @param boolean $dismiss
+     * @return \CODERS\Repository\Response
+     */
+    protected function notify( $message , $type = self::NOTICE_INFO , $dismiss = TRUE ){
+        
+        if(is_admin() ){
+            /**
+             * admin_notices hook is nolonger available once this controller gets triggered
+             */
+            //$content = array(
+            //    'message' => $message,
+            //    'type' => $type,
+            //    'dismiss' => $dismiss,
+            //);
+            //add_action( 'admin_notices', function() use($content){
+            //    printf('<div class="notice notice-%s %s">%s</div>',
+            //            $content['type'],
+            //            $content['dismiss'] ? 'is-dismissible' : '',
+            //            $content['message']);
+            //} );
+            printf('<div class="notice notice-%s %s">%s</div>',
+                        $type,
+                        $dismiss ? 'is-dismissible' : '',
+                        $message);
+
+        }
+        else{
+            //handle log here
+        }
+        
+        return $this;
     }
     /**
      * @return string

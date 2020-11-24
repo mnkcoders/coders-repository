@@ -10,7 +10,7 @@ final class ProjectsController extends \CODERS\Repository\Response{
         
         $view = $this->importView('admin.projects');
         
-        $view->setModel($project)->setLayout('projects')->display();
+        $view->setModel($project)->setLayout('project.list')->display();
         
         return TRUE;
     }

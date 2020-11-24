@@ -123,7 +123,7 @@ final class Account extends \CODERS\Repository\Model{
     /**
      * @return array
      */
-    public static final function listStatus(){
+        public static final function listStatus(){
         return array(
             self::STATUS_CREATED => __('Created','coders_repository'),
             self::STATUS_ACTIVE => __('Active','coders_repository'),

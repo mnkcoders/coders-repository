@@ -68,6 +68,7 @@ class CodersRepo{
     /**
      * @param string $component
      * @param string $type
+     * @return boolean
      */
     protected final function component( $component , $type = 'models' ){
         
@@ -88,7 +89,7 @@ class CodersRepo{
     public static final function listModules(){
         $output = array();
         $root = self::path('modules/');
-        var_dump($root);
+        //var_dump($root);
         foreach(scandir($root) as $module ){
             $path = self::path( 'modules/' . $module );
             if( $module !== '.' && $module !== '..' && is_dir($path) ){
@@ -98,17 +99,17 @@ class CodersRepo{
         return $output;
     }
     /**
-     * @param string $collection
+     * @param string $ID
      * @return string
      */
-    public static final function base( $collection = '' ){
+    public static final function base( $ID = '' ){
         
-        $base = sprintf('%s%s',
+        $base = sprintf('%s/wp-content/uploads/%s',
                 preg_replace('/\\\\/', '/', ABSPATH),
                 get_option( 'coders_repo_base' , self::ENDPOINT ));
         
-        if( strlen( $collection ) ){
-            $base .= '/' . $collection;
+        if( strlen( $ID ) ){
+            $base .= '/' . $ID;
         }
         
         return $base;
@@ -144,12 +145,12 @@ class CodersRepo{
     }
     /**
      * 
-     * @param string $collection
+     * @param int $parent_id
      * @return array
      */
-    public static final function collection( $collection ){
+    public static final function collection( $parent_id ){
         
-        $resources = \CODERS\Repository\Resource::collection($collection);
+        $resources = \CODERS\Repository\Resource::collection($parent_id);
         
         return $resources;
         //return array( $collection => $resources );

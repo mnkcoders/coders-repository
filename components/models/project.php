@@ -1,8 +1,36 @@
-<?php
+<?php namespace CODERS\Repository;
 
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+final class Project extends \CODERS\Repository\Model{
+    
+    const STATUS_INACTIVE = 0;
+    const STATUS_ACTIVE = 1;
+    const STATUS_COMPLETED = 2;
+    
+    protected final function __construct(array $data = array()) {
+        
+        $this->define('ID', parent::TYPE_TEXT, array('size'=>12))
+                ->define('title',parent::TYPE_TEXT , array('size'=>64,'label'=>'Title') )
+                ->define('content',parent::TYPE_TEXTAREA , array('label'=>'Content') )
+                ->define('status',parent::TYPE_NUMBER , array('label'=>'Status'))
+                ->define('image_id',parent::TYPE_NUMBER)
+                ->define('date_created',parent::TYPE_DATETIME , array('label'=>'Created'))
+                ->define('date_updated',parent::TYPE_DATETIME , array('label'=>'Updated'));
+        
+        parent::__construct($data);
+    }
+    
+    /**
+     * @return array
+     */
+    public static final function listStatus(){
+        return array(
+            self::STATUS_INACTIVE => __('Inactive','codrers_repository'),
+            self::STATUS_ACTIVE => __('Active','codrers_repository'),
+            self::STATUS_COMPLETED => __('Completed','codrers_repository'),
+            
+        );
+    }
+}
+
+
 

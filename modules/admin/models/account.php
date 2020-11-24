@@ -6,10 +6,13 @@ final class AccountModel extends \CODERS\Repository\Model{
     
     protected final function __construct(array $data = array()) {
         
-        $this->define('name', parent::TYPE_TEXT,
-                array('size'=>16, 'label' => __('Name', 'coders_repository'),'required' => TRUE))
-            ->define('email_address', parent::TYPE_EMAIL,
-                array('size'=>128, 'label' => __('Email', 'coders_repository'),'required' => TRUE));
+        $this->define('ID',parent::TYPE_NUMBER,array('label'=>'ID'))
+            ->define('name', parent::TYPE_TEXT,array('label' => __('Name', 'coders_repository')))
+            ->define('email_address', parent::TYPE_EMAIL,array('label' => __('Email', 'coders_repository')))
+            ->define('token',parent::TYPE_TEXT,array('label'=>__('Public Key','coders_repository')))
+            ->define('status',parent::TYPE_NUMBER,array('label'=>__('Status','coders_repository')))
+            ->define('date_created',parent::TYPE_DATETIME,array('label'=>__('Created','coders_repository')))
+            ->define('date_updated',parent::TYPE_DATETIME,array('label'=>__('Last Updated','coders_repository')));
         
         parent::__construct($data);
     }

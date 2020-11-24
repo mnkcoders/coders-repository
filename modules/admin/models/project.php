@@ -31,6 +31,15 @@ final class ProjectModel extends \CODERS\Repository\Model{
         return '';
     }
     /**
+     * @return int
+     */
+    //protected final function getProgress(){
+    //    return random_int( 0 , 100 );
+    //}
+    //protected final function getSubscriberCount(){
+    //    return 0;
+    //}
+    /**
      * @param int $paginagion
      * @return array
      */
@@ -44,8 +53,12 @@ final class ProjectModel extends \CODERS\Repository\Model{
         foreach ( $projects as $meta ){
             $output[ $meta['ID'] ] = array(
                 'title' => $meta['title'],
-                //'img' => $this->getImageUrl($meta['image_id']),
+                'status' => $meta['status'],
                 'image_id' => $meta['image_id'],
+                'progress' => random_int(0, 100),
+                'subscribers' => random_int(0, 1000),
+                'date_created' => $meta['date_created'],
+                'date_updated' => $meta['date_updated'],
             );
         }
         return $output;

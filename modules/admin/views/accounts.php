@@ -56,6 +56,17 @@ final class AccountsView extends \CODERS\Repository\View{
         return \CODERS\Repository\Request::url('admin.accounts');
     }
     /**
+     * @return string
+     */
+    protected final function getStatusButton(){
+        
+        $items = \CODERS\Repository\Account::listStatus();
+        
+        $status = $this->hasModel() ? $this->model()->status : '';
+
+        return self::renderDropDown('status', $items, $status);
+    }
+    /**
      * 
      * @return type
      */

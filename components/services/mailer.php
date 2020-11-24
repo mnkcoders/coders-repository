@@ -21,6 +21,29 @@ class Mailer{
         //$this->header($header);
     }
     /**
+     * @return \CODERS\Repository\Services\Mailer
+     */
+    private final function logError( ){
+        add_action('wp_mail_failed', function ($wp_error) {
+            $log = sprintf('%s/mail.log',ABSPATH );
+            $fp = fopen($log, 'a');
+            $ts = date('Y-m-d H:i:s');
+            fputs($fp, sprintf("[%s] Error: %s\n",$ts, $wp_error->get_error_message()));
+            fclose($fp);
+        });
+        return $this;
+    }
+    /**
+     * @return \CODERS\Repository\Services\Mailer
+     */
+    private final function prepareSender(){
+        $from = $this->_sender;
+        $from_name = 'ArtistPad Test Site';
+        add_filter('wp_mail_from', function() use( $from ){ return $from; });
+        add_filter('wp_mail_from_name', function() use( $from_name ) { return $from_name; });
+        return $this;
+    }
+    /**
      * @param string $header
      * @return CODERS\Repository\Services\Mailer
      */
@@ -42,16 +65,10 @@ class Mailer{
      * @return boolean
      */
     public final function send(){
-        
-        //add_action('wp_mail_failed', function ($wp_error) {
-        //    $fn = ABSPATH . '/mail.log'; // say you've got a mail.log file in your server root
-        //    $fp = fopen($fn, 'a');
-        //    fputs($fp, "Mailer Error: " . $wp_error->get_error_message() . "\n");
-        //    fclose($fp);
-        //});
 
-        return wp_mail( $this->_receiver, $this->_subject, $this->_content, $this->_headers );
+        $this->prepareSender()->logError();
         
+        return wp_mail( $this->_receiver, $this->_subject, $this->_content, $this->_headers );
     }
     /**
      * @param string $from

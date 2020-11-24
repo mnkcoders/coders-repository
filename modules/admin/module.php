@@ -9,7 +9,9 @@ class AdminModule extends \CodersRepo{
     
     protected final function __construct() {
         
-        parent::component('Account', 'models' );
+        $this->component('Account', 'models' );
+        $this->component('Project', 'models' );
+        $this->component('Mailer', 'services' );
         
         parent::__construct();
 

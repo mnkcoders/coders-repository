@@ -100,6 +100,19 @@ abstract class View{
     public final function __call($name, $arguments) {
         $params = is_array( $arguments ) ? $arguments[0] : $arguments;
         switch( TRUE ){
+            case $name === 'action':
+                if(is_array($arguments) && count($arguments)){
+                    $action = $arguments[0];
+                    $label = count( $arguments) > 1 ? $arguments[1] : $action;
+                    $class = count( $arguments) > 2 ? $arguments[2] : '';
+                    $url = \CODERS\Repository\Request::url($action);
+                    return self::__HTML('a', array(
+                        'class' => 'button ' . $class,
+                        'href' => $url,
+                        'target' => '_self'
+                    ), $label);
+                }
+                return '<!-- INVALID OR EMPTY ACTION -->';
             case preg_match(  '/^action_/' , $name ):
                 $action = substr($name, strlen('action_'));
                 $label = is_array($arguments) && count( $arguments ) ?
@@ -438,7 +451,8 @@ abstract class View{
     public function display( ){
         
         $path = $this->getView( $this->getLayout( ) );
-        printf('<div class="coders-repository %s-view"><!-- CODERS REPO CONTAINER -->',$this->getLayout());
+        $css_name = preg_replace('/\./', '-', $this->getLayout());
+        printf('<div class="coders-repository %s-view"><!-- CODERS REPO CONTAINER -->', $css_name );
         if( file_exists($path) ){
             require $path;
         }
@@ -448,6 +462,28 @@ abstract class View{
         print('<!-- CODERS REPO CONTAINER --></div>');
         
         return $this;
+    }
+    /**
+     * @param string $progress
+     * @return string
+     */
+    protected function displayProgressBar( $progress = 0 ){
+        
+        if( $progress > 100 ){
+            $progress = 100;
+        }
+        
+        $bar = self::__HTML('span',
+                array('class'=>'progress','style' => sprintf("width:%s%%;",$progress)),
+                '' );
+        
+        $label = self::__HTML('span',
+                array('class'=>'label'),
+                sprintf('%s / 100' , $progress ) );
+        
+        return self::__HTML('span',
+                array('class' => 'progress-bar'),
+                array( $bar , $label ));
     }
     /**
      * @param string $view
@@ -472,6 +508,46 @@ abstract class View{
         
         return $this;
     }
+    /**
+     * @param string $name
+     * @param array $options
+     * @param string $value
+     * @param mixed $class
+     * @param int $size 5
+     * @return string
+     */
+    protected static final function renderList( $name , array $options = array() , $value = '' , $placeholder = '' ,  $class = 'form-input' , $size = 5 ){
+        
+        $items = array();
+        
+        if(strlen($placeholder)){
+            $items[] = sprintf('<option value="">%s</option>',$placeholder);
+        }
+        
+        foreach( $options as $val => $text ){
+            $items[] = sprintf('<option value="%s" %s>%s</option>',
+                    $val,
+                    strlen($value) && $value == $val ? 'selected' : '',
+                    $text);
+        }
+        
+        return self::__HTML('select', array(
+            'name' => $name,
+            'size' => $size,
+            'class' => 'form-input '
+        ), $items);
+    }
+    /**
+     * @param string $name
+     * @param array $options
+     * @param string $value
+     * @param mixed $class
+     * @return string
+     */
+    protected static final function renderDropDown( $name , array $options = array(), $value = '' , $placeholder = '', $class = 'form-input' ){
+        return self::renderList($name, $options, $value, $placeholder, $class, 1 );
+    }
+    
     /**
      * @param string $request
      * @return \CODERS\Repository\Response

@@ -5,17 +5,71 @@
 .coders-repository input[type="text"]{
     margin: 0;
 }
+
+.coders-repository table{
+    
+}
+
+.coders-repository table th:not(:first-child):last-child,
+.coders-repository table td:not(:first-child):last-child{
+    text-align: right;
+}
+.coders-repository table td.strong{ font-weight: 600; }
+.coders-repository table td.detail{ font-weight: 300; font-style: italic; }
+
 .coders-repository > .header{
     margin: 40px 0 20px;
 }
-.coders-repository .hidden{ display: none !important; }
 .coders-repository .container{
-    padding: 20px 0 20px;
+    padding: 5px 10px;
     margin: 20px auto;
     box-sizing: border-box;
     
     background-color: transparent;
+    
+    position: relative;
 }
+.coders-repository .container.wide{
+    padding: 20px 0 20px;
+}
+.coders-repository .container.solid{
+    background-color: #ffffff;
+}
+.coders-repository .container.centered{
+    text-align: center;
+}
+.coders-repository .container.clearfix:after{
+    content: '';
+    display: block;
+    clear: both;
+    height: 0;
+}
+.coders-repository .container .control{
+    
+}
+.coders-repository .container .control.bottom{ position: absolute; bottom: 0; }
+.coders-repository .container .control.right{ position: absolute; right: 0; }
+.coders-repository .container .control.left{ position: absolute; left: 0; }
+.coders-repository .container .control.top{ position: absolute; top: 0; }
+
+.coders-repository .container .control.pad-sm{ padding: 10px; }
+
+.coders-repository .container .panel{
+    margin: 0;
+}
+.coders-repository .container .panel.left{ float: left; }
+.coders-repository .container .panel.right{ float: right; }
+.coders-repository .container .panel.inline{
+    display: inline-block;
+}
+.coders-repository .container .panel.inline:not(:first-child){
+    margin-left: 10px;
+}
+.coders-repository .container .panel.centered{
+    display: inline-block;
+    margin: 0 auto;
+}
+.coders-repository .hidden{ display: none !important; }
 .coders-repository .container.highlight{
     transition: ease-in 240ms;
 }
@@ -26,6 +80,19 @@
     min-width: 168px;
 }
 .coders-repository ul.inline > li{ display: inline-block; vertical-align: top; margin: 0 10px 0 0; }
+
+
+
+.coders-repository.repository-view{
+}
+
+
+
+.coders-repository #repository{
+    overflow: hidden;
+}
+
+
 
 .coders-repository ul.collection-tab{
     padding-bottom: 10px;
@@ -77,24 +144,35 @@
     clear: both;
 }
 
-.coders-repository .repository-box.grid-4 ul.collection > li.item{
+.coders-repository  ul.collection.grid-4 > li.item{
     width: 22%;
     margin: 0 4% 4% 0;
     float:left;
     font-size: 15px;
     line-height: 15px;
 }
-.coders-repository .repository-box.grid-4 ul.collection > li.item:nth-child(4n){
+.coders-repository ul.collection.grid-4 > li.item:nth-child(4n){
     margin-right: 0;
 }
-.coders-repository .repository-box.grid-6 ul.collection > li.item{
+.coders-repository ul.collection.grid-6 > li.item{
     width: 15%;
     margin: 0 2% 2% 0;
     float:left;
     font-size: 10px;
     line-height: 10px;
 }
-.coders-repository .repository-box.grid-6 ul.collection > li.item:nth-child(6n){
+.coders-repository ul.collection.grid-6 > li.item:nth-child(6n){
+    margin-right: 0;
+}
+.coders-repository ul.collection.grid-10 > li.item{
+    width: 10%;
+    margin: 0;
+    float:left;
+    font-size: 10px;
+    line-height: 10px;
+}
+.coders-repository ul.collection.grid-10 > li.item .title{ color: transparent !important; }
+.coders-repository ul.collection.grid-10 > li.item:nth-child(6n){
     margin-right: 0;
 }
 
@@ -132,7 +210,7 @@
     cursor: pointer;
 }
 .coders-repository ul.collection > li.item > .content .action:hover{
-    background-color: rgba(255,255,255,0.85);
+    background-color: rgba(255,255,255,0.5);
     color: rgba(24,24,24,0.85);
 }
 .coders-repository ul.collection > li.item > .content .action.rounded{
@@ -361,17 +439,17 @@
 }
 
 
-.coders-repository.projects-view .projects:after{
+.coders-repository.project-list-view .projects:after{
     content: '';
     display: block;
     height: 0;
     clear: both;
 }
-.coders-repository.projects-view .projects > li{
+.coders-repository.project-list-view .projects > li{
     display: inline-block;
     width: 32%;
 }
-.coders-repository.projects-view .projects > li > .project{
+.coders-repository.project-list-view .projects .project{
     display: block;
     width: 100%;
     height: 0;
@@ -379,21 +457,21 @@
     position: relative;
     overflow: hidden;
 }
-.coders-repository.projects-view .projects > li > .project img{
+.coders-repository.project-list-view .projects .project img{
     position: absolute;
     left:0; top:0;
     height: 100%;
     width: auto;
     transition: ease-in 1200ms;
 }
-.coders-repository.projects-view .projects > li > .project img.portrait{
+.coders-repository.project-list-view .projects .project img.portrait{
     width: 100%;
     height: auto;
 }
-.coders-repository.projects-view .projects > li > .project:hover img{
+.coders-repository.project-list-view .projects .project:hover img{
     transform: scale( 1.1 );
 }
-.coders-repository.projects-view .projects > li > .project .title{
+.coders-repository.project-list-view .projects .project .title{
     color: rgba(255,255,255,1);
     text-shadow: 0 0 8px rgba(0,0,0,.25);
     text-align: center;
@@ -410,10 +488,52 @@
     padding: calc(20% - 12px) 0;
     background-color: rgba(0,0,0,0.1);
 }
-.coders-repository.projects-view .projects > li > .project:hover .title{
+.coders-repository.project-list-view .projects .project:hover .title{
     background-color: rgba(0,12,24,0.55);
     letter-spacing: 1.5px;
     text-shadow: 0 0 0 32px rgba(0,0,0,.5);
+}
+
+
+
+.coders-repository .progress-bar{
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    font-size: 15px;
+    line-height: 15px;
+    box-sizing: border-box;
+    height: 20px;
+    background-color: #959595;
+    color: #ffffff;
+    letter-spacing: 1px;
+    font-weight: 500;
+    
+    position: relative;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+}
+.coders-repository .progress-bar > .progress{
+    display: block;
+    background-image: -webkit-linear-gradient( #0886c2 , #0576ac );
+    background-image: -moz-linear-gradient( #0886c2 , #0576ac );
+    background-image: -ms-linear-gradient( #0886c2 , #0576ac );
+    background-image: -o-linear-gradient( #0886c2 , #0576ac );
+    background-image: linear-gradient( #0886c2 , #0576ac );
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+}
+.coders-repository .progress-bar > .label{
+    display: block;
+    position: absolute;
+    padding: 2px 0 0;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 10;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.75);
 }
 
 

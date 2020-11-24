@@ -19,6 +19,18 @@ final class ProjectsView extends \CODERS\Repository\View{
 
     }
     /**
+     * @param int $status
+     * @return string
+     */
+    protected final function getStatus( $status = 0 ){
+
+        $status_list = \CODERS\Repository\Project::listStatus();
+        
+        return array_key_exists($status, $status_list) ?
+                $status_list[ $status ] :
+                __('Invalid','coders_repository');
+    }
+    /**
      * @param int $media_id
      * @return string
      */

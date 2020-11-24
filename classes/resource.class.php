@@ -118,7 +118,8 @@ final class Resource{
      * @return string
      */
     public final function path(){
-        return sprintf('%s/%s/%s', \CodersRepo::base(),$this->collection,$this->public_id);
+        return \CodersRepo::base( $this->public_id );
+        //return sprintf('%s/%s/%s', \CodersRepo::base(),$this->collection,$this->public_id);
     }
     /**
      * 
@@ -290,12 +291,12 @@ final class Resource{
         return $this->query($filters);
     }
     /**
-     * @param string $collection
+     * @param string $parent_id
      * @return array
      */
-    public static final function collection( $collection ){
+    public static final function collection( $parent_id = 0 ){
         
-        return self::query( array( 'parent_id' => 0 ) );
+        return self::query( array( 'parent_id' => $parent_id ) );
         //return self::query( array( 'collection' => $collection ) );
     }
     /**

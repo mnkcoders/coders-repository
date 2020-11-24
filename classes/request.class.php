@@ -285,12 +285,12 @@ final class Request{
         
         $input = self::read();
         
-            if( isset( $input[self::ACTION ] ) ){
-                $input[ self::ACTION ] = self::override($input[self::ACTION], $route);
-            }
-            else{
-                $input[ self::ACTION ] = $route;
-            }
+        if( isset( $input[self::ACTION ] ) ){
+            $input[ self::ACTION ] = self::override($input[self::ACTION], $route);
+        }
+        else{
+            $input[ self::ACTION ] = $route;
+        }
         /*if(is_admin() && array_key_exists('page', $input)){
 
             $action = self::mapAdminAction($input['page']);
