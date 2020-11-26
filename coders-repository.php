@@ -65,7 +65,7 @@ class CodersRepo{
         switch( $name ){
             case preg_match(  '/^register/' , $name ):
                 //RETURN LIST
-                return method_exists($this, $name) ? $this->$name($arguments) : FALSE;
+                return method_exists($this, $name) ? $this->$name( $arguments ) : FALSE;
         }
         return FALSE;
     }
@@ -295,30 +295,11 @@ class CodersRepo{
         return '';
     }
     /**
-     * @param string $endpoint
-     * @return boolean
-     */
-    /*public final function validate( $endpoint ){
-        return in_array($endpoint, array('posts','repository'));
-    }*/
-    /**
      * @return CodersRepo
      */
     function run( \CODERS\Repository\Request $request ){
         
         \CODERS\Repository\Response::create($request);
-        
-        return $this;
-        
-        $module = strval($this);
-
-        //$request = strlen($module) ?
-        //        //define the output route
-        //        \CODERS\Repository\Request::route( $module ) :
-        //        //check for post/get variables
-        //        \CODERS\Repository\Request::import( );
-        
-        \CODERS\Repository\Response::fromRoute($module);
         
         return $this;
     }
@@ -349,18 +330,9 @@ class CodersRepo{
             add_action( 'init' , function(){
                 //initialize Admin
                 $admin = CodersRepo::module('Admin');
-                //register admin menu
-                add_action('admin_menu', array( $admin , 'registerAdminMenu') , 100000 );
-                //register private ajax handlers
-                add_action( sprintf('wp_ajax_%s_admin', CodersRepo::ENDPOINT) , array( $admin , 'registerAjax' ) , 100000 );
-                //disable pubilc ajax handlers
-                add_action( sprintf('wp_ajax_nopriv_%s_admin', CodersRepo::ENDPOINT) , 'wp_die', 100000 );   
             });
         }
         else{
-            //REGISTER ROUTES
-            //\CODERS\Repository\Request::createRoute('account.main')
-            
             //INITIALIZE REDIRECTION RULES
             add_action( 'init' , function(){
                 global $wp, $wp_rewrite;

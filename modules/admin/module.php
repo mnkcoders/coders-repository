@@ -6,112 +6,111 @@ defined('ABSPATH') or die;
  */
 class AdminModule extends \CodersRepo{
     
+    private $_menu = array(
+        
+    );
     
     protected final function __construct() {
-        
+        //register componetns
         $this->component('Account', 'models' );
         $this->component('Project', 'models' );
         $this->component('Mailer', 'services' );
         
+        //register admin menu routes
+        $this->registerRoute( 'main' , __('Artist Pad','coders_repository'))
+                ->registerRoute( 'collection' , __('Collections','coders_repository'))
+                ->registerRoute( 'accounts' , __('Accounts','coders_repository'))
+                ->registerRoute( 'settings' , __('Settings','coders_repository'))
+                ->registerRoute( 'logs' , __('Logs','coders_repository'));
+
         parent::__construct();
 
         //register styles and scripts using the helper within the view
         \CODERS\Repository\View::attachStyles(array('style.css'),'admin');
-        //\CODERS\Repository\View::attachScripts(array('script.js'=>array()),'admin');
-        //add_filter( 'admin_body_class', 'coders-repository' );
         
-        //$this->adminMenu();
+        $this->initAdminMenu()->initAjax();
     }
     /**
-     * Describe admin pages
-     * @return array
+     * @return string
      */
-    private final function adminOptions(){
-
-        return array(
-                    'main' => __( 'Artist Pad' , 'coders_repository' ),
-                    'collection' => __( 'Collections' , 'coders_repository' ),
-                    //'projects' => __( 'Projects' , 'coders_repository' ),
-                    'accounts' => __( 'Accounts' , 'coders_repository' ),
-                    //'subscriptions' => __( 'Subscriptions' , 'coders_repository' ),
-                    //'payments' => __( 'Payments' , 'coders_repository' ),
-                    'settings' => __( 'Settings' , 'coders_repository' ),
-                    'logs' => __( 'Logs' , 'coders_repository' ),
-                );
-    }
-    /**
-     * @return boolean
-     */
-    public final function registerAdminMenu(){
+    private final function rootMenu(){
         
-        $menu = $this->adminOptions();
-
-        $root = '';
-        foreach( $menu as $page => $title ){
-            if(strlen($root)){
-                add_submenu_page(
-                        $root, $title, $title,
-                        'administrator',
-                        $root . '-' . $page ,
-                        function() use( $page ) {
-                            \CODERS\Repository\Response::fromRoute('admin.' . $page );
-                });
-            }
-            else{
-                $root = 'coders-' . $page;
-                add_menu_page(
-                        $title, $title,
-                        'administrator', $root,
-                        function() use( $page ) {
-                            \CODERS\Repository\Response::fromRoute('admin.' . $page );
-                }, 'dashicons-art', 51);
-            }
-        }
-
-
-        return TRUE;
-    }
-    /**
-     * @return boolean
-     */
-    public final function registerAjax(){
+        $keys = array_keys($this->_menu);
         
-        //print json_encode(array('response'=>'OK'));
-        \CODERS\Repository\Response::fromAjax('admin.ajax');
-        wp_die();
-        return TRUE;
+        return count( $keys ) ? $keys[ 0 ] : FALSE;
     }
     /**
      * 
+     * @param type $option
+     * @return \CODERS\Repository\Admin\AdminModule
      */
-    private final function adminMenu(){
-        
-        $menu = $this->adminOptions();
-        
-        add_action('admin_menu', function() use( $menu ) {
-                $root = '';
-                foreach( $menu as $page => $title ){
-                    if(strlen($root)){
+    private final function registerRoute( $option , $title ){
+                
+        $root = $this->rootMenu();
+
+        $page = strlen( $root ) ?
+                sprintf('%s-%s',$root,$option):
+                sprintf('%s-%s','coders',$option);
+
+        $this->_menu[ $page ] = array(
+            'title' => $title ,
+            'route' => sprintf('admin.%s',$option),
+            'root' => $root,
+        );
+
+        return $this;
+    }
+    /**
+     * @return \CODERS\Repository\Admin\AdminModule
+     */
+    private final function initAdminMenu(){
+
+        if( count( $this->_menu ) ){
+            
+            $menu = $this->_menu;
+
+            add_action('admin_menu', function() use( $menu ){
+                foreach( $menu as $page => $content ){
+                    $route = $content['route'];
+                    $title = $content['title'];
+                    $root = $content['root'];
+                    if( FALSE !== $root ){
                         add_submenu_page(
                                 $root, $title, $title,
-                                'administrator',
-                                $root . '-' . $page ,
-                                function() use( $page ) {
-                                    \CODERS\Repository\Response::fromRoute('admin.' . $page );
+                                'administrator', $page ,
+                                function() use( $route ) {
+                                    \CODERS\Repository\Response::fromRoute( $route );
                         });
                     }
                     else{
-                        $root = 'coders-' . $page;
                         add_menu_page(
                                 $title, $title,
-                                'administrator', $root,
-                                function() use( $page ) {
-                                    \CODERS\Repository\Response::fromRoute('admin.' . $page );
+                                'administrator', $page,
+                                function() use( $route ) {
+                                    \CODERS\Repository\Response::fromRoute( $route );
                         }, 'dashicons-art', 51);
                     }
                 }
-            }, 100000 );
-     
+            } , 100000 );
+        }
+        return $this;
+    }
+    /**
+     * @return \CODERS\Repository\Admin\AdminModule
+     */
+    private final function initAjax(){
+        
+        //register private ajax handlers
+        add_action( sprintf('wp_ajax_%s_admin', self::ENDPOINT ) , function(){
+            //print json_encode(array('response'=>'OK'));
+            \CODERS\Repository\Response::fromAjax('admin.ajax');
+            wp_die();
+        } , 100000 );
+
+        //disable pubilc ajax handlers
+        add_action( sprintf('wp_ajax_nopriv_%s_admin', self::ENDPOINT) , 'wp_die', 100000 );   
+        
+        return $this;
     }
 }
     
