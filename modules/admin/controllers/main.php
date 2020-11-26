@@ -20,7 +20,7 @@ final class MainController extends \CODERS\Repository\Response{
         
         $this->importView('admin.project')
                 ->setModel($project)
-                ->setLayout('project.view')
+                ->setLayout('project')
                 ->display();
         
         return TRUE;

@@ -31,6 +31,18 @@ abstract class View{
         return substr($class, 0 ,$suffix);
     }
     /**
+     * @return string
+     */
+    protected final function __date(){
+        return date('Y-m-d');
+    }
+    /**
+     * @return string
+     */
+    protected final function __time(){
+        return date('Y-m-d H:i:s');
+    }
+    /**
      * @param string $name
      * @return mixed
      */
@@ -64,6 +76,13 @@ abstract class View{
                 return self::__HTML('fieldset',
                         array('class'=>'form-input'),
                         array($this->$label,$this->$input));
+            case preg_match(  '/^view_/' , $name ):
+                $layout = preg_replace('/_/', '.', substr($name, strlen('view_')));
+                $view = $this->getView( $layout );
+                if(file_exists($view)){
+                    require $view;
+                }
+                return sprintf('<!-- VIEW [ %s ] -->',$name);
             case preg_match(  '/^display_/' , $name ):
                 $display = preg_replace('/_/', '', $name);
                 return method_exists($this, $display) ?
@@ -464,11 +483,255 @@ abstract class View{
         
         return $this;
     }
+    
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    ////  CALENDAR COMPONENT SETUP
+    ////////////////////////////////////////////////////////////////////////////
+    
     /**
-     * @param string $progress
+     * @param string $date
      * @return string
      */
-    protected function displayProgressBar( $progress = 0 ){
+    protected function renderCalendarNavigator( $date ){
+        
+        $navigation = array(
+            //add nav buttons here
+        );
+        
+        return self::__HTML('td',
+                array('colspan'=>7),
+                $navigation);
+    }
+    /**
+     * @return array
+     */
+    protected function listCalendarWeek(){
+        return array(
+            __('Sunday','coders_repository'),
+            __('Monday','coders_repository'),
+            __('Tuesday','coders_repository'),
+            __('Wednesday','coders_repository'),
+            __('Turstay','coders_repository'),
+            __('Friday','coders_repository'),
+            __('Saturday','coders_repository'),
+        );
+    }
+    /**
+     * @param string $date
+     * @return int
+     */
+    protected function getCalendarYear( $date = '' ){
+        if(strval($date) === 0 ){
+            $date = $this->__date();
+        }
+        return intval( date('Y', strtotime($date) ) );
+    }
+    /**
+     * @param string $date
+     * @return int
+     */
+    protected function getCalendarMonth( $date = '' ){
+        if(strval($date) === 0 ){
+            $date = $this->__date();
+        }
+        return intval( date('m', strtotime($date) ) );
+    }
+    /**
+     * Number of days of this month
+     * @param string $date
+     * @return int
+     */
+    protected function getMonthDays( $date = '' ){
+        if(strval($date) === 0 ){
+            $date = $this->__date();
+        }
+        return intval( date('t', strtotime($date) ) );
+    }
+    /**
+     * @param string $date
+     * @return int
+     */
+    protected function getCalendarDay( $date = '' ){
+        if(strval($date) === 0 ){
+            $date = $this->__date();
+        }
+        return intval( date('d', strtotime($date) ) );
+    }
+    /**
+     * @param string $date
+     * @return int
+     */
+    protected function getCalendarWeekDay( $date = '' ){
+        if(strval($date) === 0 ){
+            $date = $this->__date();
+        }
+        return intval( date('w', strtotime($date) ) );
+    }
+    /**
+     * @param string $date
+     * @return array
+     */
+    protected function listCalendarDays( $date = '' ){
+        
+        if(strlen($date) === 0){
+            $date = $this->__date();
+        }
+        
+        $month = $this->getCalendarMonth( $date );
+        $year = $this->getCalendarYear($date);
+        $count = $this->getMonthDays($date);
+        $first = sprintf('%s-%s-1',$year,$month);
+        $last = sprintf('%s-%s-%s',$year,$month,$count);
+        
+        //iterate from 1 to 29-31 day ...
+        $first_day = $this->getCalendarWeekDay($first);
+        $last_day = $this->getCalendarWeekDay($last);
+        
+        $list = array();
+        
+        //days previous month
+        
+        
+        //days current month
+        for( $d = 0 ; $d < $count ; $d++ ){
+            $list[] = sprintf('%s-%s-%s', $year,$month,$d + 1);
+        }
+        
+        //days mnth after
+        
+        
+        return $list;
+    }
+    /**
+     * @return array
+     */
+    protected function listCalendarClass(){
+        return array('table','calendar');
+    }
+    /**
+     * Render a full calendar table
+     * @param string $date
+     * @param mixed $class
+     * @return string
+     */
+    protected function displayCalendar( $date = '' ){
+        
+        if(strlen($date) === 0){
+            $date = $this->__date();
+        }
+        
+        $class = $this->listCalendarClass();
+        
+        //head
+        $header = array(
+            sprintf('<tr class="navigator">%s</tr>', $this->displayCalendarNavigator($date)),
+            sprintf('<tr class="days"><th>%s</th></tr>', implode('</th><th>', $this->listCalendarWeek()) ),
+        );
+        
+        //content
+        $calendar = array();
+        $week = array();
+        $days = $this->listCalendarDays($date);
+        
+        for(  $d = 0 ; $d < count( $days ) ; $d++ ){
+            $week[] =  $this->displayCalendarRecord( $days[ $d ] );
+            if( $d > 0 && $d % 7 === 0 ){
+                //save and reset
+                $calendar[] = sprintf('<tr><td>%s</td></tr>', implode('</td><td>', $week) );
+                $week = array();
+            } 
+        }
+        
+        return self::__HTML('table',
+                array('class'=>$class),
+                array(
+                    sprintf('<thead>%s</thead>', implode('', $header)),
+                    sprintf('<tbody>%s</tbody>', implode('', $calendar))
+                ));
+    }
+    /**
+     * What's within a calendar day
+     * @param string $date
+     * @param boolean $selected
+     * @return string
+     */
+    protected function displayCalendarRecord( $date , $selected = FALSE ){
+        
+        $today = date('Y-m-d');
+        
+        $day = $this->getCalendarMonth($date);
+        
+        $class = array('day');
+        
+        if( $selected ){
+            $class[] = 'selected';
+        }
+        if( $today === $date ){
+            $class[] = 'today';
+        }
+        
+        return self::__HTML('span',
+                array('class'=> implode(' ', $class)),
+                $day );
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    ////  MAP LOCATION
+    ////////////////////////////////////////////////////////////////////////////
+    /**
+     * 
+     * @return string
+     */
+    protected function listMapLocations( $source ){
+        
+        return array(
+            
+        );
+    }
+    /**
+     * @param string $location
+     * @return string
+     */
+    protected function displayMapLocation( $location ){
+        return sprintf('<label>%s</label>',$location);
+    }
+    /**
+     * @param string $source
+     * @return string
+     */
+    protected function displayMap( $source ){
+        
+        $locations = $this->listMapLocations( $source );
+        
+        $otput = array();
+        
+        $location_class = '';
+        
+        foreach( $locations as $loc ){
+            
+            $otput[] = sprintf('<div class="location %s">%s</div>',
+                    $location_class,
+                    $this->displayMapLocation($loc));
+            
+        }
+        
+        return self::__HTML('div',
+                array('class' => 'container map'),
+                $otput );
+    }
+    
+    //
+    ////////////////////////////////////////////////////////////////////////////
+    ////  GENERIC COMPONENTS
+    ////////////////////////////////////////////////////////////////////////////
+    /**
+     * @param string $progress
+     * @param string $label
+     * @return string
+     */
+    public static function displayProgressBar( $progress = 0 , $label = '%' ){
         
         if( $progress > 100 ){
             $progress = 100;
@@ -478,19 +741,19 @@ abstract class View{
                 array('class'=>'progress','style' => sprintf("width:%s%%;",$progress)),
                 '' );
         
-        $label = self::__HTML('span',
+        $caption = self::__HTML('span',
                 array('class'=>'label'),
-                sprintf('%s / 100' , $progress ) );
+                sprintf('%s %s' , $progress , $label ) );
         
         return self::__HTML('span',
                 array('class' => 'progress-bar'),
-                array( $bar , $label ));
+                array( $bar , $caption ));
     }
     /**
      * @param string|int $media_id
      * @return string
      */
-    protected function displayWPImage( $media_id ){
+    public static function displayWPImage( $media_id ){
         
         $img = wp_get_attachment_image_src( intval($media_id) , 'full' );
         

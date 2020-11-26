@@ -1,7 +1,5 @@
 <?php defined ('ABSPATH') or die; ?>
-<h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
-
-<table class="widefat fixed project">
+<table class="widefat fixed project tab-panel" data-tab="project">
     <thead>
         <tr>
             <td>
@@ -24,63 +22,31 @@
     </thead>
     <tbody>
         <tr>
+            <td><?php print __('Collection','coders_repository'); ?></td>
+            <td><?php print $this->display_collection ?></td>
+        </tr>
+        <tr>
             <td><?php print $this->label_status; ?></td>
             <td><?php print $this->display_status ?></td>
         </tr>
         <tr>
-            <td>Public</td>
+            <td><?php print __('Access Level','coders_repository') ?></td>
             <td>
                 <select>
-                    <option>Yes</option>
-                    <option>No</option>
+                    <option value="public">Public</option>
+                    <option value="subscription">Subscription</option>
+                    <option value="nsfw">NSFW Subscription</option>
+                    <option value="private">Private</option>
                 </select>
             </td>
-        </tr>
-        <tr>
-            <td>Label</td>
-            <td> More project settings here</td>
         </tr>
         <tr>
             <td colspan="2"><?php wp_editor( $this->value_content, 'content' ); ?></td>
         </tr>
         <tr>
             <th colspan="2">
-                <h2><?php print __('Tiers','coders_repository') ?></h2>
-            </th>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <ul class="tiers">
-                    <li>Copper Coin</li>
-                    <li>Silver Coin</li>
-                    <li>Golden Coin</li>
-                    <li>Platinum Coin</li>
-                    <li>Diamond Coin</li>
-                </ul>
-            </td>
-        </tr>
-        <tr>
-            <th colspan="2">
                 <h2><?php print __('Integrations','coders_repository') ?></h2>
             </th>
-        </tr>
-        <tr>
-            <td>Connect to WooCommerce</td>
-            <td>
-                <select>
-                    <option>Yes</option>
-                    <option>No</option>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td>Connect to Patreon</td>
-            <td>
-                <select>
-                    <option>Yes</option>
-                    <option>No</option>
-                </select>
-            </td>
         </tr>
     </tbody>
     <tfoot>

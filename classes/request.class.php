@@ -17,6 +17,10 @@ final class Request{
     //const DEF_CONTROLLER = 'main';
     //const DEF_ACTION = 'default';
     
+    private static $_routes = array(
+        //define here all routes
+    );
+    
     /**
      * @var array
      */
@@ -104,19 +108,7 @@ final class Request{
                     $this->_input[ $var ] = $val;
                     break;
             }
-            //$this->_input[ $var ] = $val;
-            /*if( preg_match('/^coders_repo_/', $var) ){
-                $key = preg_replace('/^coders_repo_/', '', $var);
-                switch( $key ){
-                    default:
-                        
-                        break;
-                }
-            }*/
         }
-        //if(strlen($this->module()) === 0 ){
-        //    $this->_input[ self::MODULE ] = is_admin() ? 'admin' : 'repository';
-        //}
         return $this;
     }
     /**
@@ -248,25 +240,26 @@ final class Request{
 
         $serialized = array();
 
-        $action = explode('.',$request);
-        $is_admin = $action[ 0 ] === 'admin';
+        $route = explode( '.' , $request );
+        $is_admin = $route[ 0 ] === 'admin';
         $url = $is_admin ? admin_url() . 'admin.php' : get_site_url();
 
         if( $is_admin ){
-            //admin module
-            $page =  count($action)> 1 ? self::mapAdminPage($action[1]) : self::mapAdminPage('main');
             //return $page;
-            $serialized[] = 'page=' . $page;
+            $serialized[ ] = 'page=' . self::mapAdminPage( count( $route ) > 1 ?
+                    $route[ 1 ] :
+                    'main' );
+
+            if( count( $route ) > 2  && $route[2] !== 'default' ){
+                $serialized[ ] = sprintf('%s=%s',self::ACTION, $route[2]);
+            }
         }
         else{
             //public modules
-                $serialized[] = sprintf('%s=%s',\CodersRepo::ENDPOINT,$action[0]);
+            $serialized[ ] = sprintf( '%s=%s' , \CodersRepo::ENDPOINT , $request );
+
         }
 
-        if( count( $action) > 2  && $action[2] !== 'default' ){
-            $serialized[] = sprintf('%s=%s',self::ACTION, $action[2]);
-        }
-        
         foreach( $args as $var => $val ){
             $serialized[ ] = sprintf('%s=%s',$var,$val);
         }
@@ -389,6 +382,9 @@ final class Request{
                 return is_array($post) ? $post : array();
             case INPUT_GET:
                 $get = filter_input_array( INPUT_GET );
+                if( !is_array($get)){
+                    $get = array();
+                }
                 //merge action keys?
                 if( is_admin() && array_key_exists( 'page' , $get )){
                     //parse requested action from page ID
@@ -399,7 +395,7 @@ final class Request{
                     }
                     unset($get['page']);
                 }
-                return is_array($get) ? $get : array();
+                return $get;
             case INPUT_REQUEST:
                 $post = self::read(INPUT_POST);
                 $get = self::read(INPUT_GET);
@@ -421,6 +417,33 @@ final class Request{
         }
         
         return array();
+    }
+    /**
+     * @param string $action
+     * @param string $route
+     * @return boolean
+     */
+    public static final function createRoute( $action , $route ){
+        
+        if( !array_key_exists($action, self::$_routes) ){
+            self::$_routes[ $action ] = $route;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    public static final function listRoutes(){
+        return self::$_routes;
+    }
+    /**
+     * @return array
+     */
+    public static final function listActions(){
+        $output = array();
+        foreach( self::$_routes as $action => $route ){
+            $output[ $route ] = $action;
+        }
+        return $output;
     }
     /**
      * @param string $route

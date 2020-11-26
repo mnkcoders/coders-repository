@@ -50,4 +50,22 @@ final class ProjectView extends \CODERS\Repository\View{
         
         return self::renderDropDown('status', $options, $status);
     }
+    /**
+     * @return string
+     */
+    protected final function displayCollection(){
+        
+        $collections = \CodersRepo::collections();
+        $value = $this->hasModel() ? $this->model()->collection_id : 0;
+        $options = array();
+        foreach( $collections as $data ){
+            $options[ $data['ID'] ] = strlen($data['title']) ? $data['title'] : $data['name'];
+        }
+        
+        return $this->renderDropDown('collection_id',
+                $options,
+                $value,
+                __('Select collection','coders_repository'),
+                'collection');
+    }
 }

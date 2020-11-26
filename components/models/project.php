@@ -12,7 +12,8 @@ final class Project extends \CODERS\Repository\Model{
                 ->define('title',parent::TYPE_TEXT , array('size'=>64,'label'=>'Title') )
                 ->define('content',parent::TYPE_TEXTAREA , array('label'=>'Content') )
                 ->define('status',parent::TYPE_NUMBER , array('label'=>'Status'))
-                ->define('image_id',parent::TYPE_NUMBER)
+                ->define('image_id',parent::TYPE_NUMBER,array('value'=>0))
+                ->define('collection_id',parent::TYPE_NUMBER,array('value'=>0))
                 ->define('date_created',parent::TYPE_DATETIME , array('label'=>'Created'))
                 ->define('date_updated',parent::TYPE_DATETIME , array('label'=>'Updated'));
         

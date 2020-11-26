@@ -17,6 +17,14 @@ final class Account extends \CODERS\Repository\Model{
         
         parent::__construct($data);
     }
+    
+    public final function getPoints(){
+        
+        return 0;
+    }
+    
+    
+    
     /**
      * @param string $element
      * @return boolean

@@ -1,7 +1,9 @@
 <?php defined ('ABSPATH') or die; ?>
 <h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
 
-<table class="widefat fixed">
+<?php print $this->display_calendar( '' , array('fixed','widefat')); ?>
+
+<!--table class="widefat fixed">
     <thead>
         <tr>
             <th colspan="4"><h2>Today</h2></th>
@@ -28,6 +30,6 @@
             </td>
         </tr>
     </tfoot>
-</table>
+</table-->
 
 

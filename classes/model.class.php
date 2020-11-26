@@ -109,7 +109,7 @@ abstract class Model{
     /**
      * @return string
      */
-    protected function __ts(){
+    protected static function __ts(){
         return date('Y-m-d H:i:s');
     }
     
@@ -449,7 +449,7 @@ final class Query {
      * @param string $table
      * @return string
      */
-    private static final function table( $table ){
+    public static final function table( $table ){
         return sprintf('%scoders_%s',self::prefix(),$table);
     }
     
@@ -552,6 +552,8 @@ final class Query {
         
         $result = $db->query($sql_insert);
         
+        //var_dump($db->last_error);
+        
         return FALSE !== $result ? $result : 0;
     }
     /**
@@ -611,10 +613,10 @@ final class Query {
     public final function query( $SQL_QUERY , $index = '' ){
         
         $db = self::db();
-        //var_dump($query);
 
         $result = $db->get_results($SQL_QUERY, ARRAY_A);
-
+        //var_dump($SQL_QUERY);
+        
         if( strlen($index) ){
             $output = array();
             foreach( $result as $row ){

@@ -12,14 +12,5 @@ class UserModule extends \CodersRepo{
         parent::__construct();
 
     }
-    
-    /**
-     * @param string $action
-     */
-    public final function run( $action = '' ) {
-
-        
-        parent::run( $action );
-    }
 }
     

@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_project` (
  `content` longtext NOT NULL,
  `status` tinyint(1) NOT NULL,
  `image_id` bigint(20) NOT NULL COMMENT 'wordpress gallery',
+ `collection_id` int(11) NOT NULL COMMENT 'repository collection',
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -75,8 +76,9 @@ CREATE TABLE `{{TABLE_PREFIX}}coders_post` (
 
 /*TIERS TABLE*/
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_tier` (
- `ID` varchar(32) NOT NULL COMMENT 'project_id + tier_id',
- `title` varchar(32) NOT NULL,
+ `project_id` varchar(32) NOT NULL COMMENT 'project_id + tier_id',
+ `tier` tinyint(2) NOT NULL DEFAULT '0',
+ `title` varchar(16) NOT NULL,
  `description` longtext NOT NULL,
  `image_id` bigint(20) NOT NULL,
  `status` tinyint(1) NOT NULL,
@@ -86,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_tier` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_token` (
- `ID` varchar(64) NOT NULL,
+ `ID` varchar(32) NOT NULL,
  `type` varchar(16) NOT NULL,
  `target` int(11) NOT NULL,
  `status` tinyint(1) NOT NULL,

@@ -529,15 +529,15 @@ input[type="text"].title:focus{
     background-color: rgba(0,0,0,0.05);
 }
 
-.coders-repository.project-view-view{
+.coders-repository.project-view{
     
 }
 
-.coders-repository.project-view-view .project .media{
+.coders-repository.project-view .project .media{
     overflow: hidden;
     height: 200px;
 }
-.coders-repository.project-view-view .project .media > img{
+.coders-repository.project-view .project .media > img{
     width: 100%;
     height: auto;
 }

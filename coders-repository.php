@@ -57,6 +57,19 @@ class CodersRepo{
         return strtolower( substr($class, 0 ,$suffix) );
     }
     /**
+     * @param string $name
+     * @param array $arguments
+     * @return boolean
+     */
+    public final function __call($name, $arguments) {
+        switch( $name ){
+            case preg_match(  '/^register/' , $name ):
+                //RETURN LIST
+                return method_exists($this, $name) ? $this->$name($arguments) : FALSE;
+        }
+        return FALSE;
+    }
+    /**
      * 
      */
     private final function preload(){
@@ -157,13 +170,18 @@ class CodersRepo{
         //return array( $collection => $resources );
     }
     /**
+     * @param int $parent_id 
      * @return array
      */
-    public static final function collections(){
+    public static final function collections( $parent_id = 0 ){
         
-        $collections = \CODERS\Repository\Resource::storage();
+        $db = new CODERS\Repository\Query();
         
-        return $collections;
+        return $db->select('post','*',array('parent_id'=>$parent_id),'ID');
+        
+        //$collections = \CODERS\Repository\Resource::storage();
+        
+        //return $collections;
     }
     /**
      * 
@@ -202,6 +220,7 @@ class CodersRepo{
 
                 if(class_exists( $class ) && is_subclass_of( $class, self::class ) ){
                     self::$_INSTANCE = new $class();
+                    
                     return self::$_INSTANCE;
                 }
                 else{
@@ -279,23 +298,27 @@ class CodersRepo{
      * @param string $endpoint
      * @return boolean
      */
-    public final function validate( $endpoint ){
+    /*public final function validate( $endpoint ){
         return in_array($endpoint, array('posts','repository'));
-    }
+    }*/
     /**
-     * @param string $action
-     * @param array $data
      * @return CodersRepo
      */
-    protected function run( $action = '' ){
-
-        $request = strlen($action) ?
-                //define the output route
-                \CODERS\Repository\Request::route( $action ) :
-                //check for post/get variables
-                \CODERS\Repository\Request::import( );
+    function run( \CODERS\Repository\Request $request ){
         
         \CODERS\Repository\Response::create($request);
+        
+        return $this;
+        
+        $module = strval($this);
+
+        //$request = strlen($module) ?
+        //        //define the output route
+        //        \CODERS\Repository\Request::route( $module ) :
+        //        //check for post/get variables
+        //        \CODERS\Repository\Request::import( );
+        
+        \CODERS\Repository\Response::fromRoute($module);
         
         return $this;
     }
@@ -311,9 +334,11 @@ class CodersRepo{
         define('CODERS__REPOSITORY__DIR',__DIR__);
         define('CODERS__REPOSITORY__URL', plugin_dir_url(__FILE__));
         
-        if(self::setup()){
+        //self::$_INSTANCE = new \CodersRepo ();
+        if(self::setupDataBase()){
             self::notice(__('Coders Repository Database registered!','coders_repository'));
         }
+        self::setupPosts();
 
         //register dependencies        
         foreach( self::$_dependencies as $class ){
@@ -321,63 +346,21 @@ class CodersRepo{
         }
         
         if(is_admin()){
-            
-            //initialize Admin
-            CodersRepo::module('Admin');
-            
-            add_action('admin_menu', function() {
-            
-                $root = '';
-                /*describe menu items*/
-                $pages = array(
-                    'main' => __( 'Artist Pad' , 'coders_repository' ),
-                    'collection' => __( 'Collections' , 'coders_repository' ),
-                    //'projects' => __( 'Projects' , 'coders_repository' ),
-                    'accounts' => __( 'Accounts' , 'coders_repository' ),
-                    //'subscriptions' => __( 'Subscriptions' , 'coders_repository' ),
-                    //'payments' => __( 'Payments' , 'coders_repository' ),
-                    'settings' => __( 'Settings' , 'coders_repository' ),
-                    'logs' => __( 'Logs' , 'coders_repository' ),
-                );
-                
-                foreach( $pages as $page => $title ){
-                    if(strlen($root)){
-                        add_submenu_page(
-                                $root, $title, $title,
-                                'administrator',
-                                $root . '-' . $page ,
-                                function() use( $page ) {
-                                    \CODERS\Repository\Response::fromRoute('admin.' . $page );
-                        });
-                    }
-                    else{
-                        $root = 'coders-' . $page;
-                        add_menu_page(
-                                $title, $title,
-                                'administrator', $root,
-                                function() use( $page ) {
-                                    \CODERS\Repository\Response::fromRoute('admin.' . $page );
-                        }, 'dashicons-art', 51);
-                    }
-                }
-            }, 100000 );
-            //register all ajax handlers
-            add_action( 'wp_ajax_coders_admin' , function(){
-                //print json_encode(array('response'=>'OK'));
-                if(is_admin() ){
-                    \CODERS\Repository\Response::fromAjax('admin.ajax');
-                }
-                wp_die();
-                //die;
-            }, 100000 );
-            //register all ajax handlers
-            add_action( 'wp_ajax_nopriv_coders_admin' , function(){
-
-                wp_die();
-
-            }, 100000 );
+            add_action( 'init' , function(){
+                //initialize Admin
+                $admin = CodersRepo::module('Admin');
+                //register admin menu
+                add_action('admin_menu', array( $admin , 'registerAdminMenu') , 100000 );
+                //register private ajax handlers
+                add_action( sprintf('wp_ajax_%s_admin', CodersRepo::ENDPOINT) , array( $admin , 'registerAjax' ) , 100000 );
+                //disable pubilc ajax handlers
+                add_action( sprintf('wp_ajax_nopriv_%s_admin', CodersRepo::ENDPOINT) , 'wp_die', 100000 );   
+            });
         }
         else{
+            //REGISTER ROUTES
+            //\CODERS\Repository\Request::createRoute('account.main')
+            
             //INITIALIZE REDIRECTION RULES
             add_action( 'init' , function(){
                 global $wp, $wp_rewrite;
@@ -388,16 +371,27 @@ class CodersRepo{
                 $wp->add_query_var( $endpoint );
                 $wp->add_query_var( $resource );
                 //$wp->add_query_var('template');
-                add_rewrite_endpoint(self::ENDPOINT, EP_ROOT);
-                add_rewrite_endpoint(self::RESOURCE, EP_ROOT);
+                add_rewrite_endpoint(CodersRepo::ENDPOINT, EP_ROOT);
+                add_rewrite_endpoint(CodersRepo::RESOURCE, EP_ROOT);
                 $wp_rewrite->add_rule(
                         sprintf('^/%s/?$', $endpoint),
-                        'index.php?' . $endpoint . '=default', 'bottom');
-                //$wp_rewrite->add_rule(
-                //        sprintf('^/%s/?$', $resource ),
-                //        'index.php?' . $resource . '=empty', 'bottom');
+                        sprintf('index.php?%s=%s',$endpoint,'endpoint_route'), 'bottom');
+                $wp_rewrite->add_rule(
+                        sprintf('^/%s/?$', $resource ),
+                        sprintf('index.php?%s=%s',$resource,'resource_id'), 'bottom');
                 //and rewrite
                 $wp_rewrite->flush_rules();
+                
+                //register ajax handlers
+                add_action( sprintf('wp_ajax_%s_public',CodersRepo::ENDPOINT) , function(){
+                    CodersRepo::module('ajax');
+                    wp_die();
+                }, 100000 );
+                //register ajax handlers
+                add_action( sprintf('wp_ajax_nopriv_%s_public',CodersRepo::ENDPOINT) , function(){
+                    CodersRepo::module('ajax');
+                    wp_die();
+                }, 100000 );
             } );
             //INITIALIZE TEMPLATE REDIRECTION (FOR PUBLIC APPLICATION ONLY!!!)
             add_action( 'template_redirect', function( ){
@@ -405,47 +399,34 @@ class CodersRepo{
                 global $wp , $wp_query;
                 $query = $wp->query_vars;
                 switch( TRUE ){
-                    case array_key_exists(self::RESOURCE, $query):
+                    case array_key_exists(CodersRepo::RESOURCE, $query):
                         $wp_query->set('is_404', FALSE);
-                        $resource = filter_input(INPUT_GET, self::RESOURCE );
-                        $attachment = filter_input(INPUT_GET, 'attachment');
-                        CodersRepo::download(
-                                $resource !== NULL ? $resource : '#INVALID',
-                                $attachment !== NULL ? $attachment : FALSE );
-                        //hooked repository app, exit WP framework
+                        $resource = $query[CodersRepo::RESOURCE];
+                        CodersRepo::download( $resource );
                         exit;
-                    case array_key_exists(self::ENDPOINT, $query):
+                    case array_key_exists(CodersRepo::ENDPOINT, $query):
                         $wp_query->set('is_404', FALSE);
-                        $EP = CodersRepo::module($query[self::ENDPOINT]);
-                        if( FALSE !== $EP ){
-                            $EP->run($query[self::ENDPOINT]);
+                        $route = $query[CodersRepo::ENDPOINT];
+                        $request = CODERS\Repository\Request::route( $route );
+                        $endpoint = CodersRepo::module( $request->module());
+
+                        if( FALSE !== $endpoint ){
+                            $endpoint->run( $request );
+                            exit;
                         }
-                        //$request = \CODERS\Repository\Request::import();
-                        //\CODERS\Repository\Response::create($request);
+                        else{
+                            CodersRepo::notice( sprintf('Invalid Route [%s]' , $route ) , 'error' );
+                        }
                         //hooked repository app, exit WP framework
-                        exit;
+                        wp_die();
                 }
             } );
-            //register ajax handlers
-            add_action( 'wp_ajax_coders_module' , function(){
-                
-                CodersRepo::instance()->run('ajax');
-                
-                wp_die();
-            }, 100000 );
-            //register ajax handlers
-            add_action( 'wp_ajax_nopriv_coders_module' , function(){
-                
-                CodersRepo::instance()->run('ajax');
-                
-                wp_die();
-            }, 100000 );
         }
     }
     /**
      * Setup DB Activation Hook
      */
-    private static final function setup(){
+    private static final function setupDataBase(){
         //do only when activated
         register_activation_hook(__FILE__, function( ){
             global $wpdb,$table_prefix;
@@ -473,7 +454,7 @@ class CodersRepo{
     /**
      * Register Resource Post Type
      */
-    private static final function register(){
+    private static final function setupPosts(){
         
         add_action( 'init' , function(){
             $post_labels = array(
@@ -581,6 +562,8 @@ class CodersRepo{
         }
         else{
             //do something in public?
+            $ts = date('Y-m-d H:i:s');
+            printf('<p>[ %s : <strong>%s</strong> ] %s</p>',$ts,$type,$message);
         }
     }
     /**
@@ -588,11 +571,6 @@ class CodersRepo{
      */
     static final function instance(){
         if(is_null(self::$_INSTANCE)){
-            //self::$_INSTANCE = new \CodersRepo ();
-            if(self::setup()){
-                self::notice(__('Coders Repository Database registered!','coders_repository'));
-            }
-            self::register();
             self::init();
         }
         return self::$_INSTANCE;
