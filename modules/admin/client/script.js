@@ -119,16 +119,17 @@ function CodersView( ){
      */
     this.displayCollection = function( resources , parent_id ){
 
-        var collection = _view.getContainer('collection');
-        
-        if( collection !== false ){
-            collection.clear();
-            collection.setAttribute('data-id',parent_id);
+        var container = _view.getContainer('collection');
+
+        if( container !== false ){
+            container.clear();
+            container.setAttribute('data-id',parent_id);
+            //console.log( resources );
             for( var r = 0 ; r < resources.length ; r++ ){
                 if( r % 4 === 0 ){
                     _self.wait();
                 }
-                collection.appendChild( _self.addItem( resources[ r ] ) );
+                container.appendChild( _self.addItem( resources[ r ] ) );
             }
         }
         
@@ -511,6 +512,7 @@ function CodersView( ){
                 this.renderGridResizer('panel right'),
                 _view.element('span',{'class':'panel button right'},'Post Data')
             ]));
+
             container.appendChild( _view.renderPostForm() );
             container.appendChild( _view.uploader());
             container.appendChild( _view.element('ul', {'class': 'collection grid-10' }));
@@ -854,7 +856,10 @@ function CodersModel(){
             }
             request( 'collection' , {'ID':post_id } , function( response ){
                 //console.log( response );
-                handler( response.data , post_id );
+                handler( Array.isArray( response.data ) ?
+                            response.data :
+                            Object.values(response.data) ,
+                    post_id );
             } );
         }
         return this;

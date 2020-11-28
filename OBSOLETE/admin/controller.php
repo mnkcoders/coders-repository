@@ -115,7 +115,7 @@ class Controller {
      * @return string
      */
     protected final function getResourceLinkMethod( $resource_id ){
-        return \CodersRepo::resourceLink( $resource_id );
+        return \CodersRepo::linkResource( $resource_id );
     }
     /**
      * @param array $resource

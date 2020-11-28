@@ -55,7 +55,7 @@ final class ProjectView extends \CODERS\Repository\View{
      */
     protected final function displayCollection(){
         
-        $collections = \CodersRepo::collections();
+        $collections = \CODERS\Repository\Resource::collection();
         $value = $this->hasModel() ? $this->model()->collection_id : 0;
         $options = array();
         foreach( $collections as $data ){

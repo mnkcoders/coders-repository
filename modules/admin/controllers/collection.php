@@ -45,7 +45,7 @@ final class CollectionController extends \CODERS\Repository\Response{
     
     protected final function collection_action( \CODERS\Repository\Request $request ){
         
-        var_dump(\CodersRepo::collection('default'));
+        var_dump(\CODERS\Repository\Resource::collection(0));
         
         return TRUE;
     }

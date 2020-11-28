@@ -13,14 +13,6 @@ final class Request{
     const MODULE = '_module';
     const _DEFAULT = 'repository.main.default';
     
-    //const DEF_MODULE = 'repository';
-    //const DEF_CONTROLLER = 'main';
-    //const DEF_ACTION = 'default';
-    
-    private static $_routes = array(
-        //define here all routes
-    );
-    
     /**
      * @var array
      */
@@ -34,15 +26,12 @@ final class Request{
     private $_ts = 0;
     
     /**
-     * 
      * @param array $input
      */
     private function __construct( array $input ) {
         
-        $this->_ts = time();
-        //$this->_ts = date('YmdHis');
-        
-        $this->unpack($input)->readFP();
+        $this->readFP()->import($input);
+
     }
     /**
      * @return string
@@ -73,6 +62,8 @@ final class Request{
         
         $this->_fingerprint = md5( base64_encode( implode('|', $client ) ) );
         
+        $this->_ts = time();       
+
         return $this;
     }
     /**
@@ -98,7 +89,7 @@ final class Request{
      * @param array $input
      * @return \CODERS\Repository\Request
      */
-    private final function unpack( array $input ){
+    private final function import( array $input ){
         foreach( $input as $var => $val ){
             switch( $var ){
                 case self::ACTION:
@@ -209,18 +200,14 @@ final class Request{
      * @return int
      */
     public final function userID(){
-        
         return 0;
     }
     /**
      * @return WP_User
      */
     public final function userName( $niceName = FALSE ){
-        
         $ID = $this->userID();
-        
         if( $ID ){
-            
             $user = get_user_by('ID', $ID);
             
             if( $user !== FALSE ){
@@ -228,7 +215,6 @@ final class Request{
                 return $niceName ? $user->user_nicename : $user->user_login;
             }
         }
-        
         return '';
     }
     /**
@@ -237,33 +223,51 @@ final class Request{
      * @return string
      */
     public static final function url( $request = self::_DEFAULT , $args = array( ) ){
-
         $serialized = array();
-
+        $EP = \CodersRepo::ENDPOINT;
         $route = explode( '.' , $request );
         $is_admin = $route[ 0 ] === 'admin';
         $url = $is_admin ? admin_url() . 'admin.php' : get_site_url();
 
         if( $is_admin ){
-            //return $page;
-            $serialized[ ] = 'page=' . self::mapAdminPage( count( $route ) > 1 ?
-                    $route[ 1 ] :
-                    'main' );
+
+            $page = $route[ 1 ] === 'main' ?
+                    $EP : 
+                    $EP . '-' . $route[ 1 ];
+            $serialized[ ] = 'page=' . $page;
+            
+        }
+        elseif( FALSE ){
+            //public modules using permalink format SEF
+            $url .= sprintf( '/%s/%s' ,
+                    $EP ,
+                    count( $route ) > 1 ? $route[0].'.'.$route[1] : $route[0] . '.main' );
 
             if( count( $route ) > 2  && $route[2] !== 'default' ){
-                $serialized[ ] = sprintf('%s=%s',self::ACTION, $route[2]);
+                //append action
+                $url .= '.' . $route[2];
             }
+
+            foreach( $args as $var => $val ){
+                $serialized[ ] = sprintf('%s=%s',$var,$val);
+            }
+
+            return sprintf('%s?%s', $url , implode('&', $serialized ) );
         }
         else{
-            //public modules
-            $serialized[ ] = sprintf( '%s=%s' , \CodersRepo::ENDPOINT , $request );
+            //public modules using PLAIN URL FORMAT (no sef)
+            $serialized[ ] = sprintf( '%s=%s' ,
+                    $EP ,
+                    count( $route ) > 1 ? $route[0].'.'.$route[1] : $route[0] . '.main' );
+        }
 
+        if( count( $route ) > 2  && $route[2] !== 'default' ){
+            $serialized[ ] = sprintf('%s=%s',self::ACTION, $route[2]);
         }
 
         foreach( $args as $var => $val ){
             $serialized[ ] = sprintf('%s=%s',$var,$val);
         }
-
         return sprintf('%s?%s', $url , implode('&', $serialized ) );
     }
     /**
@@ -278,172 +282,31 @@ final class Request{
     public static final function route( $route = self::_DEFAULT  ){
         
         $input = self::read();
-        
-        if( isset( $input[self::ACTION ] ) ){
-            $input[ self::ACTION ] = self::override($input[self::ACTION], $route);
-        }
-        else{
-            $input[ self::ACTION ] = $route;
-        }
-        /*if(is_admin() && array_key_exists('page', $input)){
-
-            $action = self::mapAdminAction($input['page']);
-            
-            $input[ self::ACTION ] = array_key_exists(self::ACTION, $input) ?
-                sprintf('%s.%s',$action,$input[self::ACTION]) :
-                $action;
-        }
-        else{
-        }*/
-        
-        //var_dump($input);
-        
+        if(is_admin() ){ unset( $input['page'] ); }
+        $path = explode('.', $route);
+        if(count($path) < 2){ $path[] = 'main'; }
+        $action = array_key_exists(self::ACTION, $input) ? $input[self::ACTION] : 'default';
+        $input[self::ACTION] = sprintf('%s.%s.%s',$path[0],$path[1],$action);
         return self::create($input);
-    }
-    /**
-     * @param string $route
-     * @return \CODERS\Repository\Request
-     */
-    public static final function ajax( $route = 'admin.ajax' ){
-
-        $input = self::read(INPUT_POST);
-        $data = isset($input['data']) ? json_decode($input['data'], TRUE) : array();
-        $data[ self::ACTION ] = isset($input[self::ACTION]) ?
-                sprintf('%s.%s',$route,$input[self::ACTION]) :
-                $route;
-        return self::create( $data );
-    }
-    /**
-     * @param string $request
-     * @return \CODERS\Repository\Request
-     */
-    public static final function import(  ){
-        
-        //$input = self::extract();
-        
-        return self::create( self::read( ) );
-    }
-    /**
-     * @param array $base
-     * @param arary $override
-     * @return array
-     */
-    private static final function override( $base , $override ){
-        $A = explode('.', $base);
-        $B = explode('.', $override);
-        
-        if( count($B ) < count($A)){
-            $C = $B;
-            for( $var = count($B) ; $var < count($A) ; $var++){
-                $C[] = $A[$var];
-            }
-            return implode('.', $C);
-        }
-        
-        return $override;
-    }
-    /**
-     * @param string $action
-     * @return string
-     */
-    private static final function mapAdminPage( $action ){
-
-        $page = $action === 'main' ? 'coders-main' : 'coders-main-' . $action;
-
-        return $page;
-    }
-    /**
-     * @param string $page
-     * @return string
-     */
-    private static final function mapAdminAction( $page ){
-        
-        $actions = array(
-            'coders-main' => 'admin.main',
-            'coders-main-collections' => 'admin.collection',
-            //'coders-main-projects' => 'admin.projects',
-            'coders-main-accounts' => 'admin.accounts',
-            //'coders-main-subscriptions' => 'admin.subscriptions',
-            //'coders-main-payments' => 'admin.payments',
-            'coders-main-settings' => 'admin.settings',
-            'coders-main-logs' => 'admin.logs',
-        );
-        
-        return array_key_exists($page, $actions) ?  $actions[ $page ] : $page;
     }
     /**
      * @return array
      */
     public static final function read( $input = INPUT_REQUEST ){
-        
         switch( $input ){
             case INPUT_POST:
                 $post = filter_input_array( INPUT_POST );
                 return is_array($post) ? $post : array();
             case INPUT_GET:
                 $get = filter_input_array( INPUT_GET );
-                if( !is_array($get)){
-                    $get = array();
-                }
-                //merge action keys?
-                if( is_admin() && array_key_exists( 'page' , $get )){
-                    //parse requested action from page ID
-                    $action = self::mapAdminAction($get['page']);
-                    //attach the requested action
-                    if( array_key_exists(self::ACTION, $get) ){
-                        $get[self::ACTION] = sprintf('%s.%s',$action,$get[self::ACTION]);
-                    }
-                    unset($get['page']);
-                }
-                return $get;
+                return is_array($get) ? $get : array();
             case INPUT_REQUEST:
-                $post = self::read(INPUT_POST);
-                $get = self::read(INPUT_GET);
-                foreach( $post as $var => $val ){
-                    if( $var === self::ACTION ){
-                        $get[ self::ACTION ] = array_key_exists(self::ACTION, $get) ?
-                            sprintf('%s.%s',$get[self::ACTION],$val) :
-                            $val;
-                    }
-                    else{
-                        $get[ $var ] = $val;
-                    }
-                }
-                return $get;
-                //return array_merge( $get , $post );
+                return array_merge( self::read(INPUT_POST) , self::read(INPUT_GET ) );
             case INPUT_COOKIE:
                 $cookie = filter_input_array(INPUT_COOKIE );
                 return is_array($cookie) ? $cookie : array();
         }
-        
         return array();
-    }
-    /**
-     * @param string $action
-     * @param string $route
-     * @return boolean
-     */
-    public static final function createRoute( $action , $route ){
-        
-        if( !array_key_exists($action, self::$_routes) ){
-            self::$_routes[ $action ] = $route;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    public static final function listRoutes(){
-        return self::$_routes;
-    }
-    /**
-     * @return array
-     */
-    public static final function listActions(){
-        $output = array();
-        foreach( self::$_routes as $action => $route ){
-            $output[ $route ] = $action;
-        }
-        return $output;
     }
     /**
      * @param string $route
@@ -452,15 +315,9 @@ final class Request{
     public final function redirect( $route = self::_DEFAULT , array $input = array( ) ){
         $action = explode('.', $route);
         $this->_module = $action[0];
-        if( count( $action ) > 1 ){
-            $this->_controller = $action[1];
-        }
-        if( count( $action ) > 2 ){
-            $this->_action = $action[2];
-        }
-        
+        $this->_controller = count( $action ) > 1 ? $action[1] : 'main';
+        $this->_action = count( $action ) > 2 ? $action[2] : 'default';
         $this->_input = $input;
-        
         return $this;
     }
 }

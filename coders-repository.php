@@ -57,19 +57,6 @@ class CodersRepo{
         return strtolower( substr($class, 0 ,$suffix) );
     }
     /**
-     * @param string $name
-     * @param array $arguments
-     * @return boolean
-     */
-    public final function __call($name, $arguments) {
-        switch( $name ){
-            case preg_match(  '/^register/' , $name ):
-                //RETURN LIST
-                return method_exists($this, $name) ? $this->$name( $arguments ) : FALSE;
-        }
-        return FALSE;
-    }
-    /**
      * 
      */
     private final function preload(){
@@ -81,18 +68,22 @@ class CodersRepo{
     }
     /**
      * @param string $component
-     * @param string $type
      * @return boolean
      */
-    protected final function component( $component , $type = 'models' ){
+    protected final function component( $component ){
         
-        $path = self::path(sprintf('components/%s/%s.php',
-                $type,
-                strtolower( $component) ) );
+        $path = self::path(sprintf('components/%s.php',
+                strtolower( preg_replace('/\./', '/', $component ) ) ) );
+        //$path = self::path(sprintf('components/%s/%s.php',
+        //        $type,
+        //        strtolower( $component ) ) );
 
         if(file_exists($path)){
             require $path;
             return TRUE;
+        }
+        else{
+            die( $path );
         }
         
         return FALSE;
@@ -100,7 +91,7 @@ class CodersRepo{
     /**
      * @return array
      */
-    public static final function listModules(){
+    protected static final function listModules(){
         $output = array();
         $root = self::path('modules/');
         //var_dump($root);
@@ -129,70 +120,12 @@ class CodersRepo{
         return $base;
     }
     /**
-     * @param string $rid Resource ID
-     * @return URL
-     */
-    public static final function url( $rid ){
-        
-        return sprintf('%s?%s=%s', get_site_url(),self::ENDPOINT,$rid);
-
-        //return sprintf('%s?template=%s&rid=%s', get_site_url(),self::ENDPOINT,$rid);
-    }
-    /**
      * @param string $path
      * @return string
      */
     public static final function path( $path = '' ){
-        
         $root = preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR );
-        
         return strlen($path) ? sprintf('%s/%s',$root,$path) : $root;
-    }
-    /**
-     * @param string $rid
-     * @return string
-     */
-    public static final function resourceLink( $rid ){
-
-        return sprintf('%s?%s=%s', get_site_url(),self::RESOURCE,$rid);
-
-    }
-    /**
-     * 
-     * @param int $parent_id
-     * @return array
-     */
-    public static final function collection( $parent_id ){
-        
-        $resources = \CODERS\Repository\Resource::collection($parent_id);
-        
-        return $resources;
-        //return array( $collection => $resources );
-    }
-    /**
-     * @param int $parent_id 
-     * @return array
-     */
-    public static final function collections( $parent_id = 0 ){
-        
-        $db = new CODERS\Repository\Query();
-        
-        return $db->select('post','*',array('parent_id'=>$parent_id),'ID');
-        
-        //$collections = \CODERS\Repository\Resource::storage();
-        
-        //return $collections;
-    }
-    /**
-     * 
-     * @global \wpdb $wpdb
-     * @global string $prefix
-     * @param string $public_id
-     * @return \CODERS\Repository\Resource|Boolean
-     */
-    public static final function import( $public_id ){
-        
-        return \CODERS\Repository\Resource::import($public_id);
     }
     /**
      * @param string $endpoint
@@ -238,68 +171,14 @@ class CodersRepo{
         return FALSE;
     }
     /**
-     * @param String $file_id
-     * @param boolean $attach
-     * @return \CodersRepo
-     */
-    public static final function download( $file_id , $attach = FALSE ){
-        
-        try{
-            if(is_null($file_id) || strlen($file_id) === 0 ){
-                throw new Exception('INVALID OR EMPTY RID');
-            }
-            
-            $file = self::import( $file_id );
-            if( $file !== FALSE ){
-                //var_dump($file->path());
-                //foreach( $file->headers( $attach ) as $header ){
-                //    header( $header ); 
-                //}
-                //print $file->read();
-                //output strream (not working with WP)
-                $file->stream( /*default chunk size*/ );
-            }
-            else {
-                throw new Exception(sprintf('INVALID RID#%s',$file_id));
-            }
-        }
-        catch (Exception $ex) {
-            printf( '<p><i>%s</i></p>',$ex->getMessage() );
-        }
-    }
-    /**
-     * @param string $file_id
-     * @return string
-     */
-    public final function encode( $file_id ){
-
-        $file = self::import( $file_id );
-        
-        return ($file !== FALSE ) ?
-                base64_encode( $file->read( ) ) :
-                FALSE;
-    }
-    /**
-     * @param String $file_id
-     * @return String
-     */
-    public static final function attach( $file_id ){
-        
-        $file = self::import( $file_id );
-        
-        if($file !== FALSE ){
-        
-            return base64_encode( $file->load( ) );
-        }
-        
-        return '';
-    }
-    /**
+     * @param string $route (empty by default)
      * @return CodersRepo
      */
-    function run( \CODERS\Repository\Request $request ){
+    function run( $route = '' ){
         
-        \CODERS\Repository\Response::create($request);
+        if(strlen($route)){
+            \CODERS\Repository\Response::Route($route);
+        }
         
         return $this;
     }
@@ -356,12 +235,12 @@ class CodersRepo{
                 
                 //register ajax handlers
                 add_action( sprintf('wp_ajax_%s_public',CodersRepo::ENDPOINT) , function(){
-                    CodersRepo::module('ajax');
+                    CodersRepo::module('ajax')->run();
                     wp_die();
                 }, 100000 );
                 //register ajax handlers
                 add_action( sprintf('wp_ajax_nopriv_%s_public',CodersRepo::ENDPOINT) , function(){
-                    CodersRepo::module('ajax');
+                    //CodersRepo::module('ajax');
                     wp_die();
                 }, 100000 );
             } );
@@ -373,17 +252,21 @@ class CodersRepo{
                 switch( TRUE ){
                     case array_key_exists(CodersRepo::RESOURCE, $query):
                         $wp_query->set('is_404', FALSE);
-                        $resource = $query[CodersRepo::RESOURCE];
-                        CodersRepo::download( $resource );
+                        $rid = $query[CodersRepo::RESOURCE];
+                        $resource = \CODERS\Repository\Resource::import( $rid );
+                        if( $resource !== FALSE ){
+                            $resource->stream( /*default chunk size*/ );
+                        }
+                        else{
+                            printf('INVALID RID#%s',$rid);
+                        }
                         exit;
                     case array_key_exists(CodersRepo::ENDPOINT, $query):
                         $wp_query->set('is_404', FALSE);
-                        $route = $query[CodersRepo::ENDPOINT];
-                        $request = CODERS\Repository\Request::route( $route );
-                        $endpoint = CodersRepo::module( $request->module());
-
+                        $route = explode('.',  $query[CodersRepo::ENDPOINT] );
+                        $endpoint = CodersRepo::module( $route[ 0 ] );
                         if( FALSE !== $endpoint ){
-                            $endpoint->run( $request );
+                            $endpoint->run( $query[ CodersRepo::ENDPOINT ] );
                             exit;
                         }
                         else{

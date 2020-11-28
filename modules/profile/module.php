@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\User;
+<?php namespace CODERS\Repository\Profile;
 
 defined('ABSPATH') or die;
 /**
  * 
  */
-class UserModule extends \CodersRepo{
+class ProfileModule extends \CodersRepo{
     
     
     protected final function __construct() {
@@ -12,5 +12,14 @@ class UserModule extends \CodersRepo{
         parent::__construct();
 
     }
+    
+    public final function run($route = '') {
+        
+        parent::run($route);
+
+    }
 }
     
+
+
+

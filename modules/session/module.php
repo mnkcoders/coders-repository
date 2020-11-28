@@ -14,5 +14,15 @@ class SessionModule extends \CodersRepo{
         
         parent::__construct();
     }
+    
+    
+    
+    
+    
+    public final function run($route = '') {
+        
+        return parent::run($route);
+
+    }
 }
     

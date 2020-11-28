@@ -122,6 +122,16 @@ final class Resource{
         //return sprintf('%s/%s/%s', \CodersRepo::base(),$this->collection,$this->public_id);
     }
     /**
+     * @param string $rid
+     * @return string
+     */
+    public static final function link( $rid ){
+        return sprintf('%s?%s=%s',
+                get_site_url(),
+                \CodersRepo::RESOURCE,
+                $rid);
+    }
+    /**
      * 
      * @return boolean
      */
@@ -139,9 +149,16 @@ final class Resource{
     /**
      * @return string|Boolean
      */
-    public final function read(){
+    public final function read( ){
         
         return $this->exists() ? file_get_contents($this->path()) : FALSE;
+    }
+    /**
+     * @return string
+     */
+    public final function readEncoded(){
+
+        return base64_encode( $file->read( ) );
     }
     /**
      * Array of headers required to stream this file
@@ -296,7 +313,10 @@ final class Resource{
      */
     public static final function collection( $parent_id = 0 ){
         
-        return self::query( array( 'parent_id' => $parent_id ) );
+        $db = new \CODERS\Repository\Query();
+        
+        return $db->select('post','*',array('parent_id'=>$parent_id),'ID' );
+        //return self::query( array( 'parent_id' => $parent_id ) );
         //return self::query( array( 'collection' => $collection ) );
     }
     /**

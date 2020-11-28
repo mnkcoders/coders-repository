@@ -9,7 +9,7 @@ final class CollectionModel extends \CODERS\Repository\Model{
      * @return string
      */
     protected final function getResource( $resource_id ){
-        return \CodersRepo::resourceLink( $resource_id );
+        return \CODERS\Repository\Resource::link($resource_id);
     }
     /**
      * @return array

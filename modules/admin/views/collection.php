@@ -68,8 +68,7 @@ final class CollectionView extends \CODERS\Repository\View{
      * @return string
      */
     protected final function getResourceLink( $resource_id ){
-        
-        return \CodersRepo::resourceLink( $resource_id );
+        return \CODERS\Repository\Resource::link($resource_id);
     }
     /**
      * @param string $collection

@@ -1,4 +1,4 @@
-<?php namespace CODERS\Repository\User;
+<?php namespace CODERS\Repository\Profile;
 /**
  * 
  */

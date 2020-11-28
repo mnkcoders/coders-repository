@@ -197,25 +197,11 @@ abstract class Response {
     /**
      * @return \CODERS\Repository\Response | boolean
      */
-    public static final function fromRequest( ){
-        
-        return self::create( Request::import() );
-    }
-    /**
-     * @return \CODERS\Repository\Response | boolean
-     */
-    public static final function fromRoute( $route = Request::_DEFAULT ){
+    public static final function Route( $route = Request::_DEFAULT ){
         
         $request = Request::route( $route );
 
         return self::create( $request );
-    }
-    /**
-     * @return \CODERS\Repository\Response | boolean
-     */
-    public static final function fromAjax( $route = 'admin.ajax' ){
-        
-        return self::create( Request::ajax( $route ) );
     }
 }
 

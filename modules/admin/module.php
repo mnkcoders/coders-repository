@@ -12,12 +12,12 @@ class AdminModule extends \CodersRepo{
     
     protected final function __construct() {
         //register componetns
-        $this->component('Account', 'models' );
-        $this->component('Project', 'models' );
-        $this->component('Mailer', 'services' );
+        $this->component('models.Account' );
+        $this->component('models.Project' );
+        $this->component('services.Mailer' );
         
         //register admin menu routes
-        $this->registerRoute( 'main' , __('Artist Pad','coders_repository'))
+        $this->registerRoute( self::ENDPOINT , __('Artist Pad','coders_repository'))
                 ->registerRoute( 'collection' , __('Collections','coders_repository'))
                 ->registerRoute( 'accounts' , __('Accounts','coders_repository'))
                 ->registerRoute( 'settings' , __('Settings','coders_repository'))
@@ -33,7 +33,7 @@ class AdminModule extends \CodersRepo{
     /**
      * @return string
      */
-    private final function rootMenu(){
+    private final function root(){
         
         $keys = array_keys($this->_menu);
         
@@ -46,15 +46,15 @@ class AdminModule extends \CodersRepo{
      */
     private final function registerRoute( $option , $title ){
                 
-        $root = $this->rootMenu();
+        $root = $this->root();
 
         $page = strlen( $root ) ?
                 sprintf('%s-%s',$root,$option):
-                sprintf('%s-%s','coders',$option);
+                $option;
 
         $this->_menu[ $page ] = array(
             'title' => $title ,
-            'route' => sprintf('admin.%s',$option),
+            'route' => sprintf('admin.%s',$option !== self::ENDPOINT ? $option : 'main' ),
             'root' => $root,
         );
 
@@ -79,7 +79,7 @@ class AdminModule extends \CodersRepo{
                                 $root, $title, $title,
                                 'administrator', $page ,
                                 function() use( $route ) {
-                                    \CODERS\Repository\Response::fromRoute( $route );
+                                    \CODERS\Repository\Response::Route( $route );
                         });
                     }
                     else{
@@ -87,7 +87,7 @@ class AdminModule extends \CodersRepo{
                                 $title, $title,
                                 'administrator', $page,
                                 function() use( $route ) {
-                                    \CODERS\Repository\Response::fromRoute( $route );
+                                    \CODERS\Repository\Response::Route( $route );
                         }, 'dashicons-art', 51);
                     }
                 }
@@ -103,7 +103,7 @@ class AdminModule extends \CodersRepo{
         //register private ajax handlers
         add_action( sprintf('wp_ajax_%s_admin', self::ENDPOINT ) , function(){
             //print json_encode(array('response'=>'OK'));
-            \CODERS\Repository\Response::fromAjax('admin.ajax');
+            \CODERS\Repository\Response::Route('admin.ajax');
             wp_die();
         } , 100000 );
 

@@ -614,7 +614,7 @@ final class Query {
         
         $db = self::db();
 
-        $result = $db->get_results($SQL_QUERY, ARRAY_A);
+        $result = $db->get_results($SQL_QUERY, ARRAY_A );
         //var_dump($SQL_QUERY);
         
         if( strlen($index) ){
