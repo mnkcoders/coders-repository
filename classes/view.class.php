@@ -962,7 +962,7 @@ abstract class View{
     
     /**
      * @param string $request
-     * @return \CODERS\ArtPad\Response
+     * @return \CODERS\ArtPad\View
      */
     public static final function create( $request ){
         

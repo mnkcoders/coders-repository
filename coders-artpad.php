@@ -170,15 +170,15 @@ class ArtPad{
     }
     /**
      * @param string $route (empty by default)
-     * @return ArtPad
+     * @return boolean
      */
     function run( $route = '' ){
         
         if(strlen($route)){
-            \CODERS\ArtPad\Response::Route($route);
+            return \CODERS\ArtPad\Response::Route($route);
         }
         
-        return $this;
+        return FALSE;
     }
     /**
      * @return \ArtPad
@@ -234,12 +234,12 @@ class ArtPad{
                 //register ajax handlers
                 add_action( sprintf('wp_ajax_%s_public',ArtPad::ENDPOINT) , function(){
                     ArtPad::module('ajax')->run();
-                    wp_die();
+                    exit;
                 }, 100000 );
                 //register ajax handlers
                 add_action( sprintf('wp_ajax_nopriv_%s_public',ArtPad::ENDPOINT) , function(){
                     //ArtPad::module('ajax');
-                    wp_die();
+                    exit;
                 }, 100000 );
             } );
             //INITIALIZE TEMPLATE REDIRECTION (FOR PUBLIC APPLICATION ONLY!!!)
@@ -261,14 +261,20 @@ class ArtPad{
                         exit;
                     case array_key_exists(ArtPad::ENDPOINT, $query):
                         $wp_query->set('is_404', FALSE);
-                        $route = explode('.',  $query[ArtPad::ENDPOINT] );
-                        $endpoint = ArtPad::module( $route[ 0 ] );
-                        if( FALSE !== $endpoint ){
-                            $endpoint->run( $query[ ArtPad::ENDPOINT ] );
-                            exit;
+                        if(strlen($query[ArtPad::ENDPOINT])){
+                            $route = explode('.',  $query[ArtPad::ENDPOINT] );
+                            $endpoint = ArtPad::module( $route[ 0 ] );
+                            if( FALSE !== $endpoint ){
+                                if( $endpoint->run( $query[ ArtPad::ENDPOINT ] ) ){
+                                    exit;
+                                }
+                            }
+                            else{
+                                ArtPad::notice( sprintf('Invalid Route <b>%s</b>' , implode('.', $route) ) , 'error' );
+                            }
                         }
                         else{
-                            ArtPad::notice( sprintf('Invalid Route [%s]' , $route ) , 'error' );
+                            ArtPad::notice( 'Empty route' , 'error' );
                         }
                         //hooked repository app, exit WP framework
                         wp_die();

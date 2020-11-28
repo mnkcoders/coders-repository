@@ -24,6 +24,13 @@ final class Account extends \CODERS\ArtPad\Model{
     }
     
     
+    public final function createInviteLink(){
+        
+        $invite = Invite::new($this);
+        
+        return $invite;
+    }
+    
     
     /**
      * @param string $element
@@ -63,6 +70,12 @@ final class Account extends \CODERS\ArtPad\Model{
         }
         
         return $updated;
+    }
+    /**
+     * @return string
+     */
+    public final function generateID(){
+        return self::generateHash( $this->value('ID') . $this->__ts() );
     }
     /**
      * @return \CODERS\ArtPad\Model\Account
@@ -131,7 +144,7 @@ final class Account extends \CODERS\ArtPad\Model{
     /**
      * @return array
      */
-        public static final function listStatus(){
+    public static final function listStatus(){
         return array(
             self::STATUS_CREATED => __('Created','coders_artpad'),
             self::STATUS_ACTIVE => __('Active','coders_artpad'),
