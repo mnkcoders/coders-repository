@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Session;
+<?php namespace CODERS\ArtPad\Session;
 
 defined('ABSPATH') or die;
 /**
  * 
  */
-class SessionModule extends \CodersRepo{
+class SessionModule extends \ArtPad{
     
     
     protected final function __construct() {

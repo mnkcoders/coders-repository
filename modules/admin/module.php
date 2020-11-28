@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 
 defined('ABSPATH') or die;
 /**
  * 
  */
-class AdminModule extends \CodersRepo{
+class AdminModule extends \ArtPad{
     
     private $_menu = array(
         
@@ -17,16 +17,16 @@ class AdminModule extends \CodersRepo{
         $this->component('services.Mailer' );
         
         //register admin menu routes
-        $this->registerRoute( self::ENDPOINT , __('Artist Pad','coders_repository'))
-                ->registerRoute( 'collection' , __('Collections','coders_repository'))
-                ->registerRoute( 'accounts' , __('Accounts','coders_repository'))
-                ->registerRoute( 'settings' , __('Settings','coders_repository'))
-                ->registerRoute( 'logs' , __('Logs','coders_repository'));
+        $this->registerRoute( self::ENDPOINT , __('Artist Pad','coders_artpad'))
+                ->registerRoute( 'collection' , __('Collections','coders_artpad'))
+                ->registerRoute( 'accounts' , __('Accounts','coders_artpad'))
+                ->registerRoute( 'settings' , __('Settings','coders_artpad'))
+                ->registerRoute( 'logs' , __('Logs','coders_artpad'));
 
         parent::__construct();
 
         //register styles and scripts using the helper within the view
-        \CODERS\Repository\View::attachStyles(array('style.css'),'admin');
+        \CODERS\ArtPad\View::attachStyles(array('style.css'),'admin');
         
         $this->initAdminMenu()->initAjax();
     }
@@ -42,7 +42,7 @@ class AdminModule extends \CodersRepo{
     /**
      * 
      * @param type $option
-     * @return \CODERS\Repository\Admin\AdminModule
+     * @return \CODERS\ArtPad\Admin\AdminModule
      */
     private final function registerRoute( $option , $title ){
                 
@@ -61,7 +61,7 @@ class AdminModule extends \CodersRepo{
         return $this;
     }
     /**
-     * @return \CODERS\Repository\Admin\AdminModule
+     * @return \CODERS\ArtPad\Admin\AdminModule
      */
     private final function initAdminMenu(){
 
@@ -79,7 +79,7 @@ class AdminModule extends \CodersRepo{
                                 $root, $title, $title,
                                 'administrator', $page ,
                                 function() use( $route ) {
-                                    \CODERS\Repository\Response::Route( $route );
+                                    \CODERS\ArtPad\Response::Route( $route );
                         });
                     }
                     else{
@@ -87,7 +87,7 @@ class AdminModule extends \CodersRepo{
                                 $title, $title,
                                 'administrator', $page,
                                 function() use( $route ) {
-                                    \CODERS\Repository\Response::Route( $route );
+                                    \CODERS\ArtPad\Response::Route( $route );
                         }, 'dashicons-art', 51);
                     }
                 }
@@ -96,14 +96,14 @@ class AdminModule extends \CodersRepo{
         return $this;
     }
     /**
-     * @return \CODERS\Repository\Admin\AdminModule
+     * @return \CODERS\ArtPad\Admin\AdminModule
      */
     private final function initAjax(){
         
         //register private ajax handlers
         add_action( sprintf('wp_ajax_%s_admin', self::ENDPOINT ) , function(){
             //print json_encode(array('response'=>'OK'));
-            \CODERS\Repository\Response::Route('admin.ajax');
+            \CODERS\ArtPad\Response::Route('admin.ajax');
             wp_die();
         } , 100000 );
 

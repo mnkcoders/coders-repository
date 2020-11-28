@@ -1,4 +1,4 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * Description of controller
  */
@@ -16,7 +16,7 @@ abstract class Response {
      * @param string $message
      * @param string $type
      * @param boolean $dismiss
-     * @return \CODERS\Repository\Response
+     * @return \CODERS\ArtPad\Response
      */
     protected function notify( $message , $type = self::NOTICE_INFO , $dismiss = TRUE ){
         
@@ -66,20 +66,20 @@ abstract class Response {
     /**
      * @param string $model
      * @param array $data
-     * @return \CODERS\Repository\Model
+     * @return \CODERS\ArtPad\Model
      */
     protected final function importModel( $model , array $data = array() ){
         return Model::create( $model , $data );
     }
     /**
      * @param string $view
-     * @return \CODERS\Repository\View
+     * @return \CODERS\ArtPad\View
      */
     protected final function importView( $view ){
         return View::create( $view );
     }
     /**
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
     private final function execute( Request $request ){
@@ -91,7 +91,7 @@ abstract class Response {
                 $this->error($request);
     }
     /**
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
     protected function error(Request $request ){
@@ -150,12 +150,12 @@ abstract class Response {
         return TRUE;
     }
     /**
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      */
     abstract protected function default_action(Request $request );
     /**
-     * @param \CODERS\Repository\Request $request
-     * @return \CODERS\Repository\Response | boolean
+     * @param \CODERS\ArtPad\Request $request
+     * @return \CODERS\ArtPad\Response | boolean
      * @throws \Exception
      */
     public static final function create( Request $request ){
@@ -166,7 +166,7 @@ abstract class Response {
                     preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR ),
                     strtolower( $request->module() ), strtolower( $request->controller() ) );
 
-            $class = sprintf('\CODERS\Repository\%s\%sController',
+            $class = sprintf('\CODERS\ArtPad\%s\%sController',
                     $request->module(), $request->controller() );
 
             if(file_exists($path)){
@@ -195,7 +195,7 @@ abstract class Response {
         return FALSE;
     }
     /**
-     * @return \CODERS\Repository\Response | boolean
+     * @return \CODERS\ArtPad\Response | boolean
      */
     public static final function Route( $route = Request::_DEFAULT ){
         

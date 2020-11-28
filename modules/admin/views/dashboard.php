@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class DashboardView extends \CODERS\Repository\View{
+final class DashboardView extends \CODERS\ArtPad\View{
     
     protected final function __construct() {
         
@@ -28,7 +28,7 @@ final class DashboardView extends \CODERS\Repository\View{
      */
     protected final function getProjectUrl( $id ){
 
-        return \CODERS\Repository\Request::url('admin.main.project',array('ID'=>$id));
+        return \CODERS\ArtPad\Request::url('admin.main.project',array('ID'=>$id));
 
     }
     /**
@@ -37,11 +37,11 @@ final class DashboardView extends \CODERS\Repository\View{
      */
     protected final function getStatus( $status = 0 ){
 
-        $status_list = \CODERS\Repository\Project::listStatus();
+        $status_list = \CODERS\ArtPad\Project::listStatus();
         
         return array_key_exists($status, $status_list) ?
                 $status_list[ $status ] :
-                __('Invalid','coders_repository');
+                __('Invalid','coders_artpad');
     }
     /**
      * @param int $media_id

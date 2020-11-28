@@ -1,6 +1,6 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 
-final class Project extends \CODERS\Repository\Model{
+final class Project extends \CODERS\ArtPad\Model{
     
     const STATUS_INACTIVE = 0;
     const STATUS_ACTIVE = 1;
@@ -33,7 +33,7 @@ final class Project extends \CODERS\Repository\Model{
     }
     /**
      * @param string $ID
-     * @return boolean|\CODERS\Repository\Project
+     * @return boolean|\CODERS\ArtPad\Project
      */
     public static final function load( $ID ){
         

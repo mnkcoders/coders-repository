@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Profile;
+<?php namespace CODERS\ArtPad\Profile;
 /**
  * 
  */
-class AccountModel extends \CODERS\Repository\Model{
+class AccountModel extends \CODERS\ArtPad\Model{
     
     
     protected function __construct(array $data = array()) {

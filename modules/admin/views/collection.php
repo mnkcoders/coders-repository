@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class CollectionView extends \CODERS\Repository\View{
+final class CollectionView extends \CODERS\ArtPad\View{
     
-    const PAGE = 'coders-repository';    
+    const PAGE = 'coders-artpad';    
     const MAX_FILE_SIZE = 'coders.repository.max_file_size';
     
     private $_selected = 'default';
@@ -68,7 +68,7 @@ final class CollectionView extends \CODERS\Repository\View{
      * @return string
      */
     protected final function getResourceLink( $resource_id ){
-        return \CODERS\Repository\Resource::link($resource_id);
+        return \CODERS\ArtPad\Resource::link($resource_id);
     }
     /**
      * @param string $collection
@@ -76,7 +76,7 @@ final class CollectionView extends \CODERS\Repository\View{
      */
     protected final function listCollection( $collection = '' ){
         return strlen($collection) ?
-            \CODERS\Repository\Resource::collection( $collection ) :
+            \CODERS\ArtPad\Resource::collection( $collection ) :
             array();
     }
     /**

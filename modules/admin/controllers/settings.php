@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class SettingsController extends \CODERS\Repository\Response{
+final class SettingsController extends \CODERS\ArtPad\Response{
 
-    protected function default_action(\CODERS\Repository\Request $request) {
+    protected function default_action(\CODERS\ArtPad\Request $request) {
 
         //$settings = $this->importModel('admin.settings');
         
@@ -13,23 +13,23 @@ final class SettingsController extends \CODERS\Repository\Response{
         return TRUE;
     }
     /**
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
-    protected function test_email_action( \CODERS\Repository\Request $request ){
+    protected function test_email_action( \CODERS\ArtPad\Request $request ){
         
         $to = get_option('admin_email');
         
         $message = 'Mailer Service Test';
         
-        $sent = \CODERS\Repository\Services\Mailer::systemMail(
+        $sent = \CODERS\ArtPad\Services\Mailer::systemMail(
                 $to,
                 $message,
                 $message)->send();
         
         $notify_message = $sent ?
-                __('Email sent to','coders_repository') . ' ' .$to :
-                __('Error sending the email','coders_repository');
+                __('Email sent to','coders_artpad') . ' ' .$to :
+                __('Error sending the email','coders_artpad');
 
         $notify_type = $sent ? parent::NOTICE_SUCCESS : parent::NOTICE_ERROR;
         

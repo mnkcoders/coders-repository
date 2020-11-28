@@ -1,13 +1,13 @@
-<?php namespace CODERS\Repository\Profile;
+<?php namespace CODERS\ArtPad\Profile;
 /**
  * 
  */
-final class ProfileView extends \CODERS\Repository\View{
+final class ProfileView extends \CODERS\ArtPad\View{
     
     protected final function __construct() {
         
-        \CODERS\Repository\View::attachStyles(array('style.css'),$this->module(TRUE));
-        \CODERS\Repository\View::attachScripts(array(
+        \CODERS\ArtPad\View::attachStyles(array('style.css'),$this->module(TRUE));
+        \CODERS\ArtPad\View::attachScripts(array(
             //'vue.js'=>array(),
             'script.js'=>array(),
             ),$this->module(TRUE));
@@ -16,7 +16,7 @@ final class ProfileView extends \CODERS\Repository\View{
         
     }
     /**
-     * @return \CODERS\Repository\View
+     * @return \CODERS\ArtPad\View
      */
     public final function display() {
         

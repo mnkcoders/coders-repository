@@ -1,25 +1,23 @@
 <?php defined('ABSPATH') or die;
 /*******************************************************************************
- * Plugin Name: Coders Repository
+ * Plugin Name: Coders ArtistPad
  * Plugin URI: https://coderstheme.org
- * Description: Resource Access Gateway and Manager
+ * Description: A community subscription content plugin ;)
  * Version: 1.0.0
  * Author: Coder01
  * Author URI: 
  * License: GPLv2 or later
- * Text Domain: coders_repository
+ * Text Domain: coders_artpad
  * Domain Path: lang
- * Class: CodersRepo
+ * Class: ArtPad
  * 
  * @author Coder01 <coder01@mnkcoder.com>
  ******************************************************************************/
-//final class CodersRepo{
-class CodersRepo{
-    
-    const ENDPOINT = 'coderepo';
+class ArtPad{
+    const ENDPOINT = 'artpad';
     const RESOURCE = 'resource';
     /**
-     * @var \CodersRepo
+     * @var \ArtPad
      */
     private static $_INSTANCE = NULL;
     /**
@@ -107,7 +105,7 @@ class CodersRepo{
      * @param string $ID
      * @return string
      */
-    public static final function base( $ID = '' ){
+    public static final function Storage( $ID = '' ){
         
         $base = sprintf('%s/wp-content/uploads/%s',
                 preg_replace('/\\\\/', '/', ABSPATH),
@@ -145,7 +143,7 @@ class CodersRepo{
                     preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR ),
                     strtolower( $endpoint ) );
 
-            $class = sprintf('\CODERS\Repository\%s\%sModule',$endpoint,$endpoint);
+            $class = sprintf('\CODERS\ArtPad\%s\%sModule',$endpoint,$endpoint);
 
             if( file_exists( $path ) ){
                 
@@ -172,18 +170,18 @@ class CodersRepo{
     }
     /**
      * @param string $route (empty by default)
-     * @return CodersRepo
+     * @return ArtPad
      */
     function run( $route = '' ){
         
         if(strlen($route)){
-            \CODERS\Repository\Response::Route($route);
+            \CODERS\ArtPad\Response::Route($route);
         }
         
         return $this;
     }
     /**
-     * @return \CodersRepo
+     * @return \ArtPad
      */
     public static final function init(){
         
@@ -194,9 +192,9 @@ class CodersRepo{
         define('CODERS__REPOSITORY__DIR',__DIR__);
         define('CODERS__REPOSITORY__URL', plugin_dir_url(__FILE__));
         
-        //self::$_INSTANCE = new \CodersRepo ();
+        //self::$_INSTANCE = new \ArtPad ();
         if(self::setupDataBase()){
-            self::notice(__('Coders Repository Database registered!','coders_repository'));
+            self::notice(__('Coders Repository Database registered!','coders_artpad'));
         }
         self::setupPosts();
 
@@ -208,7 +206,7 @@ class CodersRepo{
         if(is_admin()){
             add_action( 'init' , function(){
                 //initialize Admin
-                $admin = CodersRepo::module('Admin');
+                $admin = ArtPad::module('Admin');
             });
         }
         else{
@@ -216,14 +214,14 @@ class CodersRepo{
             add_action( 'init' , function(){
                 global $wp, $wp_rewrite;
                 //import the regiestered locale's endpoint from the settinsg
-                $endpoint = \CodersRepo::ENDPOINT;
-                $resource = \CodersRepo::RESOURCE;
+                $endpoint = \ArtPad::ENDPOINT;
+                $resource = \ArtPad::RESOURCE;
                 //now let wordpress do it's stuff with the query router
                 $wp->add_query_var( $endpoint );
                 $wp->add_query_var( $resource );
                 //$wp->add_query_var('template');
-                add_rewrite_endpoint(CodersRepo::ENDPOINT, EP_ROOT);
-                add_rewrite_endpoint(CodersRepo::RESOURCE, EP_ROOT);
+                add_rewrite_endpoint(ArtPad::ENDPOINT, EP_ROOT);
+                add_rewrite_endpoint(ArtPad::RESOURCE, EP_ROOT);
                 $wp_rewrite->add_rule(
                         sprintf('^/%s/?$', $endpoint),
                         sprintf('index.php?%s=%s',$endpoint,'endpoint_route'), 'bottom');
@@ -234,13 +232,13 @@ class CodersRepo{
                 $wp_rewrite->flush_rules();
                 
                 //register ajax handlers
-                add_action( sprintf('wp_ajax_%s_public',CodersRepo::ENDPOINT) , function(){
-                    CodersRepo::module('ajax')->run();
+                add_action( sprintf('wp_ajax_%s_public',ArtPad::ENDPOINT) , function(){
+                    ArtPad::module('ajax')->run();
                     wp_die();
                 }, 100000 );
                 //register ajax handlers
-                add_action( sprintf('wp_ajax_nopriv_%s_public',CodersRepo::ENDPOINT) , function(){
-                    //CodersRepo::module('ajax');
+                add_action( sprintf('wp_ajax_nopriv_%s_public',ArtPad::ENDPOINT) , function(){
+                    //ArtPad::module('ajax');
                     wp_die();
                 }, 100000 );
             } );
@@ -250,10 +248,10 @@ class CodersRepo{
                 global $wp , $wp_query;
                 $query = $wp->query_vars;
                 switch( TRUE ){
-                    case array_key_exists(CodersRepo::RESOURCE, $query):
+                    case array_key_exists(ArtPad::RESOURCE, $query):
                         $wp_query->set('is_404', FALSE);
-                        $rid = $query[CodersRepo::RESOURCE];
-                        $resource = \CODERS\Repository\Resource::import( $rid );
+                        $rid = $query[ArtPad::RESOURCE];
+                        $resource = \CODERS\ArtPad\Resource::import( $rid );
                         if( $resource !== FALSE ){
                             $resource->stream( /*default chunk size*/ );
                         }
@@ -261,16 +259,16 @@ class CodersRepo{
                             printf('INVALID RID#%s',$rid);
                         }
                         exit;
-                    case array_key_exists(CodersRepo::ENDPOINT, $query):
+                    case array_key_exists(ArtPad::ENDPOINT, $query):
                         $wp_query->set('is_404', FALSE);
-                        $route = explode('.',  $query[CodersRepo::ENDPOINT] );
-                        $endpoint = CodersRepo::module( $route[ 0 ] );
+                        $route = explode('.',  $query[ArtPad::ENDPOINT] );
+                        $endpoint = ArtPad::module( $route[ 0 ] );
                         if( FALSE !== $endpoint ){
-                            $endpoint->run( $query[ CodersRepo::ENDPOINT ] );
+                            $endpoint->run( $query[ ArtPad::ENDPOINT ] );
                             exit;
                         }
                         else{
-                            CodersRepo::notice( sprintf('Invalid Route [%s]' , $route ) , 'error' );
+                            ArtPad::notice( sprintf('Invalid Route [%s]' , $route ) , 'error' );
                         }
                         //hooked repository app, exit WP framework
                         wp_die();
@@ -289,7 +287,8 @@ class CodersRepo{
             if(file_exists($script_path)){
                 $script_file = file_get_contents($script_path);
                 if( FALSE !== $script_file && strlen($script_file)){
-                    $script_sql = preg_replace('/{{TABLE_PREFIX}}/',$table_prefix,$script_file);
+                    $coders_table = $table_prefix . self::ENDPOINT;
+                    $script_sql = preg_replace('/{{TABLE_PREFIX}}/',$coders_table,$script_file);
                     $tables = explode(';', $script_sql);
                     $counter = 0;
                     foreach( $tables as $T ){
@@ -313,56 +312,56 @@ class CodersRepo{
         
         add_action( 'init' , function(){
             $post_labels = array(
-                'name' => _x('Repository', 'Repo', 'coders_repository'),
-                'singular_name' => _x('Resource', 'Post type singular name', 'coders_repository'),
-                'menu_name' => _x('Repository', 'Admin Menu text', 'coders_repository'),
-                'name_admin_bar' => _x('Resource', 'Add New on Toolbar', 'coders_repository'),
-                'add_new' => __('Create', 'coders_repository'),
-                'add_new_item' => __('Add New Resource', 'coders_repository'),
-                'new_item' => __('New Resource', 'coders_repository'),
-                'edit_item' => __('Edit Resource', 'coders_repository'),
-                'view_item' => __('View Resource', 'coders_repository'),
-                'all_items' => __('Repository', 'coders_repository'),
-                'search_items' => __('Search Resource', 'coders_repository'),
-                'parent_item_colon' => __('Parent Resource:', 'coders_repository'),
-                'not_found' => __('No resources found.', 'coders_repository'),
-                'not_found_in_trash' => __('No resources found in Trash.', 'coders_repository'),
-                'featured_image' => _x('Resource Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_repository'),
-                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
-                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
-                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
-                'archives' => _x('Resource archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_repository'),
-                'insert_into_item' => _x('Insert into Resource', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_repository'),
-                'uploaded_to_this_item' => _x('Uploaded to this Resource', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_repository'),
-                'filter_items_list' => _x('Filter Resources', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_repository'),
-                'items_list_navigation' => _x('Repository Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_repository'),
-                'items_list' => _x('Resource List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_repository'),
+                'name' => _x('Repository', 'Repo', 'coders_artpad'),
+                'singular_name' => _x('Resource', 'Post type singular name', 'coders_artpad'),
+                'menu_name' => _x('Repository', 'Admin Menu text', 'coders_artpad'),
+                'name_admin_bar' => _x('Resource', 'Add New on Toolbar', 'coders_artpad'),
+                'add_new' => __('Create', 'coders_artpad'),
+                'add_new_item' => __('Add New Resource', 'coders_artpad'),
+                'new_item' => __('New Resource', 'coders_artpad'),
+                'edit_item' => __('Edit Resource', 'coders_artpad'),
+                'view_item' => __('View Resource', 'coders_artpad'),
+                'all_items' => __('Repository', 'coders_artpad'),
+                'search_items' => __('Search Resource', 'coders_artpad'),
+                'parent_item_colon' => __('Parent Resource:', 'coders_artpad'),
+                'not_found' => __('No resources found.', 'coders_artpad'),
+                'not_found_in_trash' => __('No resources found in Trash.', 'coders_artpad'),
+                'featured_image' => _x('Resource Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+                'archives' => _x('Resource archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_artpad'),
+                'insert_into_item' => _x('Insert into Resource', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_artpad'),
+                'uploaded_to_this_item' => _x('Uploaded to this Resource', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_artpad'),
+                'filter_items_list' => _x('Filter Resources', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_artpad'),
+                'items_list_navigation' => _x('Repository Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_artpad'),
+                'items_list' => _x('Resource List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_artpad'),
             );
             $project_labels = array(
-                'name' => _x('Projects', 'Projects', 'coders_repository'),
-                'singular_name' => _x('Project', 'Project', 'coders_repository'),
-                'menu_name' => _x('Project', 'Project', 'coders_repository'),
-                'name_admin_bar' => _x('Project', 'New Project', 'coders_repository'),
-                'add_new' => __('Create', 'coders_repository'),
-                'add_new_item' => __('Add New Project', 'coders_repository'),
-                'new_item' => __('New Project', 'coders_repository'),
-                'edit_item' => __('Edit Project', 'coders_repository'),
-                'view_item' => __('View Project', 'coders_repository'),
-                'all_items' => __('Projects', 'coders_repository'),
-                'search_items' => __('Search Project', 'coders_repository'),
-                'parent_item_colon' => __('Parent Project:', 'coders_repository'),
-                'not_found' => __('No projects  found.', 'coders_repository'),
-                'not_found_in_trash' => __('No projects found in Trash.', 'coders_repository'),
-                'featured_image' => _x('Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_repository'),
-                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
-                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
-                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_repository'),
-                'archives' => _x('Archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_repository'),
-                'insert_into_item' => _x('Insert into Project', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_repository'),
-                'uploaded_to_this_item' => _x('Uploaded to this Project', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_repository'),
-                'filter_items_list' => _x('Filter Projects', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_repository'),
-                'items_list_navigation' => _x('Projects Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_repository'),
-                'items_list' => _x('Project List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_repository'),
+                'name' => _x('Projects', 'Projects', 'coders_artpad'),
+                'singular_name' => _x('Project', 'Project', 'coders_artpad'),
+                'menu_name' => _x('Project', 'Project', 'coders_artpad'),
+                'name_admin_bar' => _x('Project', 'New Project', 'coders_artpad'),
+                'add_new' => __('Create', 'coders_artpad'),
+                'add_new_item' => __('Add New Project', 'coders_artpad'),
+                'new_item' => __('New Project', 'coders_artpad'),
+                'edit_item' => __('Edit Project', 'coders_artpad'),
+                'view_item' => __('View Project', 'coders_artpad'),
+                'all_items' => __('Projects', 'coders_artpad'),
+                'search_items' => __('Search Project', 'coders_artpad'),
+                'parent_item_colon' => __('Parent Project:', 'coders_artpad'),
+                'not_found' => __('No projects  found.', 'coders_artpad'),
+                'not_found_in_trash' => __('No projects found in Trash.', 'coders_artpad'),
+                'featured_image' => _x('Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+                'archives' => _x('Archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_artpad'),
+                'insert_into_item' => _x('Insert into Project', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_artpad'),
+                'uploaded_to_this_item' => _x('Uploaded to this Project', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_artpad'),
+                'filter_items_list' => _x('Filter Projects', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_artpad'),
+                'items_list_navigation' => _x('Projects Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_artpad'),
+                'items_list' => _x('Project List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_artpad'),
             );
                         
             $coderepo_post = array(
@@ -422,7 +421,7 @@ class CodersRepo{
         }
     }
     /**
-     * @return \CodersRepo
+     * @return \ArtPad
      */
     static final function instance(){
         if(is_null(self::$_INSTANCE)){
@@ -436,14 +435,14 @@ class CodersRepo{
      */
     static final function __( $text ){
         
-        return __( $text , 'coders_repository');
+        return __( $text , 'coders_artpad');
 
-        //return \CODERS\Repository\Text::__($text);
+        //return \CODERS\ArtPad\Text::__($text);
     }
 }
 
-CodersRepo::init();
+ArtPad::init();
 
 
-//var_dump(CodersRepo::__('Test'));
+//var_dump(ArtPad::__('Test'));
 //die;

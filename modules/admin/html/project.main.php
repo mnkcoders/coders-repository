@@ -3,14 +3,14 @@
     <thead>
         <tr>
             <td>
-                <?php print $this->action('admin.main',__('Back','coders_repository')); ?>
+                <?php print $this->action('admin.main',__('Back','coders_artpad')); ?>
             </td>
             <td>
-                <?php print $this->action_save(__('Save','coders_repository'),'button-primary right'); ?>
+                <?php print $this->action_save(__('Save','coders_artpad'),'button-primary right'); ?>
             </td>
         </tr>
         <tr>
-            <td colspan="2"><?php print $this->display_title(__('Your project title :D','coders_repository')) ?></td>
+            <td colspan="2"><?php print $this->display_title(__('Your project title :D','coders_artpad')) ?></td>
         </tr>
         <tr>
             <td colspan="2">
@@ -22,7 +22,7 @@
     </thead>
     <tbody>
         <tr>
-            <td><?php print __('Collection','coders_repository'); ?></td>
+            <td><?php print __('Collection','coders_artpad'); ?></td>
             <td><?php print $this->display_collection ?></td>
         </tr>
         <tr>
@@ -30,7 +30,7 @@
             <td><?php print $this->display_status ?></td>
         </tr>
         <tr>
-            <td><?php print __('Access Level','coders_repository') ?></td>
+            <td><?php print __('Access Level','coders_artpad') ?></td>
             <td>
                 <select>
                     <option value="public">Public</option>
@@ -45,7 +45,7 @@
         </tr>
         <tr>
             <th colspan="2">
-                <h2><?php print __('Integrations','coders_repository') ?></h2>
+                <h2><?php print __('Integrations','coders_artpad') ?></h2>
             </th>
         </tr>
     </tbody>
@@ -53,10 +53,10 @@
         <tr>
             <td colspan="2">
                 <i class="control right"><?php printf('%s: %s',
-                                __('Created', 'coders_repository'),
+                                __('Created', 'coders_artpad'),
                                 $this->date_created) ?></i>
                 <i class="control right"><?php printf('%s: %s',
-                                __('Last Updated', 'coders_repository'),
+                                __('Last Updated', 'coders_artpad'),
                                 $this->date_updated) ?></i>
             </td>
         </tr>

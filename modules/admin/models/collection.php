@@ -1,22 +1,22 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class CollectionModel extends \CODERS\Repository\Model{
+final class CollectionModel extends \CODERS\ArtPad\Model{
     
     /**
      * @param string $resource_id
      * @return string
      */
     protected final function getResource( $resource_id ){
-        return \CODERS\Repository\Resource::link($resource_id);
+        return \CODERS\ArtPad\Resource::link($resource_id);
     }
     /**
      * @return array
      */
     protected final function getStorageAttribute(){
         
-        return \CODERS\Repository\Resource::storage();
+        return \CODERS\ArtPad\Resource::storage();
     }
     /**
      * @return string|FALSE
@@ -32,7 +32,7 @@ final class CollectionModel extends \CODERS\Repository\Model{
      */
     protected final function getCollection( $collection ){
         return strlen($collection) ?
-            \CODERS\Repository\Resource::collection($collection) :
+            \CODERS\ArtPad\Resource::collection($collection) :
             array();
     }
     /**
@@ -42,7 +42,7 @@ final class CollectionModel extends \CODERS\Repository\Model{
 
         $query = $this->newQuery();
         
-        $storage = \CODERS\Repository\Resource::storage();
+        $storage = \CODERS\ArtPad\Resource::storage();
         $projects = $query->select( 'project' , array('ID','title') , array() ,  'ID' );
         $output = array();
         

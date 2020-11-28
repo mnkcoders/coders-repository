@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class SettingsModel extends \CODERS\Repository\Model{
+final class SettingsModel extends \CODERS\ArtPad\Model{
     
     
     

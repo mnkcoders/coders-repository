@@ -554,7 +554,7 @@ function CodersModel(){
         var content = {
             'ts': ( new Date( ) ).getMilliseconds( ),
             //wordpress ajax action caller
-            'action': 'coderepo_admin',
+            'action': 'artpad_admin',
             //coders module action (controller.action)
             '_action': action,
             'data': typeof data !== 'undefined' ? JSON.stringify(data) : false
@@ -668,7 +668,7 @@ function CodersModel(){
         }
 
         form.append('ts',( new Date( ) ).getMilliseconds( ));
-        form.append('action','coderepo_admin');
+        form.append('action','artpad_admin');
         form.append('_action',action);
         
         return form;
@@ -743,7 +743,7 @@ function CodersModel(){
         var formData = new FormData();
         
         formData.append('upload', fileData);
-        formData.append('action','coderepo_admin');
+        formData.append('action','artpad_admin');
         formData.append('_action','upload');
 
         var url = this.url();

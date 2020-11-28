@@ -3,7 +3,7 @@
     <thead>
         <tr>
             <th colspan="2">
-                <h2><?php print __('Tiers','coders_repository') ?></h2>
+                <h2><?php print __('Tiers','coders_artpad') ?></h2>
             </th>
         </tr>
     </thead>

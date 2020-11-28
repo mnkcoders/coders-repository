@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class AccountsController extends \CODERS\Repository\Response{
+final class AccountsController extends \CODERS\ArtPad\Response{
 
-    protected function default_action(\CODERS\Repository\Request $request) {
+    protected function default_action(\CODERS\ArtPad\Request $request) {
         //var_dump($request);
         $account = $this->importModel('admin.account');
         
@@ -16,9 +16,9 @@ final class AccountsController extends \CODERS\Repository\Response{
         return TRUE;
     }
     
-    protected function view_action( \CODERS\Repository\Request $request ){
+    protected function view_action( \CODERS\ArtPad\Request $request ){
         
-        $account = \CODERS\Repository\Account::Load($request->get('ID',0));
+        $account = \CODERS\ArtPad\Account::Load($request->get('ID',0));
         
         $view = $this->importView('admin.accounts');
         
@@ -39,16 +39,16 @@ final class AccountsController extends \CODERS\Repository\Response{
         return FALSE;
     }
     /**
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
-    protected final function create_action( \CODERS\Repository\Request $request ){
+    protected final function create_action( \CODERS\ArtPad\Request $request ){
         
         $form = $this->importModel('admin.account' , $request->input( ) );
         
         if( $form->validateData() ){
             
-            $account = \CODERS\Repository\Account::New($form->values());
+            $account = \CODERS\ArtPad\Account::New($form->values());
 
             if( FALSE !== $account ){
                 

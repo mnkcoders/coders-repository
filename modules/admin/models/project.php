@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class ProjectModel extends \CODERS\Repository\Model{
+final class ProjectModel extends \CODERS\ArtPad\Model{
     
     protected final function __construct(array $data = array()) {
         

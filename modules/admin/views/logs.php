@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class LogsView extends \CODERS\Repository\View{
+final class LogsView extends \CODERS\ArtPad\View{
 
     
     protected final function listCalendarClass(): array {

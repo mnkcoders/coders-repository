@@ -1,6 +1,6 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 
-abstract class CheckoutModel extends CODERS\Repository\Model{
+abstract class CheckoutModel extends CODERS\ArtPad\Model{
     
     //implement checkout model
     

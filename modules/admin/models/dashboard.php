@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class DashboardModel extends \CODERS\Repository\Model {
+final class DashboardModel extends \CODERS\ArtPad\Model {
 
     /**
      * @param string $image_id

@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * 
  */
-final class Subscription extends \CODERS\Repository\Model{
+final class Subscription extends \CODERS\ArtPad\Model{
 
     const STATUS_NEW = 0;
     const STATUS_ACTIVE = 1;
@@ -27,16 +27,16 @@ final class Subscription extends \CODERS\Repository\Model{
     }
     
     /**
-     * @return \CODERS\Repository\Account|boolean
+     * @return \CODERS\ArtPad\Account|boolean
      */
     public final function getAccount(){
-        return \CODERS\Repository\Account::Load($this->value('account_id'));
+        return \CODERS\ArtPad\Account::Load($this->value('account_id'));
     }
     /**
-     * @return \CODERS\Repository\Tier|boolean
+     * @return \CODERS\ArtPad\Tier|boolean
      */
     public final function getTier(){
-        return \CODERS\Repository\Tier::Load($this->value('project_id'),$this->value('tier_id'));
+        return \CODERS\ArtPad\Tier::Load($this->value('project_id'),$this->value('tier_id'));
     }
 
     /**
@@ -48,7 +48,7 @@ final class Subscription extends \CODERS\Repository\Model{
         return self::newQuery()->select('subscription','*',$filters);
     }
     /**
-     * @param \CODERS\Repository\Account $account
+     * @param \CODERS\ArtPad\Account $account
      * @return array
      */
     public static final function ListByAccount(Account $account ){
@@ -56,7 +56,7 @@ final class Subscription extends \CODERS\Repository\Model{
         return self::List(array('account_id' => $account->value('ID')));
     }
     /**
-     * @param \CODERS\Repository\Account $account
+     * @param \CODERS\ArtPad\Account $account
      * @return array
      */
     public static final function ListActive( Account $account = NULL ){
@@ -87,8 +87,8 @@ final class Subscription extends \CODERS\Repository\Model{
     }
     /**
      * 
-     * @param \CODERS\Repository\Account $account
-     * @param \CODERS\Repository\Tier $tier
+     * @param \CODERS\ArtPad\Account $account
+     * @param \CODERS\ArtPad\Tier $tier
      * @return boolean
      */
     public static final function New(Account $account , Tier $tier ){

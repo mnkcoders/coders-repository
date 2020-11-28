@@ -9,14 +9,14 @@
                     <?php print $this->error_name ?>
                     <?php print $this->input_email_address ?>
                     <?php print $this->error_email_address ?>
-                    <?php print $this->action_create(__('Create', 'coders_repository'),'button-primary') ?>
+                    <?php print $this->action_create(__('Create', 'coders_artpad'),'button-primary') ?>
                 </form>
             </td>
         </tr>
         <tr>
-            <th><?php print __('Name', 'coders_repository') ?></th>
-            <th><?php print __('Email', 'coders_repository') ?></th>
-            <th><?php print __('Status', 'coders_repository') ?></th>
+            <th><?php print __('Name', 'coders_artpad') ?></th>
+            <th><?php print __('Email', 'coders_artpad') ?></th>
+            <th><?php print __('Status', 'coders_artpad') ?></th>
             <th></th>
         </tr>
     </thead>
@@ -33,7 +33,7 @@
         <td><?php print $this->display_status( $account['status' ] ) ?></td>
         <td>
             <button type="button" name="_action" value="action1" class="button">
-                <?php print __('Action 1','coders_repository') ?>
+                <?php print __('Action 1','coders_artpad') ?>
             </button>
         </td>
     </tr>

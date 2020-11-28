@@ -2,7 +2,7 @@
 <table class="widefat fixed integrations tab-panel" data-tab="integrations">
     <thead>
         <tr>
-            <th><h2><?php print __('Integrations','coders_repository') ?></h2></th>
+            <th><h2><?php print __('Integrations','coders_artpad') ?></h2></th>
         </tr>
     </thead> 
     <tbody>

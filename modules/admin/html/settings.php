@@ -6,21 +6,21 @@
         <thead>
             <tr>
                 <th colspan="2">
-                    <h2><?php print __('Section', 'coders_repository') ?></h2>
+                    <h2><?php print __('Section', 'coders_artpad') ?></h2>
                 </th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><label for="id_setting"><?php print __('Setting', 'coders_repository') ?></label></td>
+                <td><label for="id_setting"><?php print __('Setting', 'coders_artpad') ?></label></td>
                 <td><input id="id_setting" type="text" name="setting" value="" placeholder="Value" /></td>
             </tr>
         </tbody>
         <tfoot>
             <tr>
                 <td colspan="2">
-                    <?php print $this->action('admin.settings.test_email',__('Send Test Mail','coders_repository')) ?>
-                    <button type="submit" name="_action" value="save" class="button button-primary right"><?php print __('Save', 'coders_repository') ?></button>
+                    <?php print $this->action('admin.settings.test_email',__('Send Test Mail','coders_artpad')) ?>
+                    <button type="submit" name="_action" value="save" class="button button-primary right"><?php print __('Save', 'coders_artpad') ?></button>
                 </td>
             </tr>
         </tfoot>

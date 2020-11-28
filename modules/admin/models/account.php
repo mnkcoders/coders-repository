@@ -1,18 +1,18 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class AccountModel extends \CODERS\Repository\Model{
+final class AccountModel extends \CODERS\ArtPad\Model{
     
     protected final function __construct(array $data = array()) {
         
         $this->define('ID',parent::TYPE_NUMBER,array('label'=>'ID'))
-            ->define('name', parent::TYPE_TEXT,array('label' => __('Name', 'coders_repository')))
-            ->define('email_address', parent::TYPE_EMAIL,array('label' => __('Email', 'coders_repository')))
-            ->define('token',parent::TYPE_TEXT,array('label'=>__('Public Key','coders_repository')))
-            ->define('status',parent::TYPE_NUMBER,array('label'=>__('Status','coders_repository')))
-            ->define('date_created',parent::TYPE_DATETIME,array('label'=>__('Created','coders_repository')))
-            ->define('date_updated',parent::TYPE_DATETIME,array('label'=>__('Last Updated','coders_repository')));
+            ->define('name', parent::TYPE_TEXT,array('label' => __('Name', 'coders_artpad')))
+            ->define('email_address', parent::TYPE_EMAIL,array('label' => __('Email', 'coders_artpad')))
+            ->define('token',parent::TYPE_TEXT,array('label'=>__('Public Key','coders_artpad')))
+            ->define('status',parent::TYPE_NUMBER,array('label'=>__('Status','coders_artpad')))
+            ->define('date_created',parent::TYPE_DATETIME,array('label'=>__('Created','coders_artpad')))
+            ->define('date_updated',parent::TYPE_DATETIME,array('label'=>__('Last Updated','coders_artpad')));
         
         parent::__construct($data);
     }
@@ -41,7 +41,7 @@ final class AccountModel extends \CODERS\Repository\Model{
     
     public static final function listAccounts(){
 
-        return \CODERS\Repository\Account::List();
+        return \CODERS\ArtPad\Account::List();
         
         $output = array();
         

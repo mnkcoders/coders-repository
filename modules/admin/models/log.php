@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class LogModel extends \CODERS\Repository\Model{
+final class LogModel extends \CODERS\ArtPad\Model{
     
     
     

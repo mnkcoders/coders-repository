@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Session;
+<?php namespace CODERS\ArtPad\Session;
 
 defined('ABSPATH') or die;
 /**
  * 
  */
-class AjaxModule extends \CodersRepo{
+class AjaxModule extends \ArtPad{
     /**
      * 
      */

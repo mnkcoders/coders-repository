@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Profile;
+<?php namespace CODERS\ArtPad\Profile;
 
 defined('ABSPATH') or die;
 /**
  * 
  */
-class ProfileModule extends \CodersRepo{
+class ProfileModule extends \ArtPad{
     
     
     protected final function __construct() {

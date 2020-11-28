@@ -1,41 +1,41 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class CollectionController extends \CODERS\Repository\Response{
+final class CollectionController extends \CODERS\ArtPad\Response{
     /**
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
-    protected final function default_action(\CODERS\Repository\Request $request) {
+    protected final function default_action(\CODERS\ArtPad\Request $request) {
         $model = $this->importModel('admin.collection');
         $view = $this->importView('admin.collection');
         $view->setModel($model)->setLayout('collection')->display();
         return TRUE;
     }
     
-    protected final function dashboard_action( \CODERS\Repository\Request $request ){
+    protected final function dashboard_action( \CODERS\ArtPad\Request $request ){
         
         return TRUE;
     }
     
-    protected final function remove_action( \CODERS\Repository\Request $request ){
+    protected final function remove_action( \CODERS\ArtPad\Request $request ){
         
         return TRUE;
     }
     
-    protected final function create_action( \CODERS\Repository\Request $request ){
+    protected final function create_action( \CODERS\ArtPad\Request $request ){
         
         return TRUE;
     }
     /**
      * 
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
-    protected final function upload_action( \CODERS\Repository\Request $request ){
+    protected final function upload_action( \CODERS\ArtPad\Request $request ){
         
-        $files = \CODERS\Repository\Resource::upload('upload', $request->get('collection','default'));
+        $files = \CODERS\ArtPad\Resource::upload('upload', $request->get('collection','default'));
         $names = array();
         foreach($files as $file ){
             $names[] = $file->name;
@@ -43,9 +43,9 @@ final class CollectionController extends \CODERS\Repository\Response{
         return $this->default_action($request->redirect('admin.collection.default',array('files'=>$names)));
     }
     
-    protected final function collection_action( \CODERS\Repository\Request $request ){
+    protected final function collection_action( \CODERS\ArtPad\Request $request ){
         
-        var_dump(\CODERS\Repository\Resource::collection(0));
+        var_dump(\CODERS\ArtPad\Resource::collection(0));
         
         return TRUE;
     }

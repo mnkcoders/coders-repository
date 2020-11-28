@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class SettingsView extends \CODERS\Repository\View{
+final class SettingsView extends \CODERS\ArtPad\View{
 
     protected final function getSettingsUrl(){
-        return \CODERS\Repository\Request::url('admin.settings');
+        return \CODERS\ArtPad\Request::url('admin.settings');
     }
 }

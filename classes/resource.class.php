@@ -1,4 +1,4 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * 
  */
@@ -39,6 +39,15 @@ final class Resource{
         return isset($this->_meta[$name]) ? strval( $this->_meta[$name] ) : '';
     }
     /**
+     * @return \CODERS\ArtPad\Query
+     */
+    private static final function newQuery( array $filters ){
+        
+        $db = new Query();
+        
+        return $db->select('post', '*', $filters);
+    }
+    /**
      * @param string $collection
      * @return string
      */
@@ -46,50 +55,8 @@ final class Resource{
         return md5(uniqid(date('YmdHis').$collection,true));
     }
     /**
-     * 
-     * @global wpdb $wpdb
-     * @global string $table_prefix
-     * @param array $filters
-     * @return array
-     */
-    private static final function query( array $filters  = array() ){
-
-        global $wpdb;
-        
-        global $table_prefix;
-        
-        $where = array();
-        
-        foreach( $filters as $var => $val ){
-            switch( TRUE ){
-                case is_string($val):
-                    $where[] = sprintf("`%s`='%s'",$var,$val);
-                    break;
-                case is_object($val):
-                    $where[] = sprintf("`%s`='%s'",$var,$val->toString());
-                    break;
-                case is_array($val):
-                    $where[] = sprintf("`%s` IN ('%s')",$var, implode("','", $val));
-                    break;
-                default:
-                    $where[] = sprintf('`%s`=%s',$var,$val);
-                    break;
-            }
-        }
-        
-        $query = sprintf("SELECT * FROM `%scoders_post`",$table_prefix);
-        
-        if( count($where)){
-            $query .= " WHERE " . implode(' AND ', $where);
-        }
-        
-        $result = $wpdb->get_results($query,ARRAY_A);
-
-        return ( count($result)) ? $result : array();
-     }
-    /**
      * @param array $input
-     * @return \CODERS\Repository\Resource
+     * @return \CODERS\ArtPad\Resource
      */
     private final function populate( array $input ) {
         
@@ -118,8 +85,7 @@ final class Resource{
      * @return string
      */
     public final function path(){
-        return \CodersRepo::base( $this->public_id );
-        //return sprintf('%s/%s/%s', \CodersRepo::base(),$this->collection,$this->public_id);
+        return \ArtPad::Storage( $this->public_id );
     }
     /**
      * @param string $rid
@@ -128,7 +94,7 @@ final class Resource{
     public static final function link( $rid ){
         return sprintf('%s?%s=%s',
                 get_site_url(),
-                \CodersRepo::RESOURCE,
+                \ArtPad::RESOURCE,
                 $rid);
     }
     /**
@@ -158,7 +124,7 @@ final class Resource{
      */
     public final function readEncoded(){
 
-        return base64_encode( $file->read( ) );
+        return base64_encode( $this->read( ) );
     }
     /**
      * Array of headers required to stream this file
@@ -252,11 +218,15 @@ final class Resource{
      * @global string $table_prefix
      * @return boolean
      */
-    private static final function register( \CODERS\Repository\Resource $R ){
+    private static final function register( \CODERS\ArtPad\Resource $R ){
         
-        global $wpdb,$table_prefix;
+        $db = new Query();
         
-        $inserted = $wpdb->insert(sprintf('%scoders_post',$table_prefix),$R->_meta);
+        $inserted = $db->insert('post', $R->meta());
+        
+        //global $wpdb,$table_prefix;
+        
+        //$inserted = $wpdb->insert(sprintf('%scoders_post',$table_prefix),$R->_meta);
         
         //$wpdb->show_errors();
         
@@ -268,7 +238,7 @@ final class Resource{
      */
     public static final function createCollection( $collection ){
         
-        $path = \CodersRepo::base($collection);
+        $path = \ArtPad::Storage($collection);
         
         return ( file_exists( $path ) ) ? TRUE : mkdir($path);
     }
@@ -305,7 +275,9 @@ final class Resource{
         
         $filters = is_array($search) ? $search : array('ID'=>$search);
         
-        return $this->query($filters);
+        return self::newQuery($filters);
+        
+        //return $this->query($filters);
     }
     /**
      * @param string $parent_id
@@ -313,7 +285,7 @@ final class Resource{
      */
     public static final function collection( $parent_id = 0 ){
         
-        $db = new \CODERS\Repository\Query();
+        $db = new \CODERS\ArtPad\Query();
         
         return $db->select('post','*',array('parent_id'=>$parent_id),'ID' );
         //return self::query( array( 'parent_id' => $parent_id ) );
@@ -325,7 +297,7 @@ final class Resource{
     public static final function storage(){
         
         $output = array();
-        $root = \CodersRepo::base();
+        $root = \ArtPad::Storage();
         //var_dump(self::base());
         //var_dump(scandir(self::base()));
         foreach(scandir($root) as $item ){
@@ -340,7 +312,7 @@ final class Resource{
      * 
      * @param array $meta
      * @param string $buffer
-     * @return boolean|\CODERS\Repository\Resource
+     * @return boolean|\CODERS\ArtPad\Resource
      * @throws \Exception
      */
     public static final function create( array $meta , $buffer = '' ){
@@ -467,21 +439,21 @@ final class Resource{
     }
     /**
      * @param int $ID
-     * @return \CODERS\Repository\Resource
+     * @return \CODERS\ArtPad\Resource
      */
     public static final function load( $ID ){
 
-        $result = self::query(array('ID'=>$ID));
+        $result = self::newQuery( array('ID'=>$ID) );
 
         return ( count($result)) ? new Resource( $result[0] ) : FALSE;
     }
     /**
      * @param string $public_id
-     * @return \CODERS\Repository\Resource
+     * @return \CODERS\ArtPad\Resource
      */
     public static final function import( $public_id ){
         
-        $result = self::query(array('public_id'=>$public_id));
+        $result = self::newQuery( array('public_id' => $public_id ) );
 
         return ( count($result)) ? new Resource( $result[0] ) : FALSE;
     }

@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * 
  */
-final class Session extends \CODERS\Repository\Model{
+final class Session extends \CODERS\ArtPad\Model{
     
     const STATUS_CREATED = 0;
     const STATUS_ACTIVE = 1;
@@ -29,7 +29,7 @@ final class Session extends \CODERS\Repository\Model{
         return date('Y-m-d H:i:s', strtotime( sprintf('%s + %s days' , $date , $offset ) ) );
     }
     /**
-     * @return \CODERS\Repository\Account
+     * @return \CODERS\ArtPad\Account
      */
     public final function account(){
         
@@ -69,7 +69,7 @@ final class Session extends \CODERS\Repository\Model{
     }
     /**
      * @param int $ID
-     * @return boolean|\CODERS\Repository\Session
+     * @return boolean|\CODERS\ArtPad\Session
      */
     public static final function Resume( $ID ){
         
@@ -95,7 +95,7 @@ final class Session extends \CODERS\Repository\Model{
     }
     /**
      * @param int $account_id
-     * @return \CODERS\Repository\Session
+     * @return \CODERS\ArtPad\Session
      */
     public static final function New( $account_id ){
         

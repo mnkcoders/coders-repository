@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class AccountsView extends \CODERS\Repository\View{
+final class AccountsView extends \CODERS\ArtPad\View{
 
     public final function display() {
         
@@ -13,54 +13,54 @@ final class AccountsView extends \CODERS\Repository\View{
      */
     protected final function listStatus(){
         
-        return \CODERS\Repository\Account::listStatus();
+        return \CODERS\ArtPad\Account::listStatus();
     }
     
     protected final function displayStatus( $status = 0 ){
         
         $list = $this->listStatus();
         
-        return array_key_exists($status, $list) ? $list[ $status ] : __('Invalid','coders_repository');
+        return array_key_exists($status, $list) ? $list[ $status ] : __('Invalid','coders_artpad');
     }
     /**
      * @param int $account_id
      * @return string
      */
     protected final function getAccountUrl( $account_id ){
-        return \CODERS\Repository\Request::url('admin.accounts.view',array('ID'=>$account_id));
+        return \CODERS\ArtPad\Request::url('admin.accounts.view',array('ID'=>$account_id));
     }
     /**
      * @return string
      */
     protected final function getFormUrl(){
-        return \CODERS\Repository\Request::url('admin.accounts');
+        return \CODERS\ArtPad\Request::url('admin.accounts');
     }
     /**
      * @return string
      */
     protected final function getNewFormUrl(){
-        return \CODERS\Repository\Request::url('admin.accounts.create');
+        return \CODERS\ArtPad\Request::url('admin.accounts.create');
     }
     /**
      * @return string
      */
     protected final function getSaveFormUrl(){
-        return \CODERS\Repository\Request::url('admin.accounts.save');
+        return \CODERS\ArtPad\Request::url('admin.accounts.save');
     }
     
     protected final function getMainUrl(){
-        return \CODERS\Repository\Request::url('admin.accounts');
+        return \CODERS\ArtPad\Request::url('admin.accounts');
     }
     
     protected final function getSubscriptionUrl(){
-        return \CODERS\Repository\Request::url('admin.accounts');
+        return \CODERS\ArtPad\Request::url('admin.accounts');
     }
     /**
      * @return string
      */
     protected final function getStatusButton(){
         
-        $items = \CODERS\Repository\Account::listStatus();
+        $items = \CODERS\ArtPad\Account::listStatus();
         
         $status = $this->hasModel() ? $this->model()->status : '';
 
@@ -76,7 +76,7 @@ final class AccountsView extends \CODERS\Repository\View{
             
             $subscriptions = $this->model()->list_subscriptions;
 
-            $items = array( '' => __('Subscribe to','coders_repository'));
+            $items = array( '' => __('Subscribe to','coders_artpad'));
 
             foreach( $subscriptions as $key => $label ){
                 $items[] = self::__HTML('option', array('name'=>$key), $label);
@@ -87,7 +87,7 @@ final class AccountsView extends \CODERS\Repository\View{
         //append link? ;)
         return self::__HTML('span',
                 array('class' =>'warning'),
-                __('No tier defined','coders_repository'));
+                __('No tier defined','coders_artpad'));
     }
 }
 

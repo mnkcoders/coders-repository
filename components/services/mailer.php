@@ -1,4 +1,4 @@
-<?php namespace CODERS\Repository\Services;
+<?php namespace CODERS\ArtPad\Services;
 
 class Mailer{
     
@@ -21,7 +21,7 @@ class Mailer{
         //$this->header($header);
     }
     /**
-     * @return \CODERS\Repository\Services\Mailer
+     * @return \CODERS\ArtPad\Services\Mailer
      */
     private final function logError( ){
         add_action('wp_mail_failed', function ($wp_error) {
@@ -34,7 +34,7 @@ class Mailer{
         return $this;
     }
     /**
-     * @return \CODERS\Repository\Services\Mailer
+     * @return \CODERS\ArtPad\Services\Mailer
      */
     private final function prepareSender(){
         $from = $this->_sender;
@@ -45,7 +45,7 @@ class Mailer{
     }
     /**
      * @param string $header
-     * @return CODERS\Repository\Services\Mailer
+     * @return CODERS\ArtPad\Services\Mailer
      */
     public final function header( $header ){
         $this->_headers[  ] = $header;
@@ -53,7 +53,7 @@ class Mailer{
     }
     /**
      * @param string $content
-     * @return \CODERS\Repository\Services\Mailer
+     * @return \CODERS\ArtPad\Services\Mailer
      */
     public final function body( $content ){
         
@@ -75,7 +75,7 @@ class Mailer{
      * @param string $to
      * @param string  $subject
      * @param string $content
-     * @return \CODERS\Repository\Services\Mailer
+     * @return \CODERS\ArtPad\Services\Mailer
      */
     public static final function mailFrom($from , $to, $subject, $content = '' ){
         
@@ -86,7 +86,7 @@ class Mailer{
      * @param string $to
      * @param string  $subject
      * @param string $content
-     * @return \CODERS\Repository\Services\Mailer
+     * @return \CODERS\ArtPad\Services\Mailer
      */
     public static final function systemMail($to, $subject, $content = '' ){
 

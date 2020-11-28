@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * 
  */
 abstract class View{
     /**
-     * @var \CODERS\Repository\Model
+     * @var \CODERS\ArtPad\Model
      */
     private $_model = null;
     /**
@@ -126,7 +126,7 @@ abstract class View{
                     $action = $arguments[0];
                     $label = count( $arguments) > 1 ? $arguments[1] : $action;
                     $class = count( $arguments) > 2 ? $arguments[2] : '';
-                    $url = \CODERS\Repository\Request::url($action);
+                    $url = \CODERS\ArtPad\Request::url($action);
                     return self::__HTML('a', array(
                         'class' => 'button ' . $class,
                         'href' => $url,
@@ -377,7 +377,7 @@ abstract class View{
         $path = explode('/', $url);
         $file_name = explode('.',$path[ count($path) - 1 ]);
         return strlen($module) ?
-            sprintf('%s-%s-%s', \CodersRepo::ENDPOINT , $module, $file_name[0]) :
+            sprintf('%s-%s-%s', \ArtPad::ENDPOINT , $module, $file_name[0]) :
             implode('-', $file_name);
     }
     /**
@@ -389,8 +389,8 @@ abstract class View{
         $action_hook = ( $module === 'admin' ) ? 'admin_enqueue_scripts' : 'enqueue_scripts';
         add_action( $action_hook , function() use( $script_list , $module ){
             foreach( $script_list as $script => $deps ){
-                $script_url = \CODERS\Repository\View::assetUrl( $script , $module );
-                $script_name = \CODERS\Repository\View::assetName($script , $module );
+                $script_url = \CODERS\ArtPad\View::assetUrl( $script , $module );
+                $script_name = \CODERS\ArtPad\View::assetName($script , $module );
                 wp_enqueue_script($script_name,
                         $script_url,
                         is_array($deps) ? $deps : strlen( $deps ) ? array($deps) : array());
@@ -406,8 +406,8 @@ abstract class View{
         $action_hook = ( $module === 'admin' ) ? 'admin_enqueue_scripts' : 'enqueue_scripts';
         add_action( $action_hook , function() use( $style_list , $module){
             foreach( $style_list as $style ){
-                $style_url = \CODERS\Repository\View::assetUrl( $style , $module);
-                $style_name = \CODERS\Repository\View::assetName($style,$module);
+                $style_url = \CODERS\ArtPad\View::assetUrl( $style , $module);
+                $style_name = \CODERS\ArtPad\View::assetName($style,$module);
                 wp_enqueue_style( $style_name , $style_url );
             }
         });
@@ -427,7 +427,7 @@ abstract class View{
             $class[count($class) - 1 ]  ;
     }
     /**
-     * @return \CODERS\Repository\Model
+     * @return \CODERS\ArtPad\Model
      */
     protected final function model(){
         return $this->_model;
@@ -439,8 +439,8 @@ abstract class View{
         return $this->_model !== null;
     }
     /**
-     * @param \CODERS\Repository\Model $model
-     * @return \CODERS\Repository\View
+     * @param \CODERS\ArtPad\Model $model
+     * @return \CODERS\ArtPad\View
      */
     public final function setModel( $model ){
         if( $this->_model === null && is_subclass_of($model, Model::class)){
@@ -451,7 +451,7 @@ abstract class View{
     /**
      * 
      * @param string $layout
-     * @return \CODERS\Repository\View
+     * @return \CODERS\ArtPad\View
      */
     public final function setLayout( $layout ){
         $this->_layout = $layout;
@@ -466,13 +466,13 @@ abstract class View{
             $this->_layout;
     }
     /**
-     * @return \CODERS\Repository\View
+     * @return \CODERS\ArtPad\View
      */
     public function display( ){
         
         $path = $this->getView( $this->getLayout( ) );
         $css_name = preg_replace('/\./', '-', $this->getLayout());
-        printf('<div class="coders-repository %s-view wrap"><!-- CODERS REPO CONTAINER -->', $css_name );
+        printf('<div class="coders-artpad %s-view wrap"><!-- CODERS REPO CONTAINER -->', $css_name );
         if( file_exists($path) ){
             require $path;
         }
@@ -496,34 +496,62 @@ abstract class View{
      */
     protected function renderCalendarNavigator( $date ){
         
+        $header = self::__HTML('strong',
+                array( 'class' => 'header calendar-date' ),
+                $this->getCalendarDayName($date) . ' ' . $this->getCalendarMonthName($date));
+        
+        $yearDropdown = self::renderDropDown('calendar_year',
+                $this->listCalendarYears(),
+                $this->getCalendarYear(),
+                '', //no placeholder
+                'centered calendar-year form-input');
+        
+        $left = self::__HTML('span', array('class'=>'button'), __('Previous','coders_artpad'));
+        
+        $right = self::__HTML('span', array('class'=>'button'), __('Next','coders_artpad'));
+        
         $navigation = array(
             //add nav buttons here
+            '<!-- ' . $date . '-->',
+            sprintf('<li class="left">%s</li>',$left),
+            sprintf('<li class="center">%s</li>',$header . ' ' . $yearDropdown),
+            sprintf('<li class="right">%s</li>',$right),
         );
         
-        return self::__HTML('td',
-                array('colspan'=>7),
+        return self::__HTML('ul',
+                array('class'=>'calendar-nav inline'),
                 $navigation);
     }
     /**
      * @return array
      */
     protected function listCalendarWeek(){
-        return array(
-            __('Sunday','coders_repository'),
-            __('Monday','coders_repository'),
-            __('Tuesday','coders_repository'),
-            __('Wednesday','coders_repository'),
-            __('Turstay','coders_repository'),
-            __('Friday','coders_repository'),
-            __('Saturday','coders_repository'),
+        $days =  array(
+            __('Sunday','coders_artpad'),
+            __('Monday','coders_artpad'),
+            __('Tuesday','coders_artpad'),
+            __('Wednesday','coders_artpad'),
+            __('Turstay','coders_artpad'),
+            __('Friday','coders_artpad'),
+            __('Saturday','coders_artpad'),
         );
+        
+        $first = $this->getCalendarFirstWeekDay();
+        
+        if( $first > 0 ){
+            $a = array_slice($days, $first);
+            $b = array_slice($days, 0 , $first);
+            return array_merge($a,$b);
+        }
+        
+        return $days;
     }
     /**
      * @param string $date
      * @return int
      */
     protected function getCalendarYear( $date = '' ){
-        if(strval($date) === 0 ){
+        if(strlen($date) === 0 ){
             $date = $this->__date();
         }
         return intval( date('Y', strtotime($date) ) );
@@ -533,41 +561,47 @@ abstract class View{
      * @return int
      */
     protected function getCalendarMonth( $date = '' ){
-        if(strval($date) === 0 ){
+        if(strlen($date) === 0 ){
             $date = $this->__date();
         }
         return intval( date('m', strtotime($date) ) );
     }
     /**
      * Number of days of this month
-     * @param string $date
+     * @param int $date
      * @return int
      */
-    protected function getMonthDays( $date = '' ){
-        if(strval($date) === 0 ){
+    protected function getMonthDays( $date ){
+        if(strlen($date) === 0 ){
             $date = $this->__date();
         }
-        return intval( date('t', strtotime($date) ) );
+        return intval( date('t', strtotime( $date ) ) );
     }
     /**
      * @param string $date
      * @return int
      */
     protected function getCalendarDay( $date = '' ){
-        if(strval($date) === 0 ){
+        if(strlen($date) === 0 ){
             $date = $this->__date();
         }
         return intval( date('d', strtotime($date) ) );
+    }
+    /**
+     * @return int
+     */
+    protected function getCalendarFirstWeekDay(){
+        return 1; //montay?
     }
     /**
      * @param string $date
      * @return int
      */
     protected function getCalendarWeekDay( $date = '' ){
-        if(strval($date) === 0 ){
+        if(strlen($date) === 0 ){
             $date = $this->__date();
         }
-        return intval( date('w', strtotime($date) ) );
+        return intval( date('w', strtotime($date) ) ) - $this->getCalendarFirstWeekDay();
     }
     /**
      * @param string $date
@@ -581,7 +615,7 @@ abstract class View{
         
         $month = $this->getCalendarMonth( $date );
         $year = $this->getCalendarYear($date);
-        $count = $this->getMonthDays($date);
+        $count = $this->getMonthDays( $date );
         $first = sprintf('%s-%s-1',$year,$month);
         $last = sprintf('%s-%s-%s',$year,$month,$count);
         
@@ -589,18 +623,35 @@ abstract class View{
         $first_day = $this->getCalendarWeekDay($first);
         $last_day = $this->getCalendarWeekDay($last);
         
+        $first_week_day = $this->getCalendarFirstWeekDay();
+        
         $list = array();
         
         //days previous month
-        
+        if( $first_day > $first_week_day ){
+            $month_before = $month-1;
+            $month_before_last = $this->getMonthDays(sprintf('%s-%s-0%s',$year,$month_before,1));
+            //var_dump($month_before . ':' . $month_before_last);
+            $month_before_offset = $month_before_last - $first_day + $first_week_day;
+            for( $d = $month_before_offset ; $d <= $month_before_last ; $d++ ){
+                $list[] = sprintf('%s-%s-%s',$year, $month_before, $d );
+            }
+        }
         
         //days current month
         for( $d = 0 ; $d < $count ; $d++ ){
-            $list[] = sprintf('%s-%s-%s', $year,$month,$d + 1);
+            $list[] = $d + 1 < 10 ? 
+                    sprintf('%s-%s-0%s', $year,$month, $d + 1) :
+                    sprintf('%s-%s-%s', $year,$month, $d + 1) ;
         }
-        
+
         //days mnth after
-        
+        if( $last_day < 6 ){
+            $month_after = $month+1;
+            for( $d = 1 ; $d <= 7 - $last_day ; $d++ ){
+                $list[] = sprintf('%s-%s-0%s',$year, $month_after, $d );
+            }
+        }
         
         return $list;
     }
@@ -609,6 +660,85 @@ abstract class View{
      */
     protected function listCalendarClass(){
         return array('table','calendar');
+    }
+    /**
+     * @return array
+     */
+    protected function listCalendarYears(){
+        $years = array();
+        for( $y = 1980 ; $y < 2050 ; $y++ ){
+            $years[ $y ] = $y;
+        }
+        return $years;
+    }
+    /**
+     * @return array
+     */
+    protected function listCalendarMonths(){
+        return array(
+            __('January','coders_artpad'),
+            __('February','coders_artpad'),
+            __('March','coders_artpad'),
+            __('April','coders_artpad'),
+            __('May','coders_artpad'),
+            __('June','coders_artpad'),
+            __('July','coders_artpad'),
+            __('August','coders_artpad'),
+            __('September','coders_artpad'),
+            __('October','coders_artpad'),
+            __('November','coders_artpad'),
+            __('December','coders_artpad'),
+        );
+    }
+    /**
+     * @param string|int $date
+     * @return string
+     */
+    protected function getCalendarMonthName( $date = '' ){
+
+        $month = $this->getCalendarMonth($date);
+        
+        $list = $this->listCalendarMonths();
+        
+        //var_dump($month);
+        
+        return $month > 0 ? $list[ $month - 1 ] : $list[ 0 ];
+    }
+    /**
+     * @param string $date
+     * @return string
+     */
+    protected function getCalendarDayName( $date ){
+
+        $day = $this->getCalendarDay($date);
+
+        switch( $day % 10 ){
+            case 1:
+                return sprintf( '%sst',$day );
+            case 2:
+                return sprintf( '%snd',$day );
+            case 3:
+                return sprintf( '%srd',$day );
+            default:
+                return sprintf( '%sth',$day );
+        }
+        
+        return '';
+    }
+    /**
+     * @param string $date
+     * @return string
+     */
+    protected function getCalendarDate( $date = '' ){
+        if(strlen($date) === 0){
+            $date = $this->__date();
+        }
+        
+        $year = $this->getCalendarYear($date);
+        $month = $this->getCalendarMonthName($date);
+        $day = $this->getCalendarDayName($date);
+        
+        return sprintf('%s %s of %s',$day,$month,$year);
     }
     /**
      * Render a full calendar table
@@ -623,10 +753,9 @@ abstract class View{
         }
         
         $class = $this->listCalendarClass();
-        
         //head
         $header = array(
-            sprintf('<tr class="navigator">%s</tr>', $this->displayCalendarNavigator($date)),
+            sprintf('<tr class="navigator"><td colspan="7">%s</td></tr>', $this->renderCalendarNavigator($date)),
             sprintf('<tr class="days"><th>%s</th></tr>', implode('</th><th>', $this->listCalendarWeek()) ),
         );
         
@@ -634,14 +763,21 @@ abstract class View{
         $calendar = array();
         $week = array();
         $days = $this->listCalendarDays($date);
+        $currentMonth = $this->getCalendarMonth($date);
+        $today = date('Y-m-d');
         
         for(  $d = 0 ; $d < count( $days ) ; $d++ ){
-            $week[] =  $this->displayCalendarRecord( $days[ $d ] );
             if( $d > 0 && $d % 7 === 0 ){
                 //save and reset
-                $calendar[] = sprintf('<tr><td>%s</td></tr>', implode('</td><td>', $week) );
+                $calendar[] = sprintf('<tr>%s</tr>', implode('', $week) );
                 $week = array();
             } 
+            $cls = array( 'day' );
+            if( $today === $date ){ $cls[] = 'today'; }
+            if( $this->getCalendarMonth($days[$d]) !== $currentMonth ){ $cls[] = 'disable'; }
+            $week[] = sprintf('<td class="%s">%s</td>',
+                    implode(' ',$cls),
+                    $this->renderCalendarRecord( $days[ $d ] ) );
         }
         
         return self::__HTML('table',
@@ -657,24 +793,9 @@ abstract class View{
      * @param boolean $selected
      * @return string
      */
-    protected function displayCalendarRecord( $date , $selected = FALSE ){
+    protected function renderCalendarRecord( $date ){
         
-        $today = date('Y-m-d');
-        
-        $day = $this->getCalendarMonth($date);
-        
-        $class = array('day');
-        
-        if( $selected ){
-            $class[] = 'selected';
-        }
-        if( $today === $date ){
-            $class[] = 'today';
-        }
-        
-        return self::__HTML('span',
-                array('class'=> implode(' ', $class)),
-                $day );
+        return $this->getCalendarDay($date);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -787,7 +908,7 @@ abstract class View{
     }
     /**
      * @param String $url
-     * @return \CODERS\Repository\View
+     * @return \CODERS\ArtPad\View
      */
     protected function attachScript( $url ){
         
@@ -841,7 +962,7 @@ abstract class View{
     
     /**
      * @param string $request
-     * @return \CODERS\Repository\Response
+     * @return \CODERS\ArtPad\Response
      */
     public static final function create( $request ){
         
@@ -850,7 +971,7 @@ abstract class View{
         $view = count( $call ) > 1 ? $call[1] : 'main';
         
         $path = sprintf('%s/modules/%s/views/%s.php',CODERS__REPOSITORY__DIR,$module,$view);
-        $class = sprintf('\CODERS\Repository\%s\%sView',$module,$view);
+        $class = sprintf('\CODERS\ArtPad\%s\%sView',$module,$view);
         
         if(file_exists($path)){
             require_once $path;

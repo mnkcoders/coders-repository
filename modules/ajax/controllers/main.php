@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Ajax;
+<?php namespace CODERS\ArtPad\Ajax;
 /**
  * 
  */
-final class MainController extends \CODERS\Repository\Response{
+final class MainController extends \CODERS\ArtPad\Response{
 
-    protected function default_action(\CODERS\Repository\Request $request) {
+    protected function default_action(\CODERS\ArtPad\Request $request) {
         
         return $this->ajax($request->input());
     }

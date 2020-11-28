@@ -1,4 +1,4 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * 
  */
@@ -38,7 +38,7 @@ class Log{
         return date('Y-m-d H:i:s');
     }
     /**
-     * @return \CODERS\Repository\Log
+     * @return \CODERS\ArtPad\Log
      */
     private final function save( ){
         
@@ -68,7 +68,7 @@ class Log{
     
     /**
      * @param string $message
-     * @return \CODERS\Repository\Log
+     * @return \CODERS\ArtPad\Log
      */
     public static final function info( $message ){
         
@@ -76,7 +76,7 @@ class Log{
     }
     /**
      * @param string $message
-     * @return \CODERS\Repository\Log
+     * @return \CODERS\ArtPad\Log
      */
     public static final function system( $message ){
         
@@ -84,7 +84,7 @@ class Log{
     }
     /**
      * @param string $message
-     * @return \CODERS\Repository\Log
+     * @return \CODERS\ArtPad\Log
      */
     public static final function success( $message ){
         
@@ -92,7 +92,7 @@ class Log{
     }
     /**
      * @param string $message
-     * @return \CODERS\Repository\Log
+     * @return \CODERS\ArtPad\Log
      */
     public static final function alert( $message ){
         
@@ -100,7 +100,7 @@ class Log{
     }
     /**
      * @param string $message
-     * @return \CODERS\Repository\Log
+     * @return \CODERS\ArtPad\Log
      */
     public static final function error( $message ){
         

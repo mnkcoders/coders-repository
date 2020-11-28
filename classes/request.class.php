@@ -1,4 +1,4 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * Request Class
  */
@@ -51,7 +51,7 @@ final class Request{
     }
     /**
      * Import fingerprint
-     * @return \CODERS\Repository\Request
+     * @return \CODERS\ArtPad\Request
      */
     private final function readFP(){
 
@@ -67,7 +67,7 @@ final class Request{
         return $this;
     }
     /**
-     * @return \CODERS\Repository\Request
+     * @return \CODERS\ArtPad\Request
      */
     private final function register( $request = '' ){
         if(strlen($request)){
@@ -87,7 +87,7 @@ final class Request{
     }
     /**
      * @param array $input
-     * @return \CODERS\Repository\Request
+     * @return \CODERS\ArtPad\Request
      */
     private final function import( array $input ){
         foreach( $input as $var => $val ){
@@ -224,7 +224,7 @@ final class Request{
      */
     public static final function url( $request = self::_DEFAULT , $args = array( ) ){
         $serialized = array();
-        $EP = \CodersRepo::ENDPOINT;
+        $EP = \ArtPad::ENDPOINT;
         $route = explode( '.' , $request );
         $is_admin = $route[ 0 ] === 'admin';
         $url = $is_admin ? admin_url() . 'admin.php' : get_site_url();
@@ -272,12 +272,12 @@ final class Request{
     }
     /**
      * @param array $request
-     * @return \CODERS\Repository\Request
+     * @return \CODERS\ArtPad\Request
      */
     public static final function create( array $request ){ return new Request( $request ); }
     /**
      * @param string $route
-     * @return \CODERS\Repository\Request
+     * @return \CODERS\ArtPad\Request
      */
     public static final function route( $route = self::_DEFAULT  ){
         
@@ -310,7 +310,7 @@ final class Request{
     }
     /**
      * @param string $route
-     * @return \CODERS\Repository\Request
+     * @return \CODERS\ArtPad\Request
      */
     public final function redirect( $route = self::_DEFAULT , array $input = array( ) ){
         $action = explode('.', $route);

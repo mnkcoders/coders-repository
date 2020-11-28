@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * 
  */
-final class Tier extends \CODERS\Repository\Model{
+final class Tier extends \CODERS\ArtPad\Model{
     
     const STATUS_DISABLED = 0;
     const STATUS_ENABLED = 1;
@@ -26,10 +26,10 @@ final class Tier extends \CODERS\Repository\Model{
     
     /**
      * 
-     * @return \CODERS\Repository\Project
+     * @return \CODERS\ArtPad\Project
      */
     public final function getProject(){
-        return \CODERS\Repository\Project::load($this->project_id);
+        return \CODERS\ArtPad\Project::load($this->project_id);
     }
     
     
@@ -75,7 +75,7 @@ final class Tier extends \CODERS\Repository\Model{
     /**
      * @param string $project_id
      * @param int $level
-     * @return boolean|\CODERS\Repository\Tier
+     * @return boolean|\CODERS\ArtPad\Tier
      */
     public static final function Load( $project_id , $level ){
         
@@ -91,7 +91,7 @@ final class Tier extends \CODERS\Repository\Model{
     }
     /**
      * @param array $tier_data
-     * @return \CODERS\Repository\Tier
+     * @return \CODERS\ArtPad\Tier
      */
     public static final function New( $project, $title ){
 

@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class SubscriptionsController extends \CODERS\Repository\Response{
+final class SubscriptionsController extends \CODERS\ArtPad\Response{
 
-    protected function default_action(\CODERS\Repository\Request $request) {
+    protected function default_action(\CODERS\ArtPad\Request $request) {
         
         $this->importView('admin.subscriptions')->setLayout('subscriptions')->display();
         

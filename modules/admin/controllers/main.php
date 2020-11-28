@@ -1,22 +1,22 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class MainController extends \CODERS\Repository\Response{
+final class MainController extends \CODERS\ArtPad\Response{
     /**
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
-    protected final function default_action(\CODERS\Repository\Request $request) {
+    protected final function default_action(\CODERS\ArtPad\Request $request) {
         $model = $this->importModel('admin.dashboard');
         $view = $this->importView('admin.dashboard');
         $view->setModel($model)->setLayout('dashboard')->display();
         return TRUE;
     }
     
-    protected final function project_action( \CODERS\Repository\Request $request ){
+    protected final function project_action( \CODERS\ArtPad\Request $request ){
         
-        $project = \CODERS\Repository\Project::load( $request->get('ID',''));
+        $project = \CODERS\ArtPad\Project::load( $request->get('ID',''));
         
         $this->importView('admin.project')
                 ->setModel($project)
@@ -26,28 +26,28 @@ final class MainController extends \CODERS\Repository\Response{
         return TRUE;
     }
     
-    protected final function dashboard_action( \CODERS\Repository\Request $request ){
+    protected final function dashboard_action( \CODERS\ArtPad\Request $request ){
         
         return TRUE;
     }
     
-    protected final function remove_action( \CODERS\Repository\Request $request ){
+    protected final function remove_action( \CODERS\ArtPad\Request $request ){
         
         return TRUE;
     }
     
-    protected final function create_action( \CODERS\Repository\Request $request ){
+    protected final function create_action( \CODERS\ArtPad\Request $request ){
         
         return TRUE;
     }
     /**
      * 
-     * @param \CODERS\Repository\Request $request
+     * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
-    protected final function upload_action( \CODERS\Repository\Request $request ){
+    protected final function upload_action( \CODERS\ArtPad\Request $request ){
         
-        $files = \CODERS\Repository\Resource::upload('upload', $request->get('collection','default'));
+        $files = \CODERS\ArtPad\Resource::upload('upload', $request->get('collection','default'));
         $names = array();
         foreach($files as $file ){
             $names[] = $file->name;
@@ -55,9 +55,9 @@ final class MainController extends \CODERS\Repository\Response{
         return $this->default_action($request->redirect('admin.main.default',array('files'=>$names)));
     }
     
-    protected final function collection_action( \CODERS\Repository\Request $request ){
+    protected final function collection_action( \CODERS\ArtPad\Request $request ){
         
-        var_dump(\CODERS\Repository\Resource::collection(0));
+        var_dump(\CODERS\ArtPad\Resource::collection(0));
         
         return TRUE;
     }

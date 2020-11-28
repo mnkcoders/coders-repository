@@ -3,19 +3,19 @@
 <table class="widefat fixed table">
     <!--thead>
         <tr>
-            <th><?php print __('Project','coders_repository') ?></th>
-            <th><?php print __('Status','coders_repository') ?></th>
+            <th><?php print __('Project','coders_artpad') ?></th>
+            <th><?php print __('Status','coders_artpad') ?></th>
         </tr>
     </thead-->
     <tbody class="projects">
         <tr>
             <td>
-                <h2><?php print __('Dashboard','coders_repository') ?></h2>
+                <h2><?php print __('Dashboard','coders_artpad') ?></h2>
             </td>
             <td>
                 <div class="panel right inline">
-                    <?php print $this->display_new(__('New project title','coders_repository')) ?>
-                    <?php print $this->action_create(__('Create','coders_repository'),'button-primary'); ?>
+                    <?php print $this->display_new(__('New project title','coders_artpad')) ?>
+                    <?php print $this->action_create(__('Create','coders_artpad'),'button-primary'); ?>
                 </div>
             </td>
         </tr>
@@ -38,7 +38,7 @@
                     <?php print $this->display_progress_bar($project['progress']) ?>
                 </div>
                 <i class="control bottom pad-sm right"><?php printf('%s: %s',
-                                __('Created', 'coders_repository'),
+                                __('Created', 'coders_artpad'),
                                 $project['date_created']) ?></i>
                 </td>
         </tr>

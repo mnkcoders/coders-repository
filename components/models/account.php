@@ -1,6 +1,6 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 
-final class Account extends \CODERS\Repository\Model{
+final class Account extends \CODERS\ArtPad\Model{
     
     const STATUS_CREATED = 0;       //created, must be activated
     const STATUS_ACTIVE = 1;        //active, can login
@@ -9,11 +9,11 @@ final class Account extends \CODERS\Repository\Model{
     protected final function __construct(array $data = array()) {
         $this->define('ID', parent::TYPE_NUMBER , array('value'=>0))
                 ->define('token', parent::TYPE_TEXT, array('size'=>32))
-                ->define('name', parent::TYPE_TEXT, array('size'=>16,'label' => __('Name','coders_repository')))
-                ->define('status', parent::TYPE_NUMBER, array('value'=>0,'label' => __('Status','coders_repository')))
-                ->define('email_address', parent::TYPE_EMAIL, array('size'=>128,'label' => __('Email','coders_repository')))
-                ->define('date_created', parent::TYPE_DATETIME, array('label' => __('Created','coders_repository')))
-                ->define('date_updated', parent::TYPE_DATETIME, array('label' => __('Updated','coders_repository')));
+                ->define('name', parent::TYPE_TEXT, array('size'=>16,'label' => __('Name','coders_artpad')))
+                ->define('status', parent::TYPE_NUMBER, array('value'=>0,'label' => __('Status','coders_artpad')))
+                ->define('email_address', parent::TYPE_EMAIL, array('size'=>128,'label' => __('Email','coders_artpad')))
+                ->define('date_created', parent::TYPE_DATETIME, array('label' => __('Created','coders_artpad')))
+                ->define('date_updated', parent::TYPE_DATETIME, array('label' => __('Updated','coders_artpad')));
         
         parent::__construct($data);
     }
@@ -65,7 +65,7 @@ final class Account extends \CODERS\Repository\Model{
         return $updated;
     }
     /**
-     * @return \CODERS\Repository\Model\Account
+     * @return \CODERS\ArtPad\Model\Account
      */
     public final function save(){
         
@@ -133,9 +133,9 @@ final class Account extends \CODERS\Repository\Model{
      */
         public static final function listStatus(){
         return array(
-            self::STATUS_CREATED => __('Created','coders_repository'),
-            self::STATUS_ACTIVE => __('Active','coders_repository'),
-            self::STATUS_INACTIVE => __('Inactive','coders_repository'),
+            self::STATUS_CREATED => __('Created','coders_artpad'),
+            self::STATUS_ACTIVE => __('Active','coders_artpad'),
+            self::STATUS_INACTIVE => __('Inactive','coders_artpad'),
         );
     }
     /**
@@ -153,7 +153,7 @@ final class Account extends \CODERS\Repository\Model{
     /**
      * @param int $token
      * @param boolean $hash
-     * @return boolean|\CODERS\Repository\Account
+     * @return boolean|\CODERS\ArtPad\Account
      */
     public static final function LoadByToken( $token , $hash = FALSE ){
         
@@ -171,7 +171,7 @@ final class Account extends \CODERS\Repository\Model{
     }
     /**
      * @param int $account_id
-     * @return boolean|\CODERS\Repository\Account
+     * @return boolean|\CODERS\ArtPad\Account
      */
     public static final function Load( $account_id ){
         
@@ -187,7 +187,7 @@ final class Account extends \CODERS\Repository\Model{
     }
     /**
      * @param array $data
-     * @return boolean|\CODERS\Repository\Account
+     * @return boolean|\CODERS\ArtPad\Account
      */
     public static final function New( array $data ){
         

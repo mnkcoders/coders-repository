@@ -1,4 +1,4 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 
 abstract class Model{
     
@@ -126,7 +126,7 @@ abstract class Model{
      * @param string $element
      * @param string $type
      * @param array $attributes
-     * @return \CODERS\Repository\Model
+     * @return \CODERS\ArtPad\Model
      */
     protected final function define( $element , $type = self::TYPE_TEXT , array $attributes = array( ) ){
         
@@ -165,8 +165,8 @@ abstract class Model{
         return $this;
     }
     /**
-     * @param \CODERS\Repository\Model $source
-     * @return \CODERS\Repository\Model
+     * @param \CODERS\ArtPad\Model $source
+     * @return \CODERS\ArtPad\Model
      */
     protected final function __copy(Model $source ){
         if( count( $this->_dictionary) === 0 ){
@@ -179,7 +179,7 @@ abstract class Model{
     /**
      * Import all default values
      * @param array $input
-     * @return \CODERS\Repository\Model
+     * @return \CODERS\ArtPad\Model
      */
     protected function populate( array $input ){
         foreach( $input as $element => $value ){
@@ -229,10 +229,10 @@ abstract class Model{
     }
     /**
      * Combine elements from
-     * @param \CODERS\Repository\Model $model Model to import data from
-     * @return \CODERS\Repository\Model
+     * @param \CODERS\ArtPad\Model $model Model to import data from
+     * @return \CODERS\ArtPad\Model
      */
-    public function import( \CODERS\Repository\Model $model ){
+    public function import( \CODERS\ArtPad\Model $model ){
         
         foreach( $model->elements() as $element ){
             $this->setValue($element,$model->value($element));
@@ -297,7 +297,7 @@ abstract class Model{
      * @param string $element
      * @param string $attribute
      * @param mixed $value
-     * @return \CODERS\Repository\Model
+     * @return \CODERS\ArtPad\Model
      */
     protected final function set( $element , $attribute , $value ){
         if(array_key_exists($element, $this->_dictionary)){
@@ -309,7 +309,7 @@ abstract class Model{
      * 
      * @param type $element
      * @param type $value
-     * @return \CODERS\Repository\Model
+     * @return \CODERS\ArtPad\Model
      */
     protected function setValue( $element , $value = FALSE ){
         $customSetter = sprintf('set%sValue',$element);
@@ -360,7 +360,7 @@ abstract class Model{
         return $output;
     }
     /**
-     * @return \CODERS\Repository\Query
+     * @return \CODERS\ArtPad\Query
      */
     protected static final function newQuery(){
         return new Query();
@@ -369,7 +369,7 @@ abstract class Model{
     /**
      * @param string $request
      * @param array $data
-     * @return \CODERS\Repository\Model | boolean
+     * @return \CODERS\ArtPad\Model | boolean
      * @throws \Exception
      */
     public static final function create( $request , $data = array() ){
@@ -383,7 +383,7 @@ abstract class Model{
                     preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR ),
                     strtolower( $module ), strtolower( $model ) );
 
-            $class = sprintf('\CODERS\Repository\%s\%sModel',
+            $class = sprintf('\CODERS\ArtPad\%s\%sModel',
                     strtolower( $module ),strtolower( $model ) );
 
             if(file_exists($path)){
@@ -443,14 +443,15 @@ final class Query {
      */
     public static final function prefix(){
         global $table_prefix;
-        return $table_prefix;
+        $ns = \ArtPad::ENDPOINT;
+        return $table_prefix . $ns;
     }
     /**
      * @param string $table
      * @return string
      */
     public static final function table( $table ){
-        return sprintf('%scoders_%s',self::prefix(),$table);
+        return sprintf('%s_%s',self::prefix(),$table);
     }
     
     /**

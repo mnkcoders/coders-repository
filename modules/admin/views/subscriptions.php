@@ -1,8 +1,8 @@
-<?php namespace CODERS\Repository\Admin;
+<?php namespace CODERS\ArtPad\Admin;
 /**
  * 
  */
-final class SubscriptionsView extends \CODERS\Repository\View{
+final class SubscriptionsView extends \CODERS\ArtPad\View{
 
     
     

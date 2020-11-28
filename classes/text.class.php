@@ -1,10 +1,10 @@
-<?php namespace CODERS\Repository;
+<?php namespace CODERS\ArtPad;
 /**
  * Centralize all strings here for WP string parser and locale translations
  */
 final class Text {
     /**
-     * @var \CODERS\Repository\Strings
+     * @var \CODERS\ArtPad\Strings
      */
     private static $_instance = null;
     /**

@@ -1,5 +1,5 @@
 /*ACCOUNTS TABLE*/
-CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_account` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_account` (
  `ID` int(11) NOT NULL AUTO_INCREMENT,
  `token` varchar(32) NOT NULL,
  `name` varchar(16) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_account` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*PAYMENTS TABLE*/
-CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_checkout` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_checkout` (
  `ID` int(11) NOT NULL,
  `account_id` int(11) NOT NULL,
  `subscription_id` int(11) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_checkout` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*SUBSCRIPTIONS TABLE*/
-CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_subscription` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_subscription` (
  `ID` int(11) NOT NULL,
  `account_id` int(11) NOT NULL,
  `tier_id` varchar(32) NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_subscription` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*PROJECTS TABLE*/
-CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_project` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_project` (
  `ID` varchar(12) NOT NULL,
  `title` varchar(64) NOT NULL,
  `content` longtext NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_project` (
  `date_updated` datetime NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `{{TABLE_PREFIX}}coders_post` (
+CREATE TABLE `{{TABLE_PREFIX}}_post` (
  `ID` int(11) NOT NULL AUTO_INCREMENT,
  `public_id` varchar(32) NOT NULL,
  `parent_id` int(11) NOT NULL DEFAULT '0',
@@ -75,7 +75,7 @@ CREATE TABLE `{{TABLE_PREFIX}}coders_post` (
 ) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8
 
 /*TIERS TABLE*/
-CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_tier` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_tier` (
  `project_id` varchar(32) NOT NULL COMMENT 'project_id + tier_id',
  `tier` tinyint(2) NOT NULL DEFAULT '0',
  `title` varchar(16) NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_tier` (
  PRIMARY KEY (`ID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_token` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_token` (
  `ID` varchar(32) NOT NULL,
  `type` varchar(16) NOT NULL,
  `target` int(11) NOT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_token` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*LOGS TABLE*/
-CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}coders_logs` (
+CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_logs` (
  `timestamp` datetime NOT NULL,
  `source` varchar(32) NOT NULL,
  `message` varchar(128) NOT NULL,
