@@ -31,11 +31,18 @@ abstract class Model{
     /**
      * @return string
      */
-    public final function __toString() {
+    public function __toString() {
+        return $this->__class();
+    }
+    /**
+     * Model Class Name
+     * @return string
+     */
+    protected final function __class(){
         
-        $name = explode('\\', get_class($this));
+        $ns = explode('\\', get_class($this));
         
-        return $name[count($name) - 1 ];
+        return $ns[ count($ns) - 1 ];
     }
     /**
      * @param string $name
@@ -406,7 +413,6 @@ abstract class Model{
         
         return FALSE;
     }
-    
     /**
      * @return string
      */

@@ -1,11 +1,13 @@
-<?php namespace CODERS\ArtPad\Ajax;
+<?php namespace CODERS\ArtPad\Pad;
 /**
  * 
  */
-final class MainController extends \CODERS\ArtPad\Response{
-
+final class AjaxController extends \CODERS\ArtPad\Response{
+    
     protected function default_action(\CODERS\ArtPad\Request $request) {
         
         return $this->ajax($request->input());
     }
 }
+
+

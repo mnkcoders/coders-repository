@@ -27,9 +27,14 @@ final class DashboardView extends \CODERS\ArtPad\View{
      * @return string
      */
     protected final function getProjectUrl( $id ){
-
         return \CODERS\ArtPad\Request::url('admin.main.project',array('ID'=>$id));
-
+    }
+    /**
+     * @param string $id
+     * @return string
+     */
+    protected final function getPublicUrl( $id ){
+        return \CODERS\ArtPad\Request::url('pad',array('ID'=>$id));
     }
     /**
      * @param int $status

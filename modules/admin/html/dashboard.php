@@ -36,6 +36,7 @@
                     <h4><?php print $this->status($project['status']) ?></h4>
                     <h4><?php printf('%s Subscribers', $project['subscribers']) ?></h4>
                     <?php print $this->display_progress_bar($project['progress']) ?>
+                    <a href="<?php print $this->public_url($id) ?>" target="_blank"><?php print __('Public','coders_artpad') ?></a>
                 </div>
                 <i class="control bottom pad-sm right"><?php printf('%s: %s',
                                 __('Created', 'coders_artpad'),

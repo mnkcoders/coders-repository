@@ -7,20 +7,9 @@ final class MainController extends \CODERS\ArtPad\Response{
     
     protected function default_action(\CODERS\ArtPad\Request $request) {
         
-        $ID = $request->getInt('ID');
+        $this->importView('session.main')->setLayout('login')->display();
         
-        if( $ID === 0 ){
-            $ID = 1;
-        }
-        
-        print 'Make new session for ID '. $ID;
-        
-        $session = \CODERS\ArtPad\Session::New($ID);
-        
-        
-        var_dump($session);
-        
-        return true;
+        return TRUE;
     }
     
     public function create_action( \CODERS\ArtPad\Request $request ) {

@@ -17,12 +17,23 @@ final class Account extends \CODERS\ArtPad\Model{
         
         parent::__construct($data);
     }
+    /**
+     * @return string
+     */
+    public final function __toString() {
+        return sprintf('[%s]%s' ,$this->value('ID') , $this->value('name'));
+    }
     
     public final function getPoints(){
         
         return 0;
     }
-    
+    /**
+     * @return \CODERS\ArtPad\Session
+     */
+    public final function createSession(){
+        return Session::New($this->value('ID'));
+    }
     
     public final function createInviteLink(){
         
@@ -75,7 +86,7 @@ final class Account extends \CODERS\ArtPad\Model{
      * @return string
      */
     public final function generateID(){
-        return self::generateHash( $this->value('ID') . $this->__ts() );
+        return self::GenerateHash( $this->value('ID') . $this->__ts() );
     }
     /**
      * @return \CODERS\ArtPad\Model\Account
@@ -138,7 +149,7 @@ final class Account extends \CODERS\ArtPad\Model{
      * @param string $input
      * @return string
      */
-    protected static final function generateHash( $input ){
+    public static final function GenerateHash( $input ){
         return md5( $input );
     }
     /**
@@ -164,20 +175,26 @@ final class Account extends \CODERS\ArtPad\Model{
         return $output;
     }
     /**
-     * @param int $token
+     * @param string $email
      * @param boolean $hash
      * @return boolean|\CODERS\ArtPad\Account
      */
-    public static final function LoadByToken( $token , $hash = FALSE ){
+    public static final function LoadByEmail( $email , $hash = FALSE ){
+        var_dump($email);
+        if( self::ValidateEmail($email)){
+            
+            $email = self::normalizeEmail($email);
         
-        $token_id = $hash ? self::generateHash(self::normalizeEmail($token)) : $token;
-        
-        $query = new Query();
-        
-        $data = $query->select('account', '*', array( 'token' => $token_id ) );
-        
-        if( count( $data ) ){
-            return new Account( $data );
+            $hash = $hash ? self::GenerateHash($email) : $email;
+
+            $query = new Query();
+
+            $data = $query->select('account', '*', array( 'token' => $hash ) );
+
+            if( count( $data ) ){
+                return new Account( $data[0] );
+            }
+
         }
         
         return FALSE;
@@ -206,12 +223,21 @@ final class Account extends \CODERS\ArtPad\Model{
         
         $data['ID'] = 0; //just override if any, this is a blank new account
         $data['email_address'] = self::normalizeEmail($data['email_address']);
-        $data['token'] = self::generateHash($data['email_address']);
+        $data['token'] = self::GenerateHash($data['email_address']);
         //$data['date_created'] = $data['date_updated'] = $this->__ts();
 
         $account = new Account($data);
         
         return $account->validateData() ? $account->save() : FALSE;
+    }
+    /**
+     * @param string $email
+     * @return boolean
+     */
+    public static final function ValidateEmail( $email ){
+
+        return preg_match( self::EmailMatch() , $email ) > 0;
+
     }
 }
 

@@ -1,6 +1,6 @@
 <?php namespace CODERS\ArtPad\Services;
 
-class Mailer{
+final class Mailer{
     
     private $_sender,$_receiver,$_subject,$_content;
     

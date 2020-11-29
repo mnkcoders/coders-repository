@@ -32,6 +32,12 @@ final class Invite extends \CODERS\ArtPad\Model{
         return strlen($value) ? Request::url('invite', array( 'link' => $value ) ) : '#invalid';
     }
     /**
+     * @return \CODERS\ArtPad\Account|FALSE
+     */
+    public final function account(){
+        return Account::Load($this->value('account_id'));
+    }
+    /**
      * @return boolean
      */
     public final function isActive(){

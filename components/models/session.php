@@ -101,13 +101,17 @@ final class Session extends \CODERS\ArtPad\Model{
         
         $ts = self::__ts();
         
+        $expires = self::expiration( $ts );
+        
+        $ID = self::Register($account_id, $expires);
+        
         $data = array(
             //create session
-            'ID' => md5(sprintf('%s_%s',$ts,$account_id) ),
+            'ID' => $ID,
             'account_id' => $account_id,
             'status' => self::STATUS_ACTIVE,
             'date_created' => $ts,
-            'date_expired' => self::expiration( $ts )
+            'date_expired' => $expires
 
         );
         
@@ -125,6 +129,26 @@ final class Session extends \CODERS\ArtPad\Model{
         ));
         
         return $result > 0 ? $session : FALSE;
+    }
+    /**
+     * 
+     * @param type $account_id
+     * @param type $expires
+     */
+    private static final function Register( $account_id , $expires = '' ){
+        
+        $key = sprintf('%s_SID', \ArtPad::ENDPOINT );
+        
+        $offset = strlen($expires) ? strtotime($expires) : 3600;
+
+        $SID = md5( sprintf('%s_%s',$account_id,self::__ts()) );
+        
+        //setcookie( $key, $SID, $expires, $path, $domain);
+        if( setcookie( $key, $SID, time() + $offset ) ){
+            return $SID;
+        }
+        
+        return '';
     }
 }
 

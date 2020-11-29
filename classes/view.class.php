@@ -173,7 +173,7 @@ abstract class View{
      */
     protected function __input( $element ){
         
-        if( $this->_model->has( $element ) ){
+        if( $this->hasModel() && $this->model()->has( $element ) ){
 
             $id = 'id_' . $element;
             $value = $this->_model->value($element,'');

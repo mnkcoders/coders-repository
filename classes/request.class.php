@@ -190,9 +190,9 @@ final class Request{
     /**
      * @return string
      */
-    public final function SID(){
+    public static final function SID(){
         
-        $SID = filter_input(INPUT_COOKIE, 'CODERS_SID');
+        $SID = filter_input(INPUT_COOKIE, sprintf('%s_SID', \ArtPad::ENDPOINT ) );
         
         return $SID !== NULL ? $SID : '';
     }
@@ -236,6 +236,9 @@ final class Request{
                     $EP . '-' . $route[ 1 ];
             $serialized[ ] = 'page=' . $page;
             
+            if( count( $route ) > 2  && $route[2] !== 'default' ){
+                $serialized[ ] = sprintf('%s=%s',self::ACTION, $route[2]);
+            }
         }
         elseif( FALSE ){
             //public modules using permalink format SEF
@@ -247,28 +250,34 @@ final class Request{
                 //append action
                 $url .= '.' . $route[2];
             }
+            
+            $url .= '/';
 
             foreach( $args as $var => $val ){
                 $serialized[ ] = sprintf('%s=%s',$var,$val);
             }
 
-            return sprintf('%s?%s', $url , implode('&', $serialized ) );
+            //return sprintf('%s?%s', $url , implode('&', $serialized ) );
         }
         else{
+            $url .= '/';
             //public modules using PLAIN URL FORMAT (no sef)
             $serialized[ ] = sprintf( '%s=%s' ,
                     $EP ,
                     count( $route ) > 1 ? $route[0].'.'.$route[1] : $route[0] . '.main' );
-        }
-
-        if( count( $route ) > 2  && $route[2] !== 'default' ){
-            $serialized[ ] = sprintf('%s=%s',self::ACTION, $route[2]);
+        
+            if( count( $route ) > 2  && $route[2] !== 'default' ){
+                $serialized[ ] = sprintf('%s=%s',self::ACTION, $route[2]);
+            }
         }
 
         foreach( $args as $var => $val ){
             $serialized[ ] = sprintf('%s=%s',$var,$val);
         }
-        return sprintf('%s?%s', $url , implode('&', $serialized ) );
+        
+        return count( $serialized ) ?
+                sprintf('%s?%s', $url , implode('&', $serialized ) ) :
+                $url;
     }
     /**
      * @param array $request
@@ -282,11 +291,24 @@ final class Request{
     public static final function route( $route = self::_DEFAULT  ){
         
         $input = self::read();
-        if(is_admin() ){ unset( $input['page'] ); }
+        
+        if(is_admin() ){
+            unset( $input['page'] );
+        }
+        else{
+            unset( $input[\ArtPad::ENDPOINT  ] );
+        }
+        
         $path = explode('.', $route);
+        
         if(count($path) < 2){ $path[] = 'main'; }
-        $action = array_key_exists(self::ACTION, $input) ? $input[self::ACTION] : 'default';
+        
+        $action = array_key_exists(self::ACTION, $input) ?
+                $input[self::ACTION] :
+                count($path) > 2 ? $path[2] : 'default';
+        
         $input[self::ACTION] = sprintf('%s.%s.%s',$path[0],$path[1],$action);
+        
         return self::create($input);
     }
     /**
