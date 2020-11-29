@@ -29,20 +29,12 @@ final class Account extends \CODERS\ArtPad\Model{
         return 0;
     }
     /**
-     * @return \CODERS\ArtPad\Session
+     * @return \CODERS\ArtPad\Invite
      */
-    public final function createSession(){
-        return Session::New($this->value('ID'));
-    }
-    
     public final function createInviteLink(){
         
-        $invite = Invite::new($this);
-        
-        return $invite;
+        return Invite::new($this);
     }
-    
-    
     /**
      * @param string $element
      * @return boolean

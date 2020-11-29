@@ -44,7 +44,8 @@ final class Invite extends \CODERS\ArtPad\Model{
         return $this->value('status') === self::STATUS_ACTIVE;
     }
     /**
-     * @return boolean
+     * @todo Define here the Session Create method
+     * @return \CODERS\ArtPad\Session|boolean
      */
     public final function activate(){
         

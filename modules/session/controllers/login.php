@@ -46,14 +46,10 @@ final class LoginController extends \CODERS\ArtPad\Response{
         $link = $request->get('link','');
         if( strlen($link) ){
             $invite = \CODERS\ArtPad\Invite::load($link );
-            if( FALSE !== $invite && $invite->activate( ) ){
-                $account = $invite->account();
-                if( FALSE !== $account ){
-                    //create new session for this account
-                    $session = $account->createSession();
-                    if( FALSE !== $session ){
-                        $this->importView('session.main')->setModel($account)->setLayout('logged')->display();
-                    }
+            if( FALSE !== $invite ){
+                if( FALSE !== $invite->activate( ) ){
+                    $account = $invite->account();
+                    $this->importView('session.main')->setModel($account)->setLayout('logged')->display();
                 }
             }
         }

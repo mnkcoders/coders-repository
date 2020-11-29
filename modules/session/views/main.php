@@ -3,6 +3,13 @@
  * 
  */
 final class MainView extends \CODERS\ArtPad\View{
+    
+    private static $_URLS = array(
+        'login' => 'session.login',
+        'register' => 'session.register',
+        'public' => 'pad',
+    );
+    
     /**
      * @return \CODERS\ArtPad\Session\MainView
      */
@@ -20,20 +27,20 @@ final class MainView extends \CODERS\ArtPad\View{
      * @return string|URL
      */
     protected final function getLoginUrl(){
-        return \CODERS\ArtPad\Request::url('session.login');
+        return \CODERS\ArtPad\Request::url(self::$_URLS['login']);
     }
     /**
      * @return string|URL
      */
     protected final function getRegisterUrl(){
         
-        return \CODERS\ArtPad\Request::url('session.register');
+        return \CODERS\ArtPad\Request::url(self::$_URLS['register']);
     }
     /**
      * @return string
      */
     protected final function getPadUrl(){
-        return \CODERS\ArtPad\Request::url('pad');
+        return \CODERS\ArtPad\Request::url(self::$_URLS['public']);
     }
     /**
      * @param string $label
