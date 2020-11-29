@@ -303,13 +303,49 @@ final class Request{
         
         if(count($path) < 2){ $path[] = 'main'; }
         
-        $action = array_key_exists(self::ACTION, $input) ?
-                $input[self::ACTION] :
-                count($path) > 2 ? $path[2] : 'default';
-        
-        $input[self::ACTION] = sprintf('%s.%s.%s',$path[0],$path[1],$action);
-        
+        switch( TRUE ){
+            case array_key_exists(self::ACTION, $input):
+                $input[self::ACTION] = sprintf('%s.%s.%s',
+                        $path[0],
+                        $path[1],
+                        $input[self::ACTION]);
+                break;
+            case count($path) > 2:
+                $input[self::ACTION] = sprintf('%s.%s.%s',
+                        $path[0],
+                        $path[1],
+                        $path[2] );
+                break;
+            default:
+                $input[self::ACTION] = sprintf('%s.%s.default',
+                        $path[0],
+                        $path[1] );
+                break;
+        }
+
         return self::create($input);
+    }
+    /**
+     * @param string $route
+     * @return \CODERS\ArtPad\Request
+     */
+    public static final function ajax( $route ){
+        
+        $input = self::read();
+        
+        //action is related to wp_ajax_[action] hook: remove it
+        //request is related to coders action request: parse it and remove it
+        unset( $input['action'] );
+        
+        $action = explode('.', $route);
+        
+        if( array_key_exists('request', $input) ){
+            $action[] = $input['request'];
+        }
+
+        $input[ self::ACTION ] = implode('.', $action);
+        
+        return new Request( $input );
     }
     /**
      * @return array

@@ -76,15 +76,15 @@ CREATE TABLE `{{TABLE_PREFIX}}_post` (
 
 /*TIERS TABLE*/
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_tier` (
- `project_id` varchar(32) NOT NULL COMMENT 'project_id + tier_id',
- `tier` tinyint(2) NOT NULL DEFAULT '0',
+ `tier_id` varchar(24) NOT NULL COMMENT 'project_id + tier_id',
  `title` varchar(16) NOT NULL,
+ `level` tinyint(1) NOT NULL DEFAULT '1',
  `description` longtext NOT NULL,
- `image_id` bigint(20) NOT NULL,
- `status` tinyint(1) NOT NULL,
+ `image_id` bigint(20) NOT NULL DEFAULT '0',
+ `status` tinyint(1) NOT NULL DEFAULT '0',
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
- PRIMARY KEY (`ID`)
+ PRIMARY KEY( `tier_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_token` (

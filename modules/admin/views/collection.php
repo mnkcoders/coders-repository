@@ -11,7 +11,7 @@ final class CollectionView extends \CODERS\ArtPad\View{
 
     public final function display() {
         
-        return parent::display()->attachScript('script.js');
+        return parent::display()->attachScript('collections.js');
     }
     
     /**

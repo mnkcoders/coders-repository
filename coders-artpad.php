@@ -130,42 +130,38 @@ class ArtPad{
      * @throws \Exception
      */
     public static final function module( $endpoint ){
-        
         try{
-            if(strlen($endpoint) === 0){
-                throw new \Exception('Invalid Endpoint');
-            }
             if( self::$_INSTANCE !== NULL ){
                 throw new \Exception('A module is already running');
+            }
+            if( strlen($endpoint) === 0){
+                throw new \Exception('Invalid Endpoint');
+            }
+            if( $endpoint === 'admin' && !is_admin() ){
+                //do not ex`pse admin module in public
+                throw new \Exception('Invalid Endpoint');
             }
 
             $path = sprintf('%s/modules/%s/module.php',
                     preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR ),
                     strtolower( $endpoint ) );
 
-            $class = sprintf('\CODERS\ArtPad\%s\%sModule',$endpoint,$endpoint);
+            $class = sprintf('\CODERS\ArtPad\%s\%sModule',
+                    $endpoint,
+                    $endpoint);
 
             if( file_exists( $path ) ){
-                
                 require_once $path;
-
                 if(class_exists( $class ) && is_subclass_of( $class, self::class ) ){
                     self::$_INSTANCE = new $class();
-                    
                     return self::$_INSTANCE;
                 }
-                else{
-                    throw new \Exception(sprintf('Invalid Endpoint %s',$class));
-                }
             }
-            else{
-                throw new \Exception(sprintf('Invalid Endpoint %s',$path));
-            }
+            throw new \Exception(sprintf('Invalid Endpoint %s',$path));
         }
         catch (Exception $ex) {
             self::notice($ex->getMessage(), 'error');
         }
-        
         return FALSE;
     }
     /**
@@ -263,14 +259,11 @@ class ArtPad{
                         $wp_query->set('is_404', FALSE);
                         if(strlen($query[ArtPad::ENDPOINT])){
                             $route = explode('.',  $query[ArtPad::ENDPOINT] );
-                            $endpoint = ArtPad::module( $route[ 0 ] );
-                            if( FALSE !== $endpoint ){
-                                if( $endpoint->run( $query[ ArtPad::ENDPOINT ] ) ){
+                            $module = ArtPad::module( $route[ 0 ] );
+                            if( FALSE !== $module ){
+                                if( $module->run( $query[ ArtPad::ENDPOINT ] ) ){
                                     exit;
                                 }
-                            }
-                            else{
-                                ArtPad::notice( sprintf('Invalid Route <b>%s</b>' , implode('.', $route) ) , 'error' );
                             }
                         }
                         else{

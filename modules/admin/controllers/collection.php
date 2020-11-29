@@ -13,21 +13,6 @@ final class CollectionController extends \CODERS\ArtPad\Response{
         $view->setModel($model)->setLayout('collection')->display();
         return TRUE;
     }
-    
-    protected final function dashboard_action( \CODERS\ArtPad\Request $request ){
-        
-        return TRUE;
-    }
-    
-    protected final function remove_action( \CODERS\ArtPad\Request $request ){
-        
-        return TRUE;
-    }
-    
-    protected final function create_action( \CODERS\ArtPad\Request $request ){
-        
-        return TRUE;
-    }
     /**
      * 
      * @param \CODERS\ArtPad\Request $request
@@ -41,13 +26,6 @@ final class CollectionController extends \CODERS\ArtPad\Response{
             $names[] = $file->name;
         }
         return $this->default_action($request->redirect('admin.collection.default',array('files'=>$names)));
-    }
-    
-    protected final function collection_action( \CODERS\ArtPad\Request $request ){
-        
-        var_dump(\CODERS\ArtPad\Resource::collection(0));
-        
-        return TRUE;
     }
 }
 

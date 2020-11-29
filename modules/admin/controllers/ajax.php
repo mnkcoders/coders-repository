@@ -36,7 +36,7 @@ final class AjaxController extends \CODERS\ArtPad\Response{
      */
     protected function collection_action( \CODERS\ArtPad\Request $request ){
         
-        $collection = \CODERS\ArtPad\Resource::collection( intval( $request->get('ID',0 ) ) );
+        $collection = \CODERS\ArtPad\Resource::collection( $request->getInt('parent_id' ) );
         
         return $this->ajax( $collection );
     }
@@ -67,6 +67,23 @@ final class AjaxController extends \CODERS\ArtPad\Response{
         $files = \CODERS\ArtPad\Resource::upload($upload,$collection);
         
         return $this->ajax( $files );
+    }
+    /**
+     * 
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
+    protected final function remove_action( \CODERS\ArtPad\Request $request ){
+        
+        $ID = $request->getInt('ID');
+        
+        $removed = array();
+        
+        if( $ID > 0 && \CODERS\ArtPad\Resource::remove($ID) ){
+            $removed[] = $ID;
+        }
+        
+        return $this->ajax(array('removed' => $removed ) );
     }
     /**
      * @param \CODERS\ArtPad\Request $request

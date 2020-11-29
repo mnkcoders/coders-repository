@@ -556,7 +556,7 @@ function CodersModel(){
             //wordpress ajax action caller
             'action': 'artpad_admin',
             //coders module action (controller.action)
-            '_action': action,
+            'request': action,
             'data': typeof data !== 'undefined' ? JSON.stringify(data) : false
         };
         var request = new XMLHttpRequest();
@@ -583,6 +583,7 @@ function CodersModel(){
         request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;');
         request.send( _client.self.serialize( content ) );
 
+        console.log( 'Requesting [ ' + action + ' ] with data ' + JSON.stringify( data ) + ' ...');
         //request.setRequestHeader("Content-type", "application/json;charset=UTF-8");
         //request.send( content );
         //request.send( JSON.stringify( content ) );
@@ -854,8 +855,8 @@ function CodersModel(){
             if( typeof post_id !== 'number' ){
                 post_id = 0;
             }
-            request( 'collection' , {'ID':post_id } , function( response ){
-                //console.log( response );
+            request( 'collection' , {'parent_id' : post_id } , function( response ){
+                console.log( response );
                 handler( Array.isArray( response.data ) ?
                             response.data :
                             Object.values(response.data) ,

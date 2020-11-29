@@ -1,7 +1,9 @@
 <?php defined ('ABSPATH') or die; ?>
-<h1 class="wp-heading-inline">
-    <?php print __('Project','coders_artpad') ?> :
-    <strong class="data-title"><?php print $this->title; ?></strong></h1>
+<h1 class="wp-heading-inline"><?php print __('Project','coders_artpad') ?></h1>
+<h2 class="wp-heading-inline">
+    <?php print __('Dashboard','coders_artpad'); ?>
+    <a href="#" target="_self"><?php print $this->title; ?></a>
+</h2>
 
 <ul class="tab-menu container inline widefat fixed solid pad-sm">
     <li class="tab" data-tab="project"><?php print __('Project','coders_artpad') ?></li>

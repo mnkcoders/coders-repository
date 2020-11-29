@@ -25,6 +25,32 @@ final class MainController extends \CODERS\ArtPad\Response{
         
         return TRUE;
     }
+    /**
+     * 
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
+    protected final function tier_action( \CODERS\ArtPad\Request $request ){
+        
+        $tier_id = $request->get('ID','');
+        
+        $display = $this->importView('admin.project');
+        
+        if(strlen($tier_id)){
+            $tier = \CODERS\ArtPad\Tier::Load( $tier_id );
+            if( FALSE !== $tier ){
+
+                $display->setModel($tier)
+                        ->setLayout('tier')
+                        ->display();
+                return TRUE;
+            }
+        }
+
+        $display->setLayout('tier.error')->display();
+        
+        return TRUE;
+    }
     
     protected final function dashboard_action( \CODERS\ArtPad\Request $request ){
         

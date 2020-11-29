@@ -32,6 +32,13 @@ final class Project extends \CODERS\ArtPad\Model{
         );
     }
     /**
+     * @return array
+     */
+    public final function listTiers(){
+        //var_dump($this->ID);
+        return Tier::List($this->ID);
+    }
+    /**
      * @param string $ID
      * @return boolean|\CODERS\ArtPad\Project
      */

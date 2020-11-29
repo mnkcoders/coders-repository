@@ -11,11 +11,16 @@
         <tr>
             <td colspan="2">
                 <ul class="tiers">
-                    <li>Copper Coin</li>
-                    <li>Silver Coin</li>
-                    <li>Golden Coin</li>
-                    <li>Platinum Coin</li>
-                    <li>Diamond Coin</li>
+                    <?php foreach( $this->list_tiers as $id => $tier) : ?>
+                    <li class="tier">
+                        <p><a href="<?php 
+                                print $this->tier_url($id) ?>" target="_self" class="link"><?php
+                                print $tier['title'] ?></a></p>
+                        <p><?php print $tier['description'] ?></p>
+                        <p><?php print $tier['image_id'] ?></p>
+                        <p><?php print $tier['level'] ?></p>
+                    </li>
+                    <?php endforeach; ?>
                 </ul>
             </td>
         </tr>

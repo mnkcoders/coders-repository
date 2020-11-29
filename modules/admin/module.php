@@ -14,6 +14,7 @@ class AdminModule extends \ArtPad{
         //register componetns
         $this->component('models.Account' );
         $this->component('models.Project' );
+        $this->component('models.Tier' );
         $this->component('services.Mailer' );
         
         //register admin menu routes
@@ -103,7 +104,9 @@ class AdminModule extends \ArtPad{
         //register private ajax handlers
         add_action( sprintf('wp_ajax_%s_admin', self::ENDPOINT ) , function(){
             //print json_encode(array('response'=>'OK'));
-            \CODERS\ArtPad\Response::Route('admin.ajax');
+            $request = \CODERS\ArtPad\Request::ajax('admin.ajax');
+            
+            \CODERS\ArtPad\Response::create($request);
             wp_die();
         } , 100000 );
 

@@ -6,15 +6,17 @@ final class Tier extends \CODERS\ArtPad\Model{
     
     const STATUS_DISABLED = 0;
     const STATUS_ENABLED = 1;
+    
+    private $_project = FALSE;
 
     /**
      * @param array $data
      */
     private final function __construct(array $data = array()) {
         
-        $this->define('project_id',self::TYPE_TEXT,array('size'=>12))
-               ->define('tier',self::TYPE_NUMBER) 
+        $this->define('tier_id',self::TYPE_TEXT,array('size'=>24))
                 ->define('title',self::TYPE_TEXT,array('size'=>32))
+                ->define('level',self::TYPE_NUMBER,array('value'=>1))
                 ->define('description', self::TYPE_TEXTAREA,array('value' => '' ))
                 ->define('image_id',self::TYPE_NUMBER,array('value' => 0 ))
                 ->define('status',self::TYPE_NUMBER,array('value' => self::STATUS_DISABLED ))
@@ -25,29 +27,43 @@ final class Tier extends \CODERS\ArtPad\Model{
     }
     
     /**
-     * 
-     * @return \CODERS\ArtPad\Project
+     * @return \CODERS\ArtPad\Project|boolean
      */
     public final function getProject(){
-        return \CODERS\ArtPad\Project::load($this->project_id);
+        
+        if( $this->_project === FALSE ){
+            $path = explode('.', $this->value('tier_id'));
+            $this->_project = \CODERS\ArtPad\Project::load($path[0]);
+        }
+        
+        return $this->_project;
     }
-    
-    
     /**
+     * @return string
+     */
+    public final function getProjectTitle(){
+        $p = $this->getProject();
+        if( FALSE !== $p ){
+            return $p->title;
+        }
+        return '';
+    }
+    /**
+     * @param string $project
      * @return int
      */
-    public static final function getTierCount(){
+    public static final function getTierCount( $project ){
         
         $db = self::newQuery();
         
-        $query = sprintf("SELECT COUNT(*) AS `tiers` FROM `%s` WHERE `project_id`='%s'",
+        $query = sprintf("SELECT COUNT(*) AS `tiers` FROM `%s` WHERE `tier_id` LIKE ('%s.%%')",
                 $db->table('tier'),
-                $this->value('project_id'));
+                $project);
         
         $result = $db->query($query);
         
         if( count($result)){
-            return $result[0]['tiers'];
+            return intval( $result[0]['tiers'] );
         }
         
         return 0;
@@ -60,48 +76,51 @@ final class Tier extends \CODERS\ArtPad\Model{
         
         $db = self::newQuery();
         
-        $query = sprintf("SELECT * FROM `%s` WHERE `project_id`='%s' ORDER BY tier ASC",
+        $query = sprintf("SELECT * FROM `%s` WHERE `tier_id` LIKE ('%s.%%') ORDER BY level ASC",
                 $db->table('tier'),
                 $project);
         
         //var_dump($query);
         
-        $list = $db->query( $query );
+        $list = $db->query( $query , 'tier_id' );
         
         //var_dump($list);
 
         return $list;
     }
     /**
-     * @param string $project_id
+     * @param string $tier_id
      * @param int $level
      * @return boolean|\CODERS\ArtPad\Tier
      */
-    public static final function Load( $project_id , $level ){
+    public static final function Load( $tier_id ){
         
-        $tier = self::newQuery()->select('tier','*',array(
-            'project_id'=>$project_id,
-            'tier'=>$level));
-        
-        if( count( $tier ) ){
-            return new Tier( $tier );
+        if( strlen( $tier_id) ){
+            
+            $tier = self::newQuery()->select('tier','*',array('tier_id'=>$tier_id));
+            
+            if( count( $tier ) ){
+                return new Tier( $tier[0] );
+            }
         }
         
         return FALSE;
     }
     /**
-     * @param array $tier_data
+     * @param string $tier "tier_id.tier_id"
+     * @param string $title Tier Title
      * @return \CODERS\ArtPad\Tier
      */
-    public static final function New( $project, $title ){
+    public static final function New( $tier, $title ){
 
-        $tier = self::getTierCount() + 1;
+        $level = self::getTierCount() + 1;
         
         $ts = self::__ts();
         
         $tier_data = array(
-            'project_id' => $project,
-            'tier' => $tier,
+            'tier_id' => $tier,
+            'level' => $level,
+            'status' => self::STATUS_DISABLED,
             'title' => $title,
             'date_created' => $ts,
             'date_updated' => $ts,

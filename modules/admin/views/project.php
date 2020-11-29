@@ -9,6 +9,23 @@ final class ProjectView extends \CODERS\ArtPad\View{
         parent::__construct();
         
     }
+    
+    protected final function getTierUrl( $tier_id ){
+        return \CODERS\ArtPad\Request::url('admin.main.tier',array('ID'=>$tier_id));
+    }
+    
+    protected final function getTierTitle(){
+        
+        if( $this->hasModel() ){
+            $tier = $this->model()->exists('tier_id') ? $this->model()->tier_id : '';
+            
+            if(strlen($tier)){
+                
+                return sprintf('%s : %s', $this->project_title,$this->title);
+            }
+        }
+        return '';
+    }
     /**
      * @return string
      */
