@@ -1,7 +1,6 @@
 <?php defined ('ABSPATH') or die; ?>
-<h1 class="wp-heading-inline">
-    <?php printf('%s :: <span class="highlight">%s</span>', get_admin_page_title() , $this->name );  ?>
-</h1>
+<h1 class="wp-heading-inline"><?php print $this->display_navigator ?></h1>
+<hr class="spacer" />
 <ul class="container widefat fixed inline">
     <li class="button" data-tab="profile"><?php print __('Profile','coders_artpad') ?></li>
     <li class="button" data-tab="subscriptions"><?php print __('Subscriptions','coders_artpad') ?></li>

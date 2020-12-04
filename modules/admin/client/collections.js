@@ -1,36 +1,15 @@
 /**
- * 
  * @returns {CodersView}
  */
 function CodersView( ){
-    
-    var _elements = {
-        'dropZone': null,
-        /**
-         * @type Element
-         */
-        'tabs':null,
-        /**
-         * @type Element
-         */
-        'collectionBox':null,
-        'timeout': 2000,
-        'inputs':{
-            'dropzone':'coders-repo-dropzone',
-            'uploader':'coders-repo-uploader'
-        }
-        //'uploader':null
-    };
     /**
-     * 
      * @type CodersView
      */
     var _view = this;
-
     /**
      * @type Object
      */
-    var _draggable = {
+    var Draggable = {
         'ID':0,
         'candrop':false,
         'moving':false,
@@ -126,9 +105,9 @@ function CodersView( ){
             container.setAttribute('data-id',parent_id);
             //console.log( resources );
             for( var r = 0 ; r < resources.length ; r++ ){
-                if( r % 4 === 0 ){
-                    _self.wait();
-                }
+                //if( r % 4 === 0 ){
+                //    _self.wait();
+                //}
                 container.appendChild( _self.addItem( resources[ r ] ) );
             }
         }
@@ -247,42 +226,43 @@ function CodersView( ){
             item.addEventListener( event , function(e){
                 e.preventDefault();
                 e.stopPropagation();
-                var key = 'text/plain';
                 switch( event ){
                     case 'dragstart':
                     case 'dragenter':
                         //drag(event)
                         //e.dataTransfer.setData( key, ID );
-                        _draggable.ID = this.getAttribute('data-id');
-                        _draggable.candrop = false;
-                        _draggable.moving = true;
-                        console.log( 'Moving item [ ' + _draggable.ID + ' ]' );
+                        if( Draggable.ID === 0 ){
+                            Draggable.ID = this.getAttribute('data-id');
+                            Draggable.candrop = false;
+                            Draggable.moving = true;
+                            console.log( 'Moving item [ ' + Draggable.ID + ' ]' );
+                        }
                         return true;
                     case 'dragleave':
                         var target_id = this.getAttribute('data-id');
-                        _draggable.candrop = false;
+                        Draggable.candrop = false;
                         console.log( 'Leaving [ ' + target_id  + ' ] ...');
                         return true;
                     case 'dragover':
                         var target_id = this.getAttribute('data-id');
-                        if( _draggable.ID !== target_id ){
-                            _draggable.candrop = true;
+                        if( Draggable.ID !== target_id ){
+                            Draggable.candrop = true;
                             //var child_id = e.dataTransfer.getData(key);
-                            var source_id = _draggable.ID;
+                            var source_id = Draggable.ID;
                             console.log( '[ ' + source_id + ' ] is over [ ' + target_id + ' ] ...' );
                             return true;
                         }
                         else{
-                            _draggable.candrop = false;
+                            Draggable.candrop = false;
                         }
                         return false;
                     case 'drop':
                         //var child_id = e.dataTransfer.getData(key);
-                        if( _draggable.candrop ){
+                        if( Draggable.candrop ){
                             var target_id = this.getAttribute('data-id');
-                            var source_id = _draggable.ID;
+                            var source_id = Draggable.ID;
                             console.log( 'Dropping [ ' + source_id  + ' ] over [ ' + target_id + ' ] ...');
-                            _draggable.reset();
+                            Draggable.reset();
                         }
                         return true;
                 }
@@ -509,7 +489,7 @@ function CodersView( ){
                 _view.element('ul',{'class':'navigator panel left inline'},_view.element('li',{'class':'home'},'#Home')),
                 _view.element('span',{'class':'panel title inline centered'},'Title'),
                 
-                this.renderGridResizer('panel right'),
+                _view.renderGridResizer('panel right'),
                 _view.element('span',{'class':'panel button right'},'Post Data')
             ]));
 
@@ -522,6 +502,7 @@ function CodersView( ){
         else{
             console.log('Container not found');
         }
+
         return this;
     };
     
@@ -918,40 +899,13 @@ function CodersModel(){
     
     return this;
 }
-
 /**
  * https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
  */
-(function CodersController( ){
-    
-    var _repo = {
-        /**
-         * @type CodersView
-         */
-        //'view': new CodersView(),
-        'view': null,
-        /**
-         * @type CodersModel
-         */
-        //'server': new CodersModel(),
-        'debug': true
-    };
-    /**
-     * @returns {CodersController}
-     */
-    this.bind = function(){
-
-        //var _controller = this;
-
-        document.addEventListener('DOMContentLoaded',function(e){
-
-            _repo.view = new CodersView( );
-            
-        });
-                
-        return this;
-    };
-    
-    return this.bind(/*setup client*/);
+(function( ){
+    document.addEventListener('DOMContentLoaded', function (e) {
+        //console.log('OK');
+        new CodersView( );
+    });
 })( /* autosetup */ );
 

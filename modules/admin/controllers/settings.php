@@ -6,9 +6,9 @@ final class SettingsController extends \CODERS\ArtPad\Response{
 
     protected function default_action(\CODERS\ArtPad\Request $request) {
 
-        //$settings = $this->importModel('admin.settings');
+        $settings = $this->importModel('admin.settings');
         
-        $this->importView('admin.settings')->display();
+        $this->importView('admin.settings')->setModel($settings)->setLayout('settings')->display();
         
         return TRUE;
     }

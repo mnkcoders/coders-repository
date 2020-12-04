@@ -12,10 +12,10 @@ class AdminModule extends \ArtPad{
     
     protected final function __construct() {
         //register componetns
-        $this->component('models.Account' );
-        $this->component('models.Project' );
-        $this->component('models.Tier' );
-        $this->component('services.Mailer' );
+        $this->include('Models.Account' )
+                ->include('Models.Project' )
+                ->include('Models.Tier' )
+                ->include('Services.Mailer' );
         
         //register admin menu routes
         $this->registerRoute( self::ENDPOINT , __('Artist Pad','coders_artpad'))
@@ -28,6 +28,8 @@ class AdminModule extends \ArtPad{
 
         //register styles and scripts using the helper within the view
         \CODERS\ArtPad\View::attachStyles(array('style.css'),'admin');
+        \CODERS\ArtPad\View::attachScripts(array('client.js'=>array()),'admin');
+        \CODERS\ArtPad\View::attachScripts(array('collections.js'=>array()),'admin');
         
         $this->initAdminMenu()->initAjax();
     }

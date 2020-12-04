@@ -12,6 +12,10 @@ abstract class View{
      */
     private $_layout = 'default';
     /**
+     * @var array
+     */
+    private $_navigator = array( /* list all navigation paths here*/ );
+    /**
      * 
      */
     protected function __construct() {
@@ -21,13 +25,16 @@ abstract class View{
      * @return string
      */
     public final function __toString() {
-
+        return $this->__class();
+    }
+    /**
+     * View's Class Name
+     * @return String
+     */
+    protected final function __class(){
         $NS = explode('\\', get_class($this ) );
-        
         $class = $NS[count($NS) - 1 ];
-        
         $suffix = strrpos($class, 'View');
-        
         return substr($class, 0 ,$suffix);
     }
     /**
@@ -391,9 +398,8 @@ abstract class View{
             foreach( $script_list as $script => $deps ){
                 $script_url = \CODERS\ArtPad\View::assetUrl( $script , $module );
                 $script_name = \CODERS\ArtPad\View::assetName($script , $module );
-                wp_enqueue_script($script_name,
-                        $script_url,
-                        is_array($deps) ? $deps : strlen( $deps ) ? array($deps) : array());
+                $deps = is_array($deps) ? $deps : array( $deps );
+                wp_enqueue_script($script_name,$script_url, $deps );
             }
         });
     }
@@ -842,6 +848,53 @@ abstract class View{
                 array('class' => 'container map'),
                 $otput );
     }
+    /**
+     * @param string $title
+     * @param string $url
+     * @return \CODERS\ArtPad\View
+     */
+    protected final function addNavPath( $title , $url = '' ){
+        if( !array_key_exists( $title , $this->_navigator ) ){
+            $this->_navigator[ $title ] = $url;
+        }
+        return $this;
+    }
+    /**
+     * @return string
+     */
+    protected function displayNavigator(){
+        
+        $items = array();
+        
+        if(is_admin()){
+            $current = explode('-',preg_replace('/_/', '-', get_current_screen()->id ));
+            
+            if( $current[count($current)-1] !== get_admin_page_parent()){
+                $items[] = sprintf('<li class="root"><a href="%s" target="_self">%s</a></li>',
+                        Request::url('admin.main'),
+                        __('Artist Pad','coders_artpad'));
+                $items[] = sprintf('<li class="parent-%s">%s</li>',
+                    get_admin_page_parent(),
+                    get_admin_page_title());
+            }
+            else{
+                $items[] = sprintf('<li class="root">%s</li>', get_admin_page_title());
+            }
+        }
+        
+        foreach( $this->_navigator as $title => $url ){
+            
+            $content =  strlen($url) ?
+                    $this->renderLink($url, $title) :
+                    self::__HTML('span', array( 'class' => 'current', ), $title);
+            
+            $items[] = sprintf('<li>%s</li>',$content);
+        }
+
+        return count( $items ) ?
+                self::__HTML('ul', array( 'class' => 'navigator inline' ), $items ) :
+                $this->__class();
+    }
     
     //
     ////////////////////////////////////////////////////////////////////////////
@@ -918,6 +971,21 @@ abstract class View{
         ));
         
         return $this;
+    }
+    /**
+     * @param string $url
+     * @param string $title
+     * @param string $target
+     * @param string $class
+     * @return string|HTML
+     */
+    protected static function renderLink( $url , $title , $target = '_self' , $class = 'link') {
+        
+        return self::__HTML('a', array(
+            'href' => $url,
+            'target' => $target,
+            'class' => $class,
+        ), $title);
     }
     /**
      * @param string $name

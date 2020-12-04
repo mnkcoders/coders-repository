@@ -1,9 +1,6 @@
 <?php defined ('ABSPATH') or die; ?>
-<h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
-<h2 class="wp-heading-inline">
-    <?php print __('Dashboard','coders_artpad'); ?>
-    <?php print $this->tier_title ?>
-</h2>
+<h1 class="wp-heading-inline"><?php print $this->display_navigator ?></h1>
+<hr class="spacer" />
 <div class="container tier">
     
     <p><?php print $this->project_id ?></p>

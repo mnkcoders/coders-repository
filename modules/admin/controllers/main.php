@@ -34,7 +34,7 @@ final class MainController extends \CODERS\ArtPad\Response{
         
         $tier_id = $request->get('ID','');
         
-        $display = $this->importView('admin.project');
+        $display = $this->importView('admin.tier');
         
         if(strlen($tier_id)){
             $tier = \CODERS\ArtPad\Tier::Load( $tier_id );

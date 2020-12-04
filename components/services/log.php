@@ -1,4 +1,4 @@
-<?php namespace CODERS\ArtPad;
+<?php namespace CODERS\ArtPad\Services;
 /**
  * 
  */
@@ -40,17 +40,15 @@ class Log{
     /**
      * @return \CODERS\ArtPad\Log
      */
-    private final function save( ){
-        
-        $columns = array();
-        $values = array();
-        
-        foreach( $this->data() as $var => $val ){
-            $columns[] = $var;
-            $values[] = $val;
-        }
+    public final function save( ){
         
         //INSERT INTO columns values ...
+        $db = new \CODERS\ArtPad\Query();
+        $result = $db->insert('logs', $this->data());
+        
+        if( $result === 0 ){
+            //
+        }
         
         return $this;
     }
@@ -122,8 +120,8 @@ class Log{
      */
     public static final function list( array $filters = array( ) ){
         
+        $db = new \CODERS\ArtPad\Query();
         
-        
-        return array();
+        return $db->select('logs','*',$filters);
     }
 }

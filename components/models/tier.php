@@ -49,6 +49,15 @@ final class Tier extends \CODERS\ArtPad\Model{
         return '';
     }
     /**
+     * @return string
+     */
+    public final function getProjectId(){
+        
+        $id = explode('.',  $this->value('tier_id') );
+        
+        return $id[0];
+    }
+    /**
      * @param string $project
      * @return int
      */

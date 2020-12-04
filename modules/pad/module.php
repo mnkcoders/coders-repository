@@ -10,7 +10,7 @@ class PadModule extends \ArtPad{
      */
     protected final function __construct() {
         
-        parent::component('models.Session');
+        parent::include('Models.Session');
                 
         parent::__construct();
 

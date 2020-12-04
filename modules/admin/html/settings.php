@@ -1,19 +1,19 @@
 <?php defined('ABSPATH') or die; ?>
-<h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
-
+<h1 class="wp-heading-inline"><?php print $this->display_navigator ?></h1>
+<hr class="spacer" />
 <form name="settings" method="post" action="<?php print $this->settings_url ?>">
     <table class="settings widefat fixed">
-        <thead>
+        <!--thead>
             <tr>
                 <th colspan="2">
                     <h2><?php print __('Section', 'coders_artpad') ?></h2>
                 </th>
             </tr>
-        </thead>
+        </thead-->
         <tbody>
             <tr>
-                <td><label for="id_setting"><?php print __('Setting', 'coders_artpad') ?></label></td>
-                <td><input id="id_setting" type="text" name="setting" value="" placeholder="Value" /></td>
+                <td><label for="id_root_path"><?php print __('Collections Path', 'coders_artpad') ?></label></td>
+                <td><?php print $this->display_root_path ?></td>
             </tr>
         </tbody>
         <tfoot>

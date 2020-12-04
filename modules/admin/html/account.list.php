@@ -1,5 +1,6 @@
 <?php defined ('ABSPATH') or die; ?>
-<h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
+<h1 class="wp-heading-inline"><?php print $this->display_navigator ?></h1>
+<hr class="spacer" />
 <table class="accounts widefat fixed">
     <thead>
         <tr class="new">

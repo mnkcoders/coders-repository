@@ -1,18 +1,10 @@
 <?php defined ('ABSPATH') or die; ?>
-<h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
+<h1 class="wp-heading-inline"><?php print $this->display_navigator ?></h1>
+<hr class="spacer" />
 <table class="widefat fixed table">
-    <!--thead>
-        <tr>
-            <th><?php print __('Project','coders_artpad') ?></th>
-            <th><?php print __('Status','coders_artpad') ?></th>
-        </tr>
-    </thead-->
     <tbody class="projects">
         <tr>
-            <td>
-                <h2><?php print __('Dashboard','coders_artpad') ?></h2>
-            </td>
-            <td>
+            <td colspan="2">
                 <div class="panel right inline">
                     <?php print $this->display_new(__('New project title','coders_artpad')) ?>
                     <?php print $this->action_create(__('Create','coders_artpad'),'button-primary'); ?>

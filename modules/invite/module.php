@@ -10,7 +10,7 @@ class InviteModule extends \ArtPad{
      */
     protected final function __construct() {
         
-        $this->component('models.invite');
+        $this->include('Models.invite');
         
         parent::__construct();
 

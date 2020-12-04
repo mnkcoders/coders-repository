@@ -85,4 +85,21 @@ final class ProjectView extends \CODERS\ArtPad\View{
                 __('Select collection','coders_artpad'),
                 'collection');
     }
+    /**
+     * @return \CODERS\ArtPad\Admin\ProjectView
+     */
+    public final function display() {
+
+        
+        if( $this->hasModel()){
+            $title = $this->model()->title;
+            $url = \CODERS\ArtPad\Request::url('admin.main');
+            $this->addNavPath(__('Dashboard','coders_artpad') , $url )
+                    ->addNavPath($title);
+        }
+        
+        return parent::display();
+    }
 }
+
+

@@ -7,7 +7,7 @@ final class PortfolioModule extends \ArtPad{
     
     protected final function __construct() {
         
-        $this->component('models.Project');
+        $this->include('Models.Project');
         
         parent::__construct();
         

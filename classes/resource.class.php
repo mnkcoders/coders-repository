@@ -8,8 +8,8 @@ final class Resource{
     const DEFAULT_CHUNK_SIZE = 1048576;
     
     private $_meta = array(
-        'ID'=>0,
-        'public_id'=>'',
+        'ID' => 0,
+        'public_id' => '',
         'parent_id' => 0,
         'name'=>'',
         'type'=>'',
@@ -41,18 +41,18 @@ final class Resource{
     /**
      * @return \CODERS\ArtPad\Query
      */
-    private static final function newQuery( array $filters ){
+    private static final function query( array $filters ){
         
         $db = new Query();
         
-        return $db->select('post', '*', $filters);
+        return $db->select('post', '*', $filters );
     }
     /**
      * @param string $collection
      * @return string
      */
     private static final function GenerateID( $collection = '' ){
-        return md5(uniqid(date('YmdHis').$collection,true));
+        return md5( uniqid( date( 'YmdHis' ) . $collection , true ) );
     }
     /**
      * @param array $input
@@ -139,7 +139,9 @@ final class Resource{
                     //mark as attachment if cannot be embedded or not required as download
                     $attach || !$this->embeddable() ? 'attachment' : 'inline',
                     $this->name ),
-            sprintf( 'Content-Length: %s', $this->size() )
+            sprintf( 'Content-Length: %s', $this->size() ),
+            //sprintf( 'Cache-Control : %s, max-age=%s;', 'private' , 3600 )
+            //'Cache-Control : public, max-age=3600;',
         );
         
         return $header;
@@ -275,9 +277,7 @@ final class Resource{
         
         $filters = is_array($search) ? $search : array('ID'=>$search);
         
-        return self::newQuery($filters);
-        
-        //return $this->query($filters);
+        return self::query($filters);
     }
     /**
      * @param string $parent_id
@@ -288,8 +288,6 @@ final class Resource{
         $db = new \CODERS\ArtPad\Query();
         
         return $db->select('post','*',array('parent_id'=>$parent_id),'ID' );
-        //return self::query( array( 'parent_id' => $parent_id ) );
-        //return self::query( array( 'collection' => $collection ) );
     }
     /**
      * @return array
@@ -443,7 +441,7 @@ final class Resource{
      */
     public static final function load( $ID ){
 
-        $result = self::newQuery( array('ID'=>$ID) );
+        $result = self::query( array('ID'=>$ID) );
 
         return ( count($result)) ? new Resource( $result[0] ) : FALSE;
     }
@@ -453,7 +451,7 @@ final class Resource{
      */
     public static final function import( $public_id ){
         
-        $result = self::newQuery( array('public_id' => $public_id ) );
+        $result = self::query( array('public_id' => $public_id ) );
 
         return ( count($result)) ? new Resource( $result[0] ) : FALSE;
     }

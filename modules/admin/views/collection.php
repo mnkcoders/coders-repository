@@ -8,10 +8,13 @@ final class CollectionView extends \CODERS\ArtPad\View{
     const MAX_FILE_SIZE = 'coders.repository.max_file_size';
     
     private $_selected = 'default';
-
+    /**
+     * 
+     * @return \CODERS\ArtPad\Admin\CollectionView
+     */
     public final function display() {
         
-        return parent::display()->attachScript('collections.js');
+        return parent::display();
     }
     
     /**

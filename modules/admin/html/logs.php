@@ -1,5 +1,5 @@
 <?php defined ('ABSPATH') or die; ?>
-<h1 class="wp-heading-inline"><?php print get_admin_page_title() ?></h1>
-
+<h1 class="wp-heading-inline"><?php print $this->display_navigator ?></h1>
+<hr class="spacer" />
 <?php print $this->display_calendar( '' , array('fixed','widefat')); ?>
 

@@ -1,6 +1,7 @@
 /**/
 .coders-artpad{
     /*max-width: 90%;*/
+    margin-bottom: 200px;
 }
 .coders-artpad input[type="text"]{
     margin: 0;
@@ -8,6 +9,14 @@
 
 .coders-artpad table{
     
+}
+
+.coders-artpad .spacer{
+    margin: 20px 0;
+}
+
+.coders-artpad ul.navigator{
+    margin: 0;
 }
 
 .coders-artpad table:not(.calendar) th:not(:first-child):last-child,
@@ -89,6 +98,50 @@
     min-width: 168px;
 }
 .coders-artpad ul.inline > li{ display: inline-block; vertical-align: top; margin: 0 10px 0 0; }
+
+
+
+.coders-artpad .tab-container > .tab-menu{
+    background-color: #ffffff;
+    margin: 0 0 10px;
+    padding: 10px 0;
+    border-radius: 2px;
+}
+.coders-artpad .tab-container > .tab-menu > .item{
+    padding: 5px 20px;
+    min-width: 120px;
+    box-sizing: border-box;
+    text-align: center;
+    cursor: pointer;
+    transition: ease-in 240ms;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: capitalize;
+    color: #ccd0d4;
+}
+.coders-artpad .tab-container > .tab-menu > .item:not(:last-child){
+    margin-right: 5px;
+    border-right: 1px solid #dadada;
+}
+.coders-artpad .tab-container > .tab-menu > .item.active{
+    color: #23282d;
+}
+.coders-artpad .tab-container > .tab-content{
+    position: relative;
+}
+.coders-artpad .tab-container > .tab-content > .tab-panel{
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    opacity: 0;
+    z-index: -100;
+    pointer-events: none;
+    transition: ease-out 240ms;
+}
+.coders-artpad .tab-container > .tab-content > .tab-panel.active{
+    opacity: 1;
+    z-index: initial;
+    pointer-events: initial;
+}
 
 
 

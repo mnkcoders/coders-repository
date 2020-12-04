@@ -8,10 +8,10 @@ class SessionModule extends \ArtPad{
     
     protected final function __construct() {
         
-        $this->component('models.Account' );
-        $this->component('models.Session' );
-        $this->component('models.Invite' );
-        $this->component('services.Mailer');
+        $this->include('Models.Account' )
+                ->component('Models.Session' )
+                ->component('Models.Invite' )
+                ->component('Services.Mailer');
         
         parent::__construct();
     }

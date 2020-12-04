@@ -55,36 +55,48 @@ class ArtPad{
         return strtolower( substr($class, 0 ,$suffix) );
     }
     /**
-     * 
-     */
-    private final function preload(){
-        foreach( $this->_components as $component ){
-            if( !$this->component($component) ){
-                self::notice(sprintf('Invalid component %s',$component));
-            }
-        }
-    }
-    /**
      * @param string $component
+     * @param string $type
      * @return boolean
      */
-    protected final function component( $component ){
-        
-        $path = self::path(sprintf('components/%s.php',
-                strtolower( preg_replace('/\./', '/', $component ) ) ) );
-        //$path = self::path(sprintf('components/%s/%s.php',
-        //        $type,
-        //        strtolower( $component ) ) );
+    private final function register( $component , $type ){
+
+        $path = self::path(sprintf('components/%s/%s.php',
+                strtolower( $type ),
+                strtolower( $component ) ) );
 
         if(file_exists($path)){
             require $path;
             return TRUE;
         }
-        else{
-            die( $path );
-        }
         
         return FALSE;
+    }
+    /**
+     * @return \ArtPAd
+     */
+    private final function preload(){
+        foreach( $this->_components as $type => $list ){
+            foreach( $list as $component ){
+                if( !$this->register( $component , $type ) ){
+                    self::notice(sprintf('Invalid component %s.%s',$type,$component));
+                }
+            }
+        }
+        return $this;
+    }
+    /**
+     * @param string $component
+     */
+    protected final function include( $component ){
+        $name = explode('.', $component);
+        if( count( $name ) > 1 ){
+            if( !array_key_exists($name[0], $this->_components)){
+                $this->_components[ $name[0]] = array();
+            }
+            $this->_components[ $name[0]][] = $name[1];
+        }
+        return $this;
     }
     /**
      * @return array
@@ -206,6 +218,17 @@ class ArtPad{
             });
         }
         else{
+            add_action( 'init' , function(){
+                //register ajax handlers
+                add_action( sprintf('wp_ajax_%s_public',ArtPad::ENDPOINT) , function(){
+                    ArtPad::module('ajax')->run();
+                    exit;
+                }, 100000 );
+                //register ajax handlers
+                add_action( sprintf('wp_ajax_nopriv_%s_public',ArtPad::ENDPOINT) , function(){
+                    exit;
+                }, 100000 );
+            },10000);
             //INITIALIZE REDIRECTION RULES
             add_action( 'init' , function(){
                 global $wp, $wp_rewrite;
@@ -226,17 +249,6 @@ class ArtPad{
                         sprintf('index.php?%s=%s',$resource,'resource_id'), 'bottom');
                 //and rewrite
                 $wp_rewrite->flush_rules();
-                
-                //register ajax handlers
-                add_action( sprintf('wp_ajax_%s_public',ArtPad::ENDPOINT) , function(){
-                    ArtPad::module('ajax')->run();
-                    exit;
-                }, 100000 );
-                //register ajax handlers
-                add_action( sprintf('wp_ajax_nopriv_%s_public',ArtPad::ENDPOINT) , function(){
-                    //ArtPad::module('ajax');
-                    exit;
-                }, 100000 );
             } );
             //INITIALIZE TEMPLATE REDIRECTION (FOR PUBLIC APPLICATION ONLY!!!)
             add_action( 'template_redirect', function( ){
@@ -246,13 +258,11 @@ class ArtPad{
                 switch( TRUE ){
                     case array_key_exists(ArtPad::RESOURCE, $query):
                         $wp_query->set('is_404', FALSE);
-                        $rid = $query[ArtPad::RESOURCE];
-                        $resource = \CODERS\ArtPad\Resource::import( $rid );
+                        //print $query[ArtPad::RESOURCE];
+                        $resource = \CODERS\ArtPad\Resource::import( $query[ArtPad::RESOURCE] );
                         if( $resource !== FALSE ){
                             $resource->stream( /*default chunk size*/ );
-                        }
-                        else{
-                            printf('INVALID RID#%s',$rid);
+                            print $query[ArtPad::RESOURCE];
                         }
                         exit;
                     case array_key_exists(ArtPad::ENDPOINT, $query):
@@ -262,6 +272,7 @@ class ArtPad{
                             $module = ArtPad::module( $route[ 0 ] );
                             if( FALSE !== $module ){
                                 if( $module->run( $query[ ArtPad::ENDPOINT ] ) ){
+                                    //clean exit
                                     exit;
                                 }
                             }
@@ -269,7 +280,7 @@ class ArtPad{
                         else{
                             ArtPad::notice( 'Empty route' , 'error' );
                         }
-                        //hooked repository app, exit WP framework
+                        //hooked repository app, exit WP framework into WP error display
                         wp_die();
                 }
             } );
