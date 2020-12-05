@@ -3,7 +3,30 @@
  * 
  */
 final class CollectionModel extends \CODERS\ArtPad\Model{
-    
+    /**
+     * @param array $data
+     */
+    protected final function __construct(array $data = array()) {
+        
+        $this->define('parent_id',self::TYPE_NUMBER,array('value'=>0));
+        
+        parent::__construct($data);
+    }
+    /**
+     * @return array
+     */
+    protected final function listItems(){
+        
+        return \CODERS\ArtPad\Resource::collection($this->value('parent_id'));
+
+    }
+    /**
+     * @return array
+     */
+    protected final function getTree( ){
+        $resource = \CODERS\ArtPad\Resource::load( 9 );
+        return FALSE !== $resource ? $resource->tree() : array();
+    }
     /**
      * @param string $resource_id
      * @return string

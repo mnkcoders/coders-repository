@@ -114,6 +114,15 @@ abstract class Model{
         }
     }
     /**
+     * @param string $name
+     * @param mixed $value
+     */
+    public final function __set($name, $value) {
+        if( $this->exists($name)){
+            $this->setValue($name, $value);
+        }
+    }
+    /**
      * @return string
      */
     protected static function __ts(){
@@ -590,11 +599,11 @@ final class Query {
             $values[] .= sprintf("`%s`=%s",$field,$value);
         }
         
-        $sql_update = sprintf( "UPDATE %s SET %s WHERE %s",
+        $sql_update = sprintf( "UPDATE `%s` SET %s WHERE %s",
                 self::table($table),
                 implode(',', $values),
-                $this->set_filters($filters));
-        
+                implode(' AND ', self::where( $filters )));
+
         $result = $db->query($sql_update);
         
         return FALSE !== $result ? $result : 0;

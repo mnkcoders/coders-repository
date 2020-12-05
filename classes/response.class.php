@@ -145,6 +145,8 @@ abstract class Response {
                 break;
         }
         
+        $response['debug'] = \ArtPad::stamp();
+        
         print json_encode( $response );
         
         return TRUE;

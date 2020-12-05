@@ -43,19 +43,14 @@
         <tr>
             <td colspan="2"><?php wp_editor( $this->value_content, 'content' ); ?></td>
         </tr>
-        <tr>
-            <th colspan="2">
-                <h2><?php print __('Integrations','coders_artpad') ?></h2>
-            </th>
-        </tr>
     </tbody>
     <tfoot>
         <tr>
             <td colspan="2">
-                <i class="control right"><?php printf('%s: %s',
+                <i class="right"><?php printf('%s: %s',
                                 __('Created', 'coders_artpad'),
                                 $this->date_created) ?></i>
-                <i class="control right"><?php printf('%s: %s',
+                <i class="right"><?php printf('%s: %s',
                                 __('Last Updated', 'coders_artpad'),
                                 $this->date_updated) ?></i>
             </td>

@@ -4,3 +4,5 @@
 <div id="repository">
     <!-- fill in by javascript -->
 </div>
+<?php //var_dump($this->list_items ) ?>
+<?php //var_dump($this->tree() ) ?>

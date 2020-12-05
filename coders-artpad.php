@@ -23,6 +23,12 @@ class ArtPad{
     /**
      * @var array
      */
+    private static $_stamp = array(
+        //add timers here for profiling
+    );
+    /**
+     * @var array
+     */
     private static $_dependencies = array(
         //'text',
         'view',
@@ -144,7 +150,7 @@ class ArtPad{
     public static final function module( $endpoint ){
         try{
             if( self::$_INSTANCE !== NULL ){
-                throw new \Exception('A module is already running');
+                throw new \Exception(sprintf('%s already running',$endpoint));
             }
             if( strlen($endpoint) === 0){
                 throw new \Exception('Invalid Endpoint');
@@ -193,6 +199,8 @@ class ArtPad{
      */
     public static final function init(){
         
+        self::ts('init');
+        
         //one time loader
         if(defined('CODERS__REPOSITORY__DIR')){
             return $this;
@@ -201,10 +209,10 @@ class ArtPad{
         define('CODERS__REPOSITORY__URL', plugin_dir_url(__FILE__));
         
         //self::$_INSTANCE = new \ArtPad ();
-        if(self::setupDataBase()){
-            self::notice(__('Coders Repository Database registered!','coders_artpad'));
-        }
-        self::setupPosts();
+        //if(self::setupDataBase()){
+        //    self::notice(__('Coders Repository Database registered!','coders_artpad'));
+        //}
+        //self::setupPosts();
 
         //register dependencies        
         foreach( self::$_dependencies as $class ){
@@ -213,40 +221,24 @@ class ArtPad{
         
         if(is_admin()){
             add_action( 'init' , function(){
+                ArtPad::ts('admin_module');
                 //initialize Admin
                 $admin = ArtPad::module('Admin');
             });
         }
         else{
-            add_action( 'init' , function(){
-                //register ajax handlers
-                add_action( sprintf('wp_ajax_%s_public',ArtPad::ENDPOINT) , function(){
-                    ArtPad::module('ajax')->run();
-                    exit;
-                }, 100000 );
-                //register ajax handlers
-                add_action( sprintf('wp_ajax_nopriv_%s_public',ArtPad::ENDPOINT) , function(){
-                    exit;
-                }, 100000 );
-            },10000);
             //INITIALIZE REDIRECTION RULES
             add_action( 'init' , function(){
+                ArtPad::ts('rewrite_rules');
                 global $wp, $wp_rewrite;
                 //import the regiestered locale's endpoint from the settinsg
                 $endpoint = \ArtPad::ENDPOINT;
-                $resource = \ArtPad::RESOURCE;
                 //now let wordpress do it's stuff with the query router
                 $wp->add_query_var( $endpoint );
-                $wp->add_query_var( $resource );
-                //$wp->add_query_var('template');
                 add_rewrite_endpoint(ArtPad::ENDPOINT, EP_ROOT);
-                add_rewrite_endpoint(ArtPad::RESOURCE, EP_ROOT);
                 $wp_rewrite->add_rule(
                         sprintf('^/%s/?$', $endpoint),
-                        sprintf('index.php?%s=%s',$endpoint,'endpoint_route'), 'bottom');
-                $wp_rewrite->add_rule(
-                        sprintf('^/%s/?$', $resource ),
-                        sprintf('index.php?%s=%s',$resource,'resource_id'), 'bottom');
+                        sprintf('index.php?%s=endpoint',$endpoint), 'top');
                 //and rewrite
                 $wp_rewrite->flush_rules();
             } );
@@ -255,35 +247,47 @@ class ArtPad{
                 /* Make sure to set the 404 flag to false, and redirect  to the contact page template. */
                 global $wp , $wp_query;
                 $query = $wp->query_vars;
-                switch( TRUE ){
-                    case array_key_exists(ArtPad::RESOURCE, $query):
-                        $wp_query->set('is_404', FALSE);
-                        //print $query[ArtPad::RESOURCE];
-                        $resource = \CODERS\ArtPad\Resource::import( $query[ArtPad::RESOURCE] );
-                        if( $resource !== FALSE ){
-                            $resource->stream( /*default chunk size*/ );
-                            print $query[ArtPad::RESOURCE];
-                        }
-                        exit;
-                    case array_key_exists(ArtPad::ENDPOINT, $query):
-                        $wp_query->set('is_404', FALSE);
-                        if(strlen($query[ArtPad::ENDPOINT])){
-                            $route = explode('.',  $query[ArtPad::ENDPOINT] );
-                            $module = ArtPad::module( $route[ 0 ] );
-                            if( FALSE !== $module ){
-                                if( $module->run( $query[ ArtPad::ENDPOINT ] ) ){
+                if (array_key_exists(ArtPad::ENDPOINT, $query)) {
+
+                    ArtPad::ts('endpoint_redirect');
+                    $wp_query->set('is_404', FALSE);
+                    $root = explode('.', $query[ArtPad::ENDPOINT]);
+                    
+                    switch( $root[0] ){
+                        case 'admin':
+                            break;
+                        case 'rid':
+                            $resource = CODERS\ArtPad\Resource::import($root[1]);
+                            if (FALSE !== $resource) {
+                                $resource->stream();
+                            }
+                            exit;
+                            break;
+                        default:
+                            $module = ArtPad::module($root[0]);
+                            if (FALSE !== $module) {
+                                if ($module->run($query[ArtPad::ENDPOINT])) {
                                     //clean exit
                                     exit;
                                 }
                             }
-                        }
-                        else{
-                            ArtPad::notice( 'Empty route' , 'error' );
-                        }
-                        //hooked repository app, exit WP framework into WP error display
-                        wp_die();
+                            break;
+                    }
+                    //hooked repository app, exit WP framework into WP error display
+                    wp_die('Invalid Endpoint');
                 }
             } );
+            //register ajax handlers
+            add_action( sprintf('wp_ajax_%s_public',ArtPad::ENDPOINT) , function(){
+                ArtPad::ts('ajax_module');
+                ArtPad::module('ajax')->run();
+                exit;
+            }, 100000 );
+            //register ajax handlers
+            add_action( sprintf('wp_ajax_nopriv_%s_public',ArtPad::ENDPOINT) , function(){
+                exit;
+            }, 100000 );
+
         }
     }
     /**
@@ -292,6 +296,7 @@ class ArtPad{
     private static final function setupDataBase(){
         //do only when activated
         register_activation_hook(__FILE__, function( ){
+            ArtPad::ts('database_setup');
             global $wpdb,$table_prefix;
             $script_path = sprintf('%s/sql/setup.sql', preg_replace( '/\\\\/' , '/' , __DIR__ ) );
             if(file_exists($script_path)){
@@ -319,7 +324,7 @@ class ArtPad{
      * Register Resource Post Type
      */
     private static final function setupPosts(){
-        
+        ArtPad::ts('post_setup');
         add_action( 'init' , function(){
             $post_labels = array(
                 'name' => _x('Repository', 'Repo', 'coders_artpad'),
@@ -431,28 +436,46 @@ class ArtPad{
         }
     }
     /**
-     * @return \ArtPad
-     */
-    static final function instance(){
-        if(is_null(self::$_INSTANCE)){
-            self::init();
-        }
-        return self::$_INSTANCE;
-    }
-    /**
      * @param string $text
      * @return string
      */
-    static final function __( $text ){
+    public static final function __( $text ){
         
         return __( $text , 'coders_artpad');
 
         //return \CODERS\ArtPad\Text::__($text);
     }
+    /**
+     * @param string $name
+     */
+    public static final function ts( $name ){
+        if(strlen($name)){
+            self::$_stamp[ $name ] = time();
+        }
+    }
+    /**
+     * @return array
+     */
+    public static final function stamp( $asDate = FALSE ){
+        if( $asDate ){
+            $output = array();
+            foreach( self::$_stamp as $id => $ts ){
+                $output[ $id ] = date('Y-m-d H:i:s',$ts);
+            }
+            return $output;
+        }
+        return self::$_stamp;
+    }
+    /**
+     * @return \ArtPad
+     */
+    /**static final function instance(){
+        if(is_null(self::$_INSTANCE)){
+            self::init();
+        }
+        return self::$_INSTANCE;
+    }*/
 }
 
 ArtPad::init();
 
-
-//var_dump(ArtPad::__('Test'));
-//die;

@@ -93,67 +93,71 @@ function ArtPadView( ){
         for(var i = 0 ; i < ms ; i++ );
         return this;
     };
-
-    function initializeTabs(){
-        //var container = this.getContainer();
-        var element = document.getElementsByClassName('tab-container');
-        var tabControl =  ( element !== null ) ? [].slice.call( element ) : [];
-        tabControl.forEach(function(container){
-            var tabContainer = container;
-            //create tab switcher
-            tabContainer.Tabs = tabContainer.children.length ?
-                [].slice.call(tabContainer.children[0].children) :
-                [];
-            tabContainer.firstTab = function(){
-                return this.Tabs[0].getAttribute('data-tab');
-            };
-            tabContainer.toggleTab = function( tab ){
-                if( typeof tab === 'undefined' ){
-                    tab = this.firstTab();
+    /**
+     * @param {Element} tabContainer
+     * @returns {Element}
+     */
+    function initTabControl( tabContainer ){
+        //create tab switcher
+        tabContainer.Tabs = tabContainer.children.length ?
+            [].slice.call(tabContainer.children[0].children) :
+            [];
+        tabContainer.firstTab = function(){
+            return this.Tabs[0].getAttribute('data-tab');
+        };
+        tabContainer.toggleTab = function( tab ){
+            if( typeof tab === 'undefined' ){
+                tab = this.firstTab();
+            }
+            this.Tabs.forEach( function( panel ){
+                var name = panel.getAttribute('data-tab');
+                //console.log(name);
+                if( name === tab ){
+                    panel.classList.add('active');
                 }
-                this.Tabs.forEach( function( panel ){
-                    var name = panel.getAttribute('data-tab');
-                    //console.log(name);
-                    if( name === tab ){
-                        panel.classList.add('active');
-                    }
-                    else{
-                        panel.classList.remove('active');
-                    }
-                });
-                [].slice.call(tabContainer.TabMenu().children).forEach( function(item){
-                    var name = item.getAttribute('data-tab');
-                    if( name === tab ){
-                        item.classList.add('active');
-                    }
-                    else{
-                        item.classList.remove('active');
-                    }
-                });
-                return this;
-            };
-            //create tab menu
-            var tabs = [];
-            tabContainer.Tabs.forEach(function(tab){
-                var title = tab.getAttribute('data-tab');
-                var item = _view.element('li',{'class':'item','data-tab':title},title);
-                item.addEventListener('click',function(e){
-                    e.preventDefault();
-                    var name = this.getAttribute('data-tab');
-                    tabContainer.toggleTab(name);
-                    return false;
-                });
-                tabs.push(item);
+                else{
+                    panel.classList.remove('active');
+                }
             });
-            tabContainer.prepend( _view.element('ul',{'class':'tab-menu inline'},tabs));
-            tabContainer.TabMenu = function(){ return this.children[0]; };
-            tabContainer.toggleTab();
+            [].slice.call(tabContainer.TabMenu().children).forEach( function(item){
+                var name = item.getAttribute('data-tab');
+                if( name === tab ){
+                    item.classList.add('active');
+                }
+                else{
+                    item.classList.remove('active');
+                }
+            });
+            return this;
+        };
+        //create tab menu
+        var tabs = [];
+        tabContainer.Tabs.forEach(function(tab){
+            var title = tab.getAttribute('data-tab');
+            var item = _view.element('li',{'class':'item','data-tab':title},title);
+            item.addEventListener('click',function(e){
+                e.preventDefault();
+                var name = this.getAttribute('data-tab');
+                tabContainer.toggleTab(name);
+                return false;
+            });
+            tabs.push(item);
         });
+        tabContainer.prepend( _view.element('ul',{'class':'tab-menu inline'},tabs));
+        tabContainer.TabMenu = function(){ return this.children[0]; };
+        tabContainer.toggleTab();
+        return rabContainer;
     };
-    
+    /**
+     * @returns {ArtPadView}
+     */
     this.init = function(){
-        
-        initializeTabs();
+
+        var element = document.getElementsByClassName('tab-container');
+        var tabs =  ( element !== null ) ? [].slice.call( element ) : [];
+        tabs.forEach( function( tabControl ){
+            initTabControl( tabControl );
+        });
         
         return this;
     };

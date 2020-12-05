@@ -331,18 +331,22 @@ final class Request{
      */
     public static final function ajax( $route ){
         
-        $input = self::read();
+        $ajax = self::read();
         
         //action is related to wp_ajax_[action] hook: remove it
         //request is related to coders action request: parse it and remove it
-        unset( $input['action'] );
+        //unset( $ajax['action'] );
         
         $action = explode('.', $route);
         
-        if( array_key_exists('request', $input) ){
-            $action[] = $input['request'];
+        if( array_key_exists('request', $ajax) ){
+            $action[] = $ajax['request'];
         }
 
+        $input = array_key_exists('data', $ajax) ?
+                json_decode($ajax['data'], TRUE) :
+            array();
+        
         $input[ self::ACTION ] = implode('.', $action);
         
         return new Request( $input );

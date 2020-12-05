@@ -487,6 +487,8 @@ abstract class View{
         }
         print('<!-- CODERS REPO CONTAINER --></div>');
         
+        $this->displayDebug();
+        
         return $this;
     }
     
@@ -894,6 +896,14 @@ abstract class View{
         return count( $items ) ?
                 self::__HTML('ul', array( 'class' => 'navigator inline' ), $items ) :
                 $this->__class();
+    }
+    /**
+     * 
+     */
+    protected function displayDebug(){
+        
+        var_dump(\ArtPad::stamp());
+        
     }
     
     //

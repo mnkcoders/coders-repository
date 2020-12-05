@@ -15,7 +15,7 @@ final class Resource{
         'type'=>'',
         'collection'=>'default',
         'title' => '',
-        'tier_id' => 0,
+        'tier_id' => '',
         'content' => '',
         'date_created'=>NULL,
         'date_updated'=>NULL,
@@ -68,6 +68,7 @@ final class Resource{
         foreach($input as $var => $val ){
             if(array_key_exists( $var, $this->_meta)){
                 switch($var){
+                    case 'parent_id':
                     case 'ID':
                         $this->_meta[$var] = intval($val);
                         break;
@@ -88,14 +89,39 @@ final class Resource{
         return \ArtPad::Storage( $this->public_id );
     }
     /**
+     * @return array
+     */
+    public final function tree(){
+        
+        $id = $this->_meta['ID'];
+        $name = strlen( $this->_meta['title'] ) ? $this->_meta['title'] : $this->_meta['name'];
+        
+        $output = array( $id => $name );
+        
+        if( $this->_meta['parent_id'] > 0 ){
+            $parent = self::load($this->_meta['parent_id']);
+            if( FALSE !== $parent ){
+                return array_reverse( $parent->tree() + $output , TRUE );
+            }
+        }
+        
+        return $output;
+    }
+    /**
      * @param string $rid
      * @return string
      */
     public static final function link( $rid ){
-        return sprintf('%s?%s=%s',
+
+        return sprintf('%s?%s=rid.%s',
                 get_site_url(),
-                \ArtPad::RESOURCE,
+                \ArtPad::ENDPOINT,
                 $rid);
+        
+        //return sprintf('%s?%s=%s',
+        //        get_site_url(),
+        //        \ArtPad::RESOURCE,
+        //        $rid);
     }
     /**
      * 
@@ -257,6 +283,23 @@ final class Resource{
         return FALSE;
     }
     /**
+     * @param int $parent_id
+     * @return boolean
+     */
+    public final function setParent( $parent_id = 0 ){
+        if( $parent_id !== $this->_meta['ID']){
+            $db = new Query();
+            $result = $db->update('post',
+                    array('parent_id'=> $parent_id),
+                    array('ID'=>$this->_meta['ID']));
+            if( $result > 0 ){
+                $this->_meta['parent_id'] = $parent_id;
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+    /**
      * @global wpdb $wpdb
      * @global string $table_prefix
      * @param string $id
@@ -280,14 +323,14 @@ final class Resource{
         return self::query($filters);
     }
     /**
-     * @param string $parent_id
+     * @param string $id
      * @return array
      */
-    public static final function collection( $parent_id = 0 ){
+    public static final function collection( $id = 0 ){
         
         $db = new \CODERS\ArtPad\Query();
         
-        return $db->select('post','*',array('parent_id'=>$parent_id),'ID' );
+        return $db->select('post','*',array('parent_id'=>$id),'ID' );
     }
     /**
      * @return array

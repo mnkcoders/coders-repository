@@ -36,7 +36,7 @@ final class AjaxController extends \CODERS\ArtPad\Response{
      */
     protected function collection_action( \CODERS\ArtPad\Request $request ){
         
-        $collection = \CODERS\ArtPad\Resource::collection( $request->getInt('parent_id' ) );
+        $collection = \CODERS\ArtPad\Resource::collection( $request->getInt('id' ) );
         
         return $this->ajax( $collection );
     }
@@ -44,16 +44,45 @@ final class AjaxController extends \CODERS\ArtPad\Response{
      * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
-    protected final function create_collection_action( \CODERS\ArtPad\Request $request ){
-                        
-        $collection = preg_replace( '/ / ','' , strtolower($request->get('collection','')) );
+    protected function item_action( \CODERS\ArtPad\Request $request ){
         
-        if( strlen($collection) ){
+        $item = \CODERS\ArtPad\Resource::load($request->getInt('id'));
+        
+        if( FALSE !==  $item ){
             
-            return $this->ajax(array('collection' => $collection));
+            return $this->ajax( $item->meta() );
         }
         
-        return $this->ajax( array( 'message' => 'Invalid collection name' ) );
+        return $this->ajax(array('error' => 'Invalid Resource'));
+    }
+    /**
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
+    protected function attach_action( \CODERS\ArtPad\Request $request ){
+        
+        $ID = $request->getInt('ID');
+        
+        $parent_id = $request->getInt('parent_id');
+        
+        $resource = \CODERS\ArtPad\Resource::load($ID);
+        
+        $response = FALSE !== $resource && $resource->setParent($parent_id);
+        
+        return $this->ajax($response);
+    }
+    /**
+     * 
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
+    protected function path_action(\CODERS\ArtPad\Request $request){
+        $item = \CODERS\ArtPad\Resource::load( $request->getInt('id' ) );
+        $response = array();
+        if( FALSE !== $item ){
+            $response = $item->tree();
+        }
+        return $this->ajax($response);
     }
     /**
      * @param \CODERS\ArtPad\Request $request
