@@ -22,6 +22,22 @@ final class CollectionController extends \CODERS\ArtPad\Response{
      * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
+    protected final function remove_action( \CODERS\ArtPad\Request $request ){
+        
+        $ID = $request->get('ID');
+        
+        $item = \CODERS\ArtPad\Resource::load($ID);
+                    var_dump($item);
+        if( $item !== FALSE ){
+            var_dump( $item->delete() );
+        }
+        
+        return FALSE;
+    }
+    /**
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
     protected final function test_action( \CODERS\ArtPad\Request $request ){
         
         $this->importView('admin.collection')

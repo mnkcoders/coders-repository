@@ -68,7 +68,7 @@ CREATE TABLE `{{TABLE_PREFIX}}_post` (
  `collection` varchar(24) NOT NULL,
  `title` varchar(64) NOT NULL,
  `content` longtext NOT NULL,
- `tier_id` int(11) NOT NULL,
+ `tier_id` varchar(24) NOT NULL DEFAULT '',
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
  PRIMARY KEY (`ID`)

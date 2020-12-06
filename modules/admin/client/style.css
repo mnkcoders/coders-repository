@@ -1,4 +1,22 @@
 /**/
+#artpad-draggable{
+    position: absolute;
+    display: block;
+    width: 100px;
+    height: 100px;
+    border-radius: 3px;
+    background-color: rgba(0,0,0,0.25);
+    z-index: 100;
+}
+#artpad-draggable:before{
+    content:'\f161';
+    font-family: dashicons;
+    text-align: center;
+    display:block;
+    font-size: 24px;
+    line-height: 24px;
+    padding: 40% 0 0 0;
+}
 .coders-artpad{
     /*max-width: 90%;*/
     margin-bottom: 100px;
@@ -29,7 +47,7 @@
     margin: 0 !important;
     padding: 4px 0;
     letter-spacing: 1px;
-    font-style: italic;
+    /*font-style: italic;*/
 }
 .coders-artpad ul.navigator > li.home{
     font-weight: 600;
@@ -179,6 +197,13 @@
 
 .coders-artpad #repository{
     overflow: hidden;
+    transition: ease-in 250ms;
+}
+.coders-artpad #repository.disabled{
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0.5;
+    background-color: rgba(0,0,0,0.15);
 }
 
 
@@ -206,6 +231,17 @@
     font-weight: 600;
     font-size: 15px;
     letter-spacing: 1px;
+    
+    transition: ease-in 250ms;
+    overflow: hidden;
+    pointer-events: initial;
+}
+.coders-artpad .uploader.collapsed{
+    height: 0;
+    padding: 0;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 .coders-artpad .repository-box > .tab{
     display: block;
@@ -233,6 +269,23 @@
     height: 0;
     clear: both;
 }
+
+
+.coders-artpad ul.collection > li.item{
+    box-sizing: border-box;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    transition: 140ms ease-in;
+}
+.coders-artpad ul.collection > li.item.captured{
+    box-shadow: -1px -1px 2px rgba(0,0,0,0.5);
+}
+.coders-artpad ul.collection > li.item.attached{
+    background-color: rgba(255,255,255,1);
+    box-shadow: 0 0 8px rgba(0,0,0,0.35);
+}
+
+
 
 .coders-artpad  ul.collection.grid-2 > li.item{
     width: 48%;
@@ -284,6 +337,7 @@
 .coders-artpad ul.collection.grid-8 > li.item:nth-child(8n){
     margin-right: 0;
 }
+
 .coders-artpad ul.collection.grid-10 > li.item{
     width: 10%;
     margin: 0;
@@ -303,10 +357,24 @@
     height: 0;
     padding-bottom: 100%;
     background-color: rgba(255,255,255,0.15);
-    border-radius: 2px;
-    box-shadow: 0 0 4px rgba(0,0,0,0.1);
     overflow: hidden;
+    transition: ease-out 140ms;
 }
+.coders-artpad ul.collection > li.item > .content:before{
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding-top: calc(50% - 24px);
+
+    font-family: dashicons;
+    font-size: 48px;
+    line-height: 48px;
+    text-align: center;
+    opacity: 0.15;
+}
+.coders-artpad ul.collection > li.item.captured > .content{ opacity: 0; }
+.coders-artpad ul.collection > li.item > .content.image:before{ content: '\f128'; }
+.coders-artpad ul.collection > li.item > .content.text:before{ content: '\f215'; }
 .coders-artpad ul.collection > li.item > .content > img{
     width: auto;
     height: 100%;
@@ -324,13 +392,13 @@
 .coders-artpad ul.collection > li.item > .content .action{
     position: absolute;
 
-    color: rgba(0,0,0,0.15);
+    color: rgba(0,0,0,0);
     background-color: transparent;
     transition: ease-in 250ms;
     cursor: pointer;
 }
 .coders-artpad ul.collection > li.item > .content .action:hover{
-    background-color: rgba(255,255,255,0.5);
+    background-color: rgba(255,255,255,0.85);
     color: rgba(24,24,24,0.85);
 }
 .coders-artpad ul.collection > li.item > .content .action.rounded{

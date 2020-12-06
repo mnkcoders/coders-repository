@@ -614,11 +614,8 @@ final class Query {
      * @return int
      */
     public final function delete( $table, array $filters ){
-               
         $db = self::db();
-
         $result = $db->delete(self::table($table), $filters);
-
         return FALSE !== $result ? $result : 0;
     }
     /**

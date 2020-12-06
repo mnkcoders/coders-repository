@@ -902,7 +902,7 @@ abstract class View{
      */
     protected function displayDebug(){
         
-        var_dump(\ArtPad::stamp());
+        var_dump(\ArtPad::stamp( TRUE ));
         
     }
     

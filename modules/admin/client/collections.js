@@ -147,13 +147,11 @@ function CollectionView( ){
         if( typeof current === 'undefined' ){
             current = 0;
         }
-        if( Array.isArray( path ) ){
-            
-        }
-        
+
         var navPath = _controls.navigator;
         
         navPath.clear();
+
         var ids = Object.keys( path );
         
         if( ids.length ){
@@ -167,7 +165,7 @@ function CollectionView( ){
             navPath.appendChild( home );
             ids.forEach( function( id ){
                 if( parseInt( id ) !== current ){
-                    var parent = _view.element('li',{'class':'link'}, path[ id ] );
+                    var parent = _view.element('li',{'class':'link','data-id':id}, path[ id ] );
                     parent.addEventListener('click',function(e){
                         e.stopPropagation();
                         e.preventDefault();
@@ -230,10 +228,10 @@ function CollectionView( ){
         }
         
         if( status ){
-            _view.getContainer().classList.add('sync');
+            _view.getContainer().classList.add(['sync','disabled']);
         }
         else{
-            _view.getContainer().classList.remove('sync');
+            _view.getContainer().classList.remove(['sync','disabled']);
         }
         
         return this;
@@ -245,13 +243,13 @@ function CollectionView( ){
      * @returns {CollectionView}
      */
     this.attach = function( source_id , target_id ){
-        console.log('Attaching ' + source_id + ' into ' + target_id  + ' ...');
-        var target = _view.getItem( target_id );
+        //console.log('Attaching ' + source_id + ' into ' + target_id  + ' ...');
         var resource = _view.getItem( source_id );
         //console.log(resource);
         if( false !== resource ){
             resource.remove();
-            console.log( source_id + ' removed!');
+            //console.log( source_id + ' removed!');
+            var target = _view.getItem( target_id );
             if( false !== target ){
                 target.classList.add('attached');
                 window.setTimeout(function(){
@@ -260,6 +258,18 @@ function CollectionView( ){
             }
         }
         
+        return this;
+    };
+    /**
+     * @param {String|Number} source_id
+     * @returns {CollectionView}
+     */
+    this.remove = function( id ){
+        //console.log('Attaching ' + source_id + ' into ' + target_id  + ' ...');
+        var resource = _view.getItem( id );
+        if( false !== resource ){
+            resource.remove();
+        }
         return this;
     };
     /**
@@ -294,7 +304,7 @@ function CollectionView( ){
      */
     this.showPost = function( itemData ){
         
-        console.log( itemData );
+        //console.log( itemData );
         
         if( itemData.hasOwnProperty('error')){
             
@@ -304,7 +314,7 @@ function CollectionView( ){
         var media = _controls.form.element('media');
         var txtTitle = _controls.form.element('title');
         var txtContent = _controls.form.element('content');
-        console.log( txtTitle);
+
         txtTitle.value = itemData.title;
         txtTitle.placeholder = itemData.name;
         txtContent.value = itemData.content;
@@ -341,10 +351,10 @@ function CollectionView( ){
         var contentClass = ['content'];
 
         if( _server.isImage( itemData.type ) ){
-            contentClass.push('dashicons dashicons-format-image');
+            contentClass.push('image');
         }
         else if( _server.isDocument( itemData.type )){
-            contentClass.push('dashicons dashicons-text');
+            contentClass.push('text');
         }
         
         var btnTitle = this.element('span',
@@ -362,19 +372,20 @@ function CollectionView( ){
         btnTitle.addEventListener( 'click' , function(e){
             e.preventDefault();
             e.stopPropagation();
+            CollectionView.Drag.reset();
             var id = this.parentNode.parentNode.getAttribute('data-id');
             if( null !== id ){
                 id = parseInt( id );
-                //_view.getContainer('collection').clear();
                 _server.item( _view.showPost , id );
-                //_server.collection( _view.collection , id ).path(_view.path,id);
             }
             return false;
         });
+        
         btnRemove.addEventListener('click',function(e){
                 e.preventDefault();
                 e.stopPropagation();
-                _server.remove(itemData.ID);
+                CollectionView.Drag.reset();
+                _server.remove( itemData.ID, _view.remove );
                 return false;
             });
 
@@ -388,6 +399,7 @@ function CollectionView( ){
             btnParent.addEventListener( 'click', function(e){
                 e.preventDefault();
                 e.stopPropagation();
+                CollectionView.Drag.reset();
                 var id = this.parentNode.parentNode.getAttribute('data-id');
                 _server.attach( id , 0 , _view.attach );
                 return false;
@@ -411,51 +423,9 @@ function CollectionView( ){
             'draggable':'true',
             'data-id':itemData.ID},
             //'data-id':itemData.public_id},
-            this.element('div',{'class':'content'},elements) );
+            this.element('div',{'class':contentClass.join(' ')},elements) );
 
-        //attach drag-drop events
-        ['drag','dragenter','dragleave','dragover','drop'].forEach( function( event ){
-            item.addEventListener( event , function(e){
-                e.preventDefault();
-                e.stopPropagation();
-                switch( event ){
-                    case 'dragstart':
-                    case 'dragenter':
-                        var selected = this.getAttribute('data-id');
-                        if( CollectionView.Draggable.empty( ) ){
-                            CollectionView.Draggable.set(selected);
-                            //CollectionView.Draggable.move();
-                            console.log( 'Moving ' + selected);
-                            return true;
-                        }
-                        return false;
-                    case 'dragleave':
-                        //console.log('left');
-                        //CollectionView.Draggable.reset();
-                        return true;
-                    case 'dragover':
-                        //var target_id = this.getAttribute('data-id');
-                        //if( !CollectionView.Draggable.match( target_id ) ){
-                        //    CollectionView.Draggable.setDrop( true );
-                        //    var source_id = CollectionView.Draggable.ID;
-                        //    return true;
-                        //}
-                        //CollectionView.Draggable.setDrop();
-                        return false;
-                    case 'drop':
-                        var target_id = this.getAttribute('data-id') || 0;
-                        if( !CollectionView.Draggable.match( target_id ) ){
-                            var source_id = CollectionView.Draggable.ID;
-                            _server.attach( source_id , target_id , _view.attach );
-                            //_view.attach( parseInt(source_id) , parseInt( target_id ) );
-                        }
-                        CollectionView.Draggable.reset();
-                        return true;
-                }
-                return false;
-            });
-        });
-
+        apply_drag_drop_v2( item );
 
         return item;
     };
@@ -535,7 +505,114 @@ function CollectionView( ){
         return formData;
     };
     /**
-     * @returns {Element}
+     * @param {HTMLElement} element
+     * @returns {HTMLElement}
+     */
+    function apply_drag_drop_v2( element ){
+        if( element instanceof HTMLElement ){
+            var event_list = ['mousedown','mouseup','mouseout','mouseenter'];
+            event_list.forEach( function( event ){
+                element.addEventListener( event , function(e){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    switch( event ){
+                        case 'mouseout':
+                            CollectionView.Drag.stack();
+                            break;
+                        case 'mousedown':
+                            var current = this.getAttribute('data-id');
+                            if( CollectionView.Drag.capture( current ) ){
+                                this.classList.add('captured');
+                                CollectionView.Drag.setDraggable(this );
+                                return true;
+                            }
+                            break;
+                        case 'mouseup':
+                            var current = this.getAttribute('data-id');
+                            if( CollectionView.Drag.stack( current ) ){
+                                var item = this;
+                                item.classList.add('attached');
+                                var source = CollectionView.Drag.ID;
+                                console.log( source + ' stacked into ' + current );
+                                _server.attach( source , current , _view.attach );
+                                window.setTimeout(function(){
+                                    item.classList.remove('attached');
+                                },1000);
+                                CollectionView.Drag.reset();
+                                return true;
+                            }
+                            CollectionView.Drag.unsetDraggable();
+                            break;
+                        case 'mouseenter':
+                            var current = this.getAttribute('data-id');
+                            if (CollectionView.Drag.stack(current)) {
+                                console.log('Moving '
+                                        + CollectionView.Drag.ID
+                                        + ' over ' + current);
+                                return true;
+                            }
+                            break;
+                    }
+                    return false;
+                });
+            });
+        }
+        return element;
+    };
+    /**
+     * @param {HTMLElement} item
+     * @returns {HTMLElement}
+     */
+    function apply_drag_drop_v1( item ){
+        if( item instanceof HTMLElement ){
+            //attach drag-drop events
+            ['drag','dragenter','dragleave','dragover','drop'].forEach( function( event ){
+                item.addEventListener( event , function(e){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    switch( event ){
+                        case 'dragstart':
+                        case 'dragenter':
+                            var selected = this.getAttribute('data-id');
+                            if( CollectionView.Drag.set(selected)){
+                                this.classList.add('captured');
+                                return true;
+                            }
+                            return false;
+                        case 'dragleave':
+                            if( CollectionView.Drag.stack( selected ) ){
+                                var item = this;
+                                item.classList.remove('attached');
+                                return true;
+                            }
+                            return false;
+                        case 'dragover':
+                            if( CollectionView.Drag.stack( selected ) ){
+                                var item = this;
+                                item.classList.add('attached');
+                                return true;
+                            }
+                            return false;
+                        case 'drop':
+                            var selected = this.getAttribute('data-id') || 0;
+                            if( CollectionView.Drag.stack( selected ) ){
+                                var source = CollectionView.Drag.ID;
+                                console.log( source + ' stacked into ' + selected );
+                                _server.attach( source , selected , _view.attach );
+                                var item = this;
+                                item.classList.remove('attached');
+                            }
+                            CollectionView.Drag.reset();
+                            return true;
+                    }
+                    return false;
+                });
+            });
+        }
+        return item;
+    }
+    /**
+     * @returns {HTMLElement}
      */
     function render_uploader(  ){
 
@@ -573,13 +650,7 @@ function CollectionView( ){
                 return true;
             });
 
-
-
-        var url = 'http://localhost/WORDPRESS/artistpad/wp-admin/admin.php?page=coders-main&_action=admin.main.upload';
-        
-        //var container = _view.getContainer('collection');
-        //var parent_id = container.getAttribute('data-id');
-        //console.log( parent_id );
+        var url = 'http://localhost/WORDPRESS/artistpad/wp-admin/admin.php?page=artpad-collection&_action=upload';
          
         var formData = _view.element('form',{
             //FORM DECLARATION
@@ -594,11 +665,11 @@ function CollectionView( ){
             inputButton
         ]);
         
-        var uploader = _view.element('div',{'class':'uploader item container' },[
+        var uploader = _view.element('div',{'class':'uploader item container collapsed' },[
             formData,
             _view.element('label',{
                 'class':'dashicons-before dashicons-media-default button',
-                'for': 'id_collection',
+                'for': 'id_uploader',
             }, 'Select files' ),
             _view.progressBar( 'Upload' , 'hidden content' )
         ]);
@@ -614,7 +685,7 @@ function CollectionView( ){
     };
     /**
      * @param {String} cls
-     * @returns {Element}
+     * @returns {HTMLElement}
      */
     function render_grid_resizer( cls ){
         
@@ -654,14 +725,26 @@ function CollectionView( ){
     function render_toolbox(){
         
         _controls.navigator = _view.element('ul',{'class':'navigator panel left inline'});
+        
+        var btnUploader = _view.element('span',{'class':'button right'},'Upload');
+        btnUploader.addEventListener( 'click' , function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            var uploader = _view.getContainer('uploader');
+            if( false !== uploader ){
+                uploader.classList.toggle('collapsed');
+            }
+            return true;
+        });
 
         return _view.element('div',{'class': 'toolbox container inline solid clearfix centered'},[
                 _controls.navigator,
+                btnUploader,
                 render_grid_resizer('panel right')
             ]);
     }
     /**
-     * @returns {Element}
+     * @returns {HTMLElement}
      */
     function render_post(){
         
@@ -683,6 +766,22 @@ function CollectionView( ){
         return _controls.form;
     };
     /**
+     * @returns {HTMLElement}
+     */
+    function render_collection(){
+        
+        var collection = _view.element('ul', {'class': 'collection grid-4' })
+        
+        collection.addEventListener( 'mouseup' ,function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            CollectionView.Drag.reset().unsetDraggable();
+            return false;
+        });
+        
+        return collection;
+    };
+    /**
      * @param {array} collections 
      * @returns {CollectionView}
      */
@@ -696,10 +795,10 @@ function CollectionView( ){
         
         if( null !== container ){
             
-            container.appendChild( render_post( ) );
             container.appendChild( render_toolbox( ) );
+            container.appendChild( render_post( ) );
             container.appendChild( render_uploader( ) );
-            container.appendChild( _view.element('ul', {'class': 'collection grid-4' }));
+            container.appendChild( render_collection( ) );
             //request parent collection (root)
             _server.collection( _view.collection ).path(_view.path);
         }
@@ -717,67 +816,89 @@ function CollectionView( ){
  */
 CollectionView.FileSize = function(){ return 256 * 256 * 256; };
 /**
- * @returns {CollectionView.Draggable}
+ * @type CollectionView.Drag
  */
-CollectionView.Draggable = {
+CollectionView.Drag = {
     'ID':0,
-    'candrop':false,
-    'moving':false,
+    'timer':0,
+    'elapsed': 800,
     /**
-     * @returns {CollectionView.Draggable}
+     * @type Element
      */
-    'reset': function(){
-        this.ID = 0;
-        this.candrop = false;
-        this.moving = false;
+    'element':null,
+    /**
+     * @param {Element} element
+     * @returns {CollectionView.Drag}
+     */
+    'setDraggable': function( element ){
+        this.unsetDraggable();
+        this.element = element;
+        this.element.classList.add('captured');
         return this;
     },
     /**
-     * @returns {Boolean}
+     * @returns {CollectionView.Drag}
      */
-    'empty': function(){ return this.ID === 0; },
+    'unsetDraggable':function(){
+        if( this.element !== null ){
+            this.element.classList.remove('captured');
+            this.element = null;
+        }
+        return this;
+    },
+    /**
+     * @returns {CollectionView.Drag}
+     */
+    'capture': function( id ){
+        if( this.ID === 0 ){
+            this.timer = window.setTimeout( function(){
+                CollectionView.Drag.ID = parseInt(id);
+                console.log(CollectionView.Drag.ID + ' captured!');
+            },this.elapsed);
+            return true;
+        }
+        return false;
+    },
     /**
      * @param {Number} id
      * @returns {Boolean}
      */
-    'match': function( id ){
-        return this.ID === parseInt( id ) && this.ID > 0;
+    'set': function( id ){
+        if( this.ID === 0 ){
+            this.ID = parseInt( id );
+            console.log(CollectionView.Drag.ID + ' captured!');
+            return true;
+        }
+        return false;
+    },
+    /**
+     * @returns {CollectionView.Drag}
+     */
+    'cancel': function(){
+        if( this.timer > 0 ){
+            window.clearTimeout(this.timer);
+            this.timer = 0;
+        }
+        return this;
     },
     /**
      * @param {String|Number} id
-     * @returns {CollectionView.Draggable}
+     * @returns {Boolean}
      */
-    'set':function( id ){
-        if( id && this.ID === 0 ){
-            this.ID = parseInt( id );
-        }
-        return this;
+    'stack':function (id) {
+        if (this.ID === 0) { return false; }
+        if (typeof id === 'undefined') { id = 0; }
+        return this.ID !== parseInt(id);
     },
     /**
-     * @param {Boolean} drop
-     * @returns {CollectionView.Draggable}
+     * @returns {CollectionView.Drag}
      */
-    'setDrop':function( drop ){
-        this.candrop = typeof drop === 'boolean' && drop || false;
-        return this;
-    },
-    /**
-     * @returns {CollectionView.Draggable}
-     */
-    'move': function(){
-        if( !this.moving ){
-            this.moving = true;
+    'reset':function () {
+        if( this.ID ){
+            console.log(this.ID + ' released!');
+            this.ID = 0;
         }
-        return this;
-    },
-    /**
-     * @returns {CollectionView.Draggable}
-     */
-    'stop': function(){
-        if( this.moving ){
-            this.moving = false;
-        }
-        return this;
+        return this.cancel();
     }
 };
 /**
@@ -801,7 +922,7 @@ function CollectionModel( syncHandler ){
         if( typeof active !== 'boolean' ){ active = false; }
         console.log( active ? 'Sync On' : 'Sync Off');
     };
-    console.log( typeof syncHandler );
+
     var _sync = typeof syncHandler === 'function' ? syncHandler : sync;
     
     /**
@@ -831,7 +952,11 @@ function CollectionModel( syncHandler ){
                         _sync(false);
                     }
                     else if( _client.debug ){
-                        //console.log( this.responseText );
+                        console.log( this.responseText );
+                    }
+                    if( _client.debug ){
+                        var ts = ( new Date( ) ).getMilliseconds( ) - content.ts;
+                        console.log( 'Elapsed time ' + ts + 'ms' );
                     }
                 }
             }
@@ -846,7 +971,7 @@ function CollectionModel( syncHandler ){
         request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;');
         request.send( _client.self.serialize( content ) );
 
-        console.log( 'Requesting [ ' + action + ' ] with data ' + JSON.stringify( data ) + ' ...');
+        //console.log( 'Requesting [ ' + action + ' ] with data ' + JSON.stringify( data ) + ' ...');
         //request.setRequestHeader("Content-type", "application/json;charset=UTF-8");
         //request.send( content );
         //request.send( JSON.stringify( content ) );
@@ -1019,12 +1144,12 @@ function CollectionModel( syncHandler ){
         if( typeof handler === 'function' ){
             request( 'remove' , {'ID' : ID } , function( response ){
                 if( _client.debug ){
-                    //console.log( response );
+                    console.log( response );
                 }
-                if( response.data === true ){
+                //if( parseInt( response.data ) === 1 ){
                     //fire remove handler
                     handler( ID );
-                }
+                //}
             });
         }
         

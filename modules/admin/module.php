@@ -31,7 +31,7 @@ class AdminModule extends \ArtPad{
         \CODERS\ArtPad\View::attachScripts(array('client.js'=>array()),'admin');
         \CODERS\ArtPad\View::attachScripts(array('collections.js'=>array()),'admin');
         
-        $this->initAdminMenu()->initAjax();
+        $this->initAdminMenu();//->initAjax();
     }
     /**
      * @return string
@@ -96,25 +96,6 @@ class AdminModule extends \ArtPad{
                 }
             } , 100000 );
         }
-        return $this;
-    }
-    /**
-     * @return \CODERS\ArtPad\Admin\AdminModule
-     */
-    private final function initAjax(){
-        
-        //register private ajax handlers
-        add_action( sprintf('wp_ajax_%s_admin', self::ENDPOINT ) , function(){
-            //print json_encode(array('response'=>'OK'));
-            $request = \CODERS\ArtPad\Request::ajax('admin.ajax');
-            
-            \CODERS\ArtPad\Response::create($request);
-            wp_die();
-        } , 100000 );
-
-        //disable pubilc ajax handlers
-        add_action( sprintf('wp_ajax_nopriv_%s_admin', self::ENDPOINT) , 'wp_die', 100000 );   
-        
         return $this;
     }
 }

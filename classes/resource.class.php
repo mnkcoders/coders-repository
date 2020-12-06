@@ -275,11 +275,17 @@ final class Resource{
      */
     public final function delete(){
         
-        if( self::remove($this->_ID) ){
-            
-            return unlink($this->path());
-        }
+        $db = new Query();
         
+        $deleted = $db->delete('post', array('ID'=>$this->_meta['ID']));
+
+        if( $deleted ){
+            
+            $db->update('post', array('parent_id'=>0), array('parent_id'=>$this->_meta['ID']));
+            
+            return self::remove($this->_meta['public_id']);
+        }
+
         return FALSE;
     }
     /**
@@ -302,16 +308,15 @@ final class Resource{
     /**
      * @global wpdb $wpdb
      * @global string $table_prefix
-     * @param string $id
+     * @param string $public_id
      * @return boolean
      */
-    public static final function remove( $id ){
-        
-        global $wpdb,$table_prefix;
-        
-        $deleted = $wpdb->delete(sprintf('%scoders_post',$table_prefix), array( 'ID' => $id ) );
-
-        return $deleted !== FALSE && $deleted > 0;
+    public static final function remove( $public_id ){
+        $path = \ArtPad::Storage($public_id);
+        if (file_exists($path)) {
+            return unlink($path);
+        }
+        return FALSE;
     }
     /**
      * @return array
@@ -339,8 +344,6 @@ final class Resource{
         
         $output = array();
         $root = \ArtPad::Storage();
-        //var_dump(self::base());
-        //var_dump(scandir(self::base()));
         foreach(scandir($root) as $item ){
             if( is_dir($root . '/' . $item ) && $item !== '.' && $item !== '..' ){
                 $output[] = $item;
@@ -408,7 +411,7 @@ final class Resource{
             $upload = array_key_exists($input, $_FILES) ? $_FILES[ $input ] : array();
 
             $list = array();
-            //var_dump($upload);
+
             if( count($upload) ){
                 
                 if(is_array($upload['name'])){

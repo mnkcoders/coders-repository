@@ -23,7 +23,7 @@ class ArtPad{
     /**
      * @var array
      */
-    private static $_stamp = array(
+    private static $_status = array(
         //add timers here for profiling
     );
     /**
@@ -145,40 +145,36 @@ class ArtPad{
     }
     /**
      * @param string $endpoint
-     * @throws \Exception
+     * @return ArtPad|Boolean
      */
     public static final function module( $endpoint ){
-        try{
-            if( self::$_INSTANCE !== NULL ){
-                throw new \Exception(sprintf('%s already running',$endpoint));
-            }
-            if( strlen($endpoint) === 0){
-                throw new \Exception('Invalid Endpoint');
-            }
-            if( $endpoint === 'admin' && !is_admin() ){
-                //do not ex`pse admin module in public
-                throw new \Exception('Invalid Endpoint');
-            }
-
-            $path = sprintf('%s/modules/%s/module.php',
-                    preg_replace( '/\\\\/', '/', CODERS__REPOSITORY__DIR ),
-                    strtolower( $endpoint ) );
-
-            $class = sprintf('\CODERS\ArtPad\%s\%sModule',
-                    $endpoint,
-                    $endpoint);
-
-            if( file_exists( $path ) ){
-                require_once $path;
-                if(class_exists( $class ) && is_subclass_of( $class, self::class ) ){
-                    self::$_INSTANCE = new $class();
-                    return self::$_INSTANCE;
-                }
-            }
-            throw new \Exception(sprintf('Invalid Endpoint %s',$path));
+        
+        if( self::$_INSTANCE !== NULL ){
+            return FALSE;
+            //throw new \Exception(sprintf('%s already running',$endpoint));
         }
-        catch (Exception $ex) {
-            self::notice($ex->getMessage(), 'error');
+        if( strlen($endpoint) === 0){
+            return FALSE;
+            //throw new \Exception('Invalid Endpoint');
+        }
+        
+        $modName = strtolower( $endpoint );
+        $path = self::path(sprintf('/modules/%s/module.php',$modName ));
+        $class = sprintf('\CODERS\ArtPad\%s\%sModule',$endpoint,$endpoint);
+
+        if( $modName === 'admin' && !is_admin() ){
+            //do not ex`pse admin module in public
+            //throw new \Exception('Invalid Endpoint');
+            return FALSE;
+        }
+
+        if( file_exists( $path ) ){
+            require_once $path;
+            if(class_exists( $class ) && is_subclass_of( $class, self::class ) ){
+                self::check(sprintf('%s_module', $modName));
+                self::$_INSTANCE = new $class();
+                return self::$_INSTANCE;
+            }
         }
         return FALSE;
     }
@@ -195,224 +191,240 @@ class ArtPad{
         return FALSE;
     }
     /**
+     * @return boolean
+     */
+    public static final function loaded(){
+        return (defined('CODERS__REPOSITORY__DIR'));
+    }
+    /**
      * @return \ArtPad
      */
     public static final function init(){
         
-        self::ts('init');
-        
         //one time loader
-        if(defined('CODERS__REPOSITORY__DIR')){
-            return $this;
-        }
+        if(!self::check('init')){ return; }
+        
+        //Activate plugin
+        register_activation_hook(__FILE__, function( ){
+            ArtPad::setupDataBase();
+            ArtPad::setupRewrite( TRUE );
+        });
+        //Disable plugin
+        register_deactivation_hook(__FILE__, function(){
+            flush_rewrite_rules( );
+        });
+
+        //Initialize framework
         define('CODERS__REPOSITORY__DIR',__DIR__);
         define('CODERS__REPOSITORY__URL', plugin_dir_url(__FILE__));
-        
-        //self::$_INSTANCE = new \ArtPad ();
-        //if(self::setupDataBase()){
-        //    self::notice(__('Coders Repository Database registered!','coders_artpad'));
-        //}
-        //self::setupPosts();
-
         //register dependencies        
         foreach( self::$_dependencies as $class ){
             require_once( sprintf( '%s/classes/%s.class.php' , CODERS__REPOSITORY__DIR , $class ) );
         }
         
-        if(is_admin()){
-            add_action( 'init' , function(){
-                ArtPad::ts('admin_module');
+        //register ajax handlers
+        add_action( sprintf('wp_ajax_%s_admin',ArtPad::ENDPOINT) , function(){
+            ArtPad::check('ajax_admin');
+            $request = \CODERS\ArtPad\Request::ajax('admin.ajax');
+            \CODERS\ArtPad\Response::create($request);
+            exit;
+        }, 100000 );
+        add_action( sprintf('wp_ajax_%s_public',ArtPad::ENDPOINT) , function(){
+            ArtPad::check('ajax_public');
+            $request = \CODERS\ArtPad\Request::ajax('ajax');
+            \CODERS\ArtPad\Response::create($request);
+        });
+        add_action( sprintf('wp_ajax_nopriv_%s_admin',ArtPad::ENDPOINT) , 'exit', 100000 );
+        add_action( sprintf('wp_ajax_nopriv_%s_public',ArtPad::ENDPOINT) , 'exit', 100000 );
+        
+        //Initialize integration
+        add_action( 'init' , function(){
+            //ArtPad::setupPosts();
+            if(is_admin()){
                 //initialize Admin
                 $admin = ArtPad::module('Admin');
-            });
-        }
-        else{
-            //INITIALIZE REDIRECTION RULES
-            add_action( 'init' , function(){
-                ArtPad::ts('rewrite_rules');
-                global $wp, $wp_rewrite;
-                //import the regiestered locale's endpoint from the settinsg
-                $endpoint = \ArtPad::ENDPOINT;
+            }
+            else{
+                if( !self::check('rewrite') ){ return; }
                 //now let wordpress do it's stuff with the query router
-                $wp->add_query_var( $endpoint );
-                add_rewrite_endpoint(ArtPad::ENDPOINT, EP_ROOT);
-                $wp_rewrite->add_rule(
-                        sprintf('^/%s/?$', $endpoint),
-                        sprintf('index.php?%s=endpoint',$endpoint), 'top');
-                //and rewrite
-                $wp_rewrite->flush_rules();
-            } );
-            //INITIALIZE TEMPLATE REDIRECTION (FOR PUBLIC APPLICATION ONLY!!!)
-            add_action( 'template_redirect', function( ){
-                /* Make sure to set the 404 flag to false, and redirect  to the contact page template. */
-                global $wp , $wp_query;
-                $query = $wp->query_vars;
-                if (array_key_exists(ArtPad::ENDPOINT, $query)) {
-
-                    ArtPad::ts('endpoint_redirect');
-                    $wp_query->set('is_404', FALSE);
-                    $root = explode('.', $query[ArtPad::ENDPOINT]);
-                    
-                    switch( $root[0] ){
-                        case 'admin':
-                            break;
-                        case 'rid':
-                            $resource = CODERS\ArtPad\Resource::import($root[1]);
-                            if (FALSE !== $resource) {
-                                $resource->stream();
-                            }
+                add_rewrite_endpoint( ArtPad::ENDPOINT, EP_ROOT );
+                //ArtPad::setupRewrite( );
+            }
+        });
+        //Setup Route management
+        add_action( 'template_redirect', function( ){
+            if( !ArtPad::check('redirect')) { return; }
+            global $wp , $wp_query;
+            $query = $wp->query_vars;
+            if (array_key_exists(ArtPad::ENDPOINT, $query)) {
+                $wp_query->set('is_404', FALSE);
+                $endpoint = $query[ArtPad::ENDPOINT];
+                $path = explode('.', $endpoint );
+                switch( $path[0] ){
+                    case 'admin':
+                        //locked in public
+                        break;
+                    case 'rid':
+                        $resource = CODERS\ArtPad\Resource::import($path[1]);
+                        if (FALSE !== $resource) {
+                            $resource->stream();
                             exit;
-                            break;
-                        default:
-                            $module = ArtPad::module($root[0]);
-                            if (FALSE !== $module) {
-                                if ($module->run($query[ArtPad::ENDPOINT])) {
-                                    //clean exit
-                                    exit;
-                                }
-                            }
-                            break;
-                    }
-                    //hooked repository app, exit WP framework into WP error display
-                    wp_die('Invalid Endpoint');
+                        }
+                        break;
+                    default:
+                        $module = ArtPad::module($path[0]);
+                        if(FALSE !== $module && $module->run( $endpoint )){
+                            exit;
+                        }
+                        break;
                 }
-            } );
-            //register ajax handlers
-            add_action( sprintf('wp_ajax_%s_public',ArtPad::ENDPOINT) , function(){
-                ArtPad::ts('ajax_module');
-                ArtPad::module('ajax')->run();
-                exit;
-            }, 100000 );
-            //register ajax handlers
-            add_action( sprintf('wp_ajax_nopriv_%s_public',ArtPad::ENDPOINT) , function(){
-                exit;
-            }, 100000 );
-
-        }
+                //hooked repository app, exit WP framework into WP error display
+                wp_die('Invalid Endpoint');
+            }
+        });
     }
     /**
-     * Setup DB Activation Hook
+     * @global wpdb $wpdb
+     * @global string $table_prefix
+     * @return boolean
      */
     private static final function setupDataBase(){
-        //do only when activated
-        register_activation_hook(__FILE__, function( ){
-            ArtPad::ts('database_setup');
-            global $wpdb,$table_prefix;
-            $script_path = sprintf('%s/sql/setup.sql', preg_replace( '/\\\\/' , '/' , __DIR__ ) );
-            if(file_exists($script_path)){
-                $script_file = file_get_contents($script_path);
-                if( FALSE !== $script_file && strlen($script_file)){
-                    $coders_table = $table_prefix . self::ENDPOINT;
-                    $script_sql = preg_replace('/{{TABLE_PREFIX}}/',$coders_table,$script_file);
-                    $tables = explode(';', $script_sql);
-                    $counter = 0;
-                    foreach( $tables as $T ){
-                        if ($wpdb->query($T)) {
-                            $counter++;
-                        }
-                        else {
-                            //
-                        }
+        
+        if( !self::check('database') ){ return; }
+
+        global $wpdb,$table_prefix;
+
+        $script_path = sprintf('%s/sql/setup.sql', preg_replace( '/\\\\/' , '/' , __DIR__ ) );
+
+        if(file_exists($script_path)){
+            $script_file = file_get_contents($script_path);
+            if( FALSE !== $script_file && strlen($script_file)){
+                $coders_table = $table_prefix . self::ENDPOINT;
+                $script_sql = preg_replace('/{{TABLE_PREFIX}}/',$coders_table,$script_file);
+                $tables = explode(';', $script_sql);
+                $counter = 0;
+                foreach( $tables as $T ){
+                    if ($wpdb->query($T)) {
+                        $counter++;
                     }
-                    return $counter === count( $tables );
+                    else {
+                        //
+                    }
                 }
+                return $counter === count( $tables );
             }
-            return FALSE;
-        });
+        }
+        return FALSE;
+    }
+    /**
+     * @param boolean $flush FALSE default
+     * @global WP $wp
+     * @global WP_Rewrite $wp_rewrite
+     */
+    public static final function setupRewrite( $flush = FALSE ){
+        if( !self::check('setup_rewrite')) { return; }
+        global $wp, $wp_rewrite;
+        //import the regiestered locale's endpoint from the settinsg
+        $endpoint = \ArtPad::ENDPOINT;
+        add_rewrite_endpoint( ArtPad::ENDPOINT, EP_ROOT );
+        $wp->add_query_var( $endpoint );
+        $wp_rewrite->add_rule("^/$endpoint/?$",'index.php?' . $endpoint . '=$matches[1]', 'top');
+        //and rewrite
+        if ($flush ){
+            $wp_rewrite->flush_rules();
+        }
     }
     /**
      * Register Resource Post Type
      */
-    private static final function setupPosts(){
-        ArtPad::ts('post_setup');
-        add_action( 'init' , function(){
-            $post_labels = array(
-                'name' => _x('Repository', 'Repo', 'coders_artpad'),
-                'singular_name' => _x('Resource', 'Post type singular name', 'coders_artpad'),
-                'menu_name' => _x('Repository', 'Admin Menu text', 'coders_artpad'),
-                'name_admin_bar' => _x('Resource', 'Add New on Toolbar', 'coders_artpad'),
-                'add_new' => __('Create', 'coders_artpad'),
-                'add_new_item' => __('Add New Resource', 'coders_artpad'),
-                'new_item' => __('New Resource', 'coders_artpad'),
-                'edit_item' => __('Edit Resource', 'coders_artpad'),
-                'view_item' => __('View Resource', 'coders_artpad'),
-                'all_items' => __('Repository', 'coders_artpad'),
-                'search_items' => __('Search Resource', 'coders_artpad'),
-                'parent_item_colon' => __('Parent Resource:', 'coders_artpad'),
-                'not_found' => __('No resources found.', 'coders_artpad'),
-                'not_found_in_trash' => __('No resources found in Trash.', 'coders_artpad'),
-                'featured_image' => _x('Resource Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_artpad'),
-                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
-                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
-                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
-                'archives' => _x('Resource archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_artpad'),
-                'insert_into_item' => _x('Insert into Resource', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_artpad'),
-                'uploaded_to_this_item' => _x('Uploaded to this Resource', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_artpad'),
-                'filter_items_list' => _x('Filter Resources', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_artpad'),
-                'items_list_navigation' => _x('Repository Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_artpad'),
-                'items_list' => _x('Resource List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_artpad'),
-            );
-            $project_labels = array(
-                'name' => _x('Projects', 'Projects', 'coders_artpad'),
-                'singular_name' => _x('Project', 'Project', 'coders_artpad'),
-                'menu_name' => _x('Project', 'Project', 'coders_artpad'),
-                'name_admin_bar' => _x('Project', 'New Project', 'coders_artpad'),
-                'add_new' => __('Create', 'coders_artpad'),
-                'add_new_item' => __('Add New Project', 'coders_artpad'),
-                'new_item' => __('New Project', 'coders_artpad'),
-                'edit_item' => __('Edit Project', 'coders_artpad'),
-                'view_item' => __('View Project', 'coders_artpad'),
-                'all_items' => __('Projects', 'coders_artpad'),
-                'search_items' => __('Search Project', 'coders_artpad'),
-                'parent_item_colon' => __('Parent Project:', 'coders_artpad'),
-                'not_found' => __('No projects  found.', 'coders_artpad'),
-                'not_found_in_trash' => __('No projects found in Trash.', 'coders_artpad'),
-                'featured_image' => _x('Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_artpad'),
-                'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
-                'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
-                'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
-                'archives' => _x('Archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_artpad'),
-                'insert_into_item' => _x('Insert into Project', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_artpad'),
-                'uploaded_to_this_item' => _x('Uploaded to this Project', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_artpad'),
-                'filter_items_list' => _x('Filter Projects', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_artpad'),
-                'items_list_navigation' => _x('Projects Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_artpad'),
-                'items_list' => _x('Project List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_artpad'),
-            );
-                        
-            $coderepo_post = array(
-                   'labels'             => $post_labels,
-                   'public'             => FALSE,
-                   'publicly_queryable' => FALSE,
-                   'show_ui'            => FALSE,
-                   'show_in_menu'       => FALSE,
-                   'query_var'          => FALSE,
-                   'rewrite'            => array( 'slug' => 'coderepo-post' ),
-                   'capability_type'    => 'post',
-                   'has_archive'        => FALSE,
-                   'hierarchical'       => TRUE,
-                   'menu_position'      => null,
-                   'supports'           => array( 'title', 'editor', 'author', 'excerpt', 'comments' ),
-            );
-            
-            $coderepo_project = array(
-                   'labels'             => $project_labels,
-                   'public'             => FALSE,
-                   'publicly_queryable' => FALSE,
-                   'show_ui'            => FALSE,
-                   'show_in_menu'       => FALSE,
-                   'query_var'          => FALSE,
-                   'rewrite'            => array( 'slug' => 'coderepo-project' ),
-                   'capability_type'    => 'post',
-                   'has_archive'        => FALSE,
-                   'hierarchical'       => FALSE,
-                   'menu_position'      => null,
-                   'supports'           => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' ),
-            );
-            
-            register_post_type( 'coderepo_post', $coderepo_post );
-            register_post_type( 'coderepo_project', $coderepo_project );
-            
-        } );
+    public static final function setupPosts(){
+        if( !self::check('post') ){ return; }
+        $post_labels = array(
+            'name' => _x('Repository', 'Repo', 'coders_artpad'),
+            'singular_name' => _x('Resource', 'Post type singular name', 'coders_artpad'),
+            'menu_name' => _x('Repository', 'Admin Menu text', 'coders_artpad'),
+            'name_admin_bar' => _x('Resource', 'Add New on Toolbar', 'coders_artpad'),
+            'add_new' => __('Create', 'coders_artpad'),
+            'add_new_item' => __('Add New Resource', 'coders_artpad'),
+            'new_item' => __('New Resource', 'coders_artpad'),
+            'edit_item' => __('Edit Resource', 'coders_artpad'),
+            'view_item' => __('View Resource', 'coders_artpad'),
+            'all_items' => __('Repository', 'coders_artpad'),
+            'search_items' => __('Search Resource', 'coders_artpad'),
+            'parent_item_colon' => __('Parent Resource:', 'coders_artpad'),
+            'not_found' => __('No resources found.', 'coders_artpad'),
+            'not_found_in_trash' => __('No resources found in Trash.', 'coders_artpad'),
+            'featured_image' => _x('Resource Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'archives' => _x('Resource archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_artpad'),
+            'insert_into_item' => _x('Insert into Resource', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_artpad'),
+            'uploaded_to_this_item' => _x('Uploaded to this Resource', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_artpad'),
+            'filter_items_list' => _x('Filter Resources', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_artpad'),
+            'items_list_navigation' => _x('Repository Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_artpad'),
+            'items_list' => _x('Resource List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_artpad'),
+        );
+        $project_labels = array(
+            'name' => _x('Projects', 'Projects', 'coders_artpad'),
+            'singular_name' => _x('Project', 'Project', 'coders_artpad'),
+            'menu_name' => _x('Project', 'Project', 'coders_artpad'),
+            'name_admin_bar' => _x('Project', 'New Project', 'coders_artpad'),
+            'add_new' => __('Create', 'coders_artpad'),
+            'add_new_item' => __('Add New Project', 'coders_artpad'),
+            'new_item' => __('New Project', 'coders_artpad'),
+            'edit_item' => __('Edit Project', 'coders_artpad'),
+            'view_item' => __('View Project', 'coders_artpad'),
+            'all_items' => __('Projects', 'coders_artpad'),
+            'search_items' => __('Search Project', 'coders_artpad'),
+            'parent_item_colon' => __('Parent Project:', 'coders_artpad'),
+            'not_found' => __('No projects  found.', 'coders_artpad'),
+            'not_found_in_trash' => __('No projects found in Trash.', 'coders_artpad'),
+            'featured_image' => _x('Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'archives' => _x('Archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_artpad'),
+            'insert_into_item' => _x('Insert into Project', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_artpad'),
+            'uploaded_to_this_item' => _x('Uploaded to this Project', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_artpad'),
+            'filter_items_list' => _x('Filter Projects', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_artpad'),
+            'items_list_navigation' => _x('Projects Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_artpad'),
+            'items_list' => _x('Project List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_artpad'),
+        );
+
+        $coderepo_post = array(
+               'labels'             => $post_labels,
+               'public'             => FALSE,
+               'publicly_queryable' => FALSE,
+               'show_ui'            => FALSE,
+               'show_in_menu'       => FALSE,
+               'query_var'          => FALSE,
+               'rewrite'            => array( 'slug' => 'coderepo-post' ),
+               'capability_type'    => 'post',
+               'has_archive'        => FALSE,
+               'hierarchical'       => TRUE,
+               'menu_position'      => null,
+               'supports'           => array( 'title', 'editor', 'author', 'excerpt', 'comments' ),
+        );
+
+        $coderepo_project = array(
+               'labels'             => $project_labels,
+               'public'             => FALSE,
+               'publicly_queryable' => FALSE,
+               'show_ui'            => FALSE,
+               'show_in_menu'       => FALSE,
+               'query_var'          => FALSE,
+               'rewrite'            => array( 'slug' => 'coderepo-project' ),
+               'capability_type'    => 'post',
+               'has_archive'        => FALSE,
+               'hierarchical'       => FALSE,
+               'menu_position'      => null,
+               'supports'           => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' ),
+        );
+
+        register_post_type( 'coderepo_post', $coderepo_post );
+        register_post_type( 'coderepo_project', $coderepo_project );
+
     }
     /**
      * Send a message through the admin notifier
@@ -446,35 +458,43 @@ class ArtPad{
         //return \CODERS\ArtPad\Text::__($text);
     }
     /**
-     * @param string $name
+     * @param string $status
      */
-    public static final function ts( $name ){
-        if(strlen($name)){
-            self::$_stamp[ $name ] = time();
+    public static final function ts( $status ){
+        self::check($status);
+    }
+    /**
+     * @param string $status
+     * @return boolean
+     */
+    public static final function check( $status ){
+        if( strlen($status) && !array_key_exists($status, self::$_status) ){
+            self::$_status[ $status ] = time();
+            return TRUE;
         }
+        return FALSE;
     }
     /**
      * @return array
      */
-    public static final function stamp( $asDate = FALSE ){
-        if( $asDate ){
+    public static final function stamp( $asCounter = FALSE ){
+        if( $asCounter ){
+            $first = 0;
             $output = array();
-            foreach( self::$_stamp as $id => $ts ){
-                $output[ $id ] = date('Y-m-d H:i:s',$ts);
+            foreach( self::$_status as $id => $ts ){
+                if( $first > 0 ){
+                    $output[ $id ] = ($ts - $first);
+                }
+                else{
+                    $output[ $id ] = $first;
+                    $first = $ts;
+                }
+                //$output[ $id ] = date('Y-m-d H:i:s',$ts);
             }
             return $output;
         }
-        return self::$_stamp;
+        return self::$_status;
     }
-    /**
-     * @return \ArtPad
-     */
-    /**static final function instance(){
-        if(is_null(self::$_INSTANCE)){
-            self::init();
-        }
-        return self::$_INSTANCE;
-    }*/
 }
 
 ArtPad::init();

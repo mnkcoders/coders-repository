@@ -91,6 +91,68 @@ final class CollectionView extends \CODERS\ArtPad\View{
 
         return $collection;
     }
+    /**
+     * @return array
+     */
+    protected final function listGrid(){
+        return array( 2,4,6,8);
+    }
+    /**
+     * @return array
+     */
+    protected final function listRoute(){
+        
+        //add home here
+        
+        return $this->hasModel() ? $this->model()->list_route() : array();
+    }
+    /**
+     * @return boolean
+     */
+    protected final function isImage(){
+        return $this->hasModel() && $this->model()->is_image;
+    }
+    /**
+     * @return boolean
+     */
+    protected final function isText(){
+        return $this->hasModel() && $this->model()->is_text;
+    }
+    /**
+     * @return boolean
+     */
+    protected final function isPost(){
+        return $this->hasModel() && $this->model()->value('ID') > 0;
+    }
+    /**
+     * @return string
+     */
+    protected final function getAttachmentContent(){
+        return $this->hasModel() ? $this->model()->attachment : '';
+    }
+    /**
+     * @return int
+     */
+    protected final function getPostId(){
+        return $this->hasModel() ? $this->model()->value('ID') : 0;
+    }
+    /**
+     * @return string
+     */
+    protected final function getAttachmentUrl(){
+        return $this->hasModel() ? $this->model()->attachment_url : '';
+    }
+    /**
+     * @return string
+     */
+    protected final function getUploadUrl(){
+        
+        $post_id = $this->getPostId();
+        
+        return $post_id > 0 ?
+                \CODERS\ArtPad\Request::url('admin.collection' , array('ID'=>$post_id)) :
+                \CODERS\ArtPad\Request::url('admin.collection') ;
+    }
 }
 
 

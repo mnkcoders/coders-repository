@@ -106,13 +106,15 @@ final class AjaxController extends \CODERS\ArtPad\Response{
         
         $ID = $request->getInt('ID');
         
-        $removed = array();
+        $item = \CODERS\ArtPad\Resource::load($ID);
         
-        if( $ID > 0 && \CODERS\ArtPad\Resource::remove($ID) ){
-            $removed[] = $ID;
+        $removed = FALSE;
+        
+        if( FALSE !== $item ){
+            $removed = $item->delete();
         }
         
-        return $this->ajax(array('removed' => $removed ) );
+        return $this->ajax( $removed );
     }
     /**
      * @param \CODERS\ArtPad\Request $request
