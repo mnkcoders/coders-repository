@@ -289,6 +289,22 @@ final class Resource{
         return FALSE;
     }
     /**
+     * @return boolean
+     */
+    public final function moveUp(){
+        $parent_id = $this->_meta['parent_id'];
+        if( $parent_id > 0 ){
+            
+            $parent = self::load($parent_id);
+            
+            if( FALSE !== $parent ){
+                
+                return $this->setParent( $parent->_meta['parent_id'] );
+            }
+        }
+        return FALSE;
+    }
+    /**
      * @param int $parent_id
      * @return boolean
      */

@@ -372,7 +372,8 @@ function CollectionView( ){
         btnTitle.addEventListener( 'click' , function(e){
             e.preventDefault();
             e.stopPropagation();
-            CollectionView.Drag.reset();
+            CollectionView.Drag.release();
+            _view.getContainer('collection').enable();
             var id = this.parentNode.parentNode.getAttribute('data-id');
             if( null !== id ){
                 id = parseInt( id );
@@ -384,7 +385,8 @@ function CollectionView( ){
         btnRemove.addEventListener('click',function(e){
                 e.preventDefault();
                 e.stopPropagation();
-                CollectionView.Drag.reset();
+                CollectionView.Drag.release();
+                _view.getContainer('collection').enable();
                 _server.remove( itemData.ID, _view.remove );
                 return false;
             });
@@ -399,9 +401,16 @@ function CollectionView( ){
             btnParent.addEventListener( 'click', function(e){
                 e.preventDefault();
                 e.stopPropagation();
-                CollectionView.Drag.reset();
-                var id = this.parentNode.parentNode.getAttribute('data-id');
-                _server.attach( id , 0 , _view.attach );
+                CollectionView.Drag.release();
+                _view.getContainer('collection').enable();
+                var item = this.parentNode.parentNode;
+                var id = item.getAttribute('data-id');
+                //_server.attach( id , 0 , _view.attach );
+                _server.up( id , function(){
+                    item.remove();
+                    //console.log( item );
+                    //console.log( id + ' moved up!');
+                });
                 return false;
             });
             elements.push( btnParent );
@@ -510,45 +519,47 @@ function CollectionView( ){
      */
     function apply_drag_drop_v2( element ){
         if( element instanceof HTMLElement ){
-            var event_list = ['mousedown','mouseup','mouseout','mouseenter'];
+            var event_list = ['click','mousedown','mouseup','mouseout','mouseenter'];
             event_list.forEach( function( event ){
                 element.addEventListener( event , function(e){
                     e.preventDefault();
                     e.stopPropagation();
                     switch( event ){
+                        case 'click':
+                            CollectionView.Drag.release();
+                            _view.getContainer('collection').enable();
+                            break;
                         case 'mouseout':
-                            CollectionView.Drag.stack();
+                            CollectionView.Drag.dragOut( this );
                             break;
                         case 'mousedown':
-                            var current = this.getAttribute('data-id');
-                            if( CollectionView.Drag.capture( current ) ){
-                                this.classList.add('captured');
-                                CollectionView.Drag.setDraggable(this );
+                            //var current = this.getAttribute('data-id');
+                            if( CollectionView.Drag.capture( this ) ){
+                                //this.classList.add('captured');
+                                //CollectionView.Drag.setDraggable(this );
+                                _view.getContainer('collection').disable();
                                 return true;
                             }
                             break;
                         case 'mouseup':
-                            var current = this.getAttribute('data-id');
-                            if( CollectionView.Drag.stack( current ) ){
-                                var item = this;
-                                item.classList.add('attached');
-                                var source = CollectionView.Drag.ID;
-                                console.log( source + ' stacked into ' + current );
-                                _server.attach( source , current , _view.attach );
-                                window.setTimeout(function(){
-                                    item.classList.remove('attached');
-                                },1000);
-                                CollectionView.Drag.reset();
+                            //var current = this.getAttribute('data-id');
+                            var target_id = CollectionView.Drag.dragOver( this );
+                            if( target_id > 0 ){
+                                _server.attach(
+                                        CollectionView.Drag.ID ,
+                                        target_id ,
+                                        function(){} );
+                                console.log( CollectionView.Drag.ID + ' stacked into ' + target_id );
+                                _view.getContainer('collection').enable();
+                                CollectionView.Drag.stack();
+                                //CollectionView.Drag.dragOut( this );
                                 return true;
                             }
-                            CollectionView.Drag.unsetDraggable();
                             break;
                         case 'mouseenter':
-                            var current = this.getAttribute('data-id');
-                            if (CollectionView.Drag.stack(current)) {
-                                console.log('Moving '
-                                        + CollectionView.Drag.ID
-                                        + ' over ' + current);
+                            var id = CollectionView.Drag.dragOver( this );
+                            if ( id > 0 ) {
+                                console.log('Moving ' + CollectionView.Drag.ID + ' over ' + id);
                                 return true;
                             }
                             break;
@@ -602,7 +613,7 @@ function CollectionView( ){
                                 var item = this;
                                 item.classList.remove('attached');
                             }
-                            CollectionView.Drag.reset();
+                            CollectionView.Drag.release();
                             return true;
                     }
                     return false;
@@ -772,10 +783,22 @@ function CollectionView( ){
         
         var collection = _view.element('ul', {'class': 'collection grid-4' })
         
+        collection.enable = function(){
+            if( this.classList.contains('disabled') ){
+                this.classList.remove('disabled');
+            }
+            return this;
+        };
+        collection.disable = function(){
+            this.classList.add('disabled');
+            return this;
+        };
+        
         collection.addEventListener( 'mouseup' ,function(e){
             e.preventDefault();
             e.stopPropagation();
-            CollectionView.Drag.reset().unsetDraggable();
+            CollectionView.Drag.release();
+            _view.getContainer('collection').enable();
             return false;
         });
         
@@ -822,83 +845,120 @@ CollectionView.Drag = {
     'ID':0,
     'timer':0,
     'elapsed': 800,
-    /**
-     * @type Element
-     */
-    'element':null,
-    /**
-     * @param {Element} element
-     * @returns {CollectionView.Drag}
-     */
-    'setDraggable': function( element ){
-        this.unsetDraggable();
-        this.element = element;
-        this.element.classList.add('captured');
-        return this;
-    },
-    /**
-     * @returns {CollectionView.Drag}
-     */
-    'unsetDraggable':function(){
-        if( this.element !== null ){
-            this.element.classList.remove('captured');
-            this.element = null;
+    'Icon':{
+        'getDraggable':function(){
+            var drag = document.getElementById('artpad-draggable');
+            if( drag === null ){
+                drag = document.createElement('div');
+                drag.id = 'artpad-draggable';
+                drag.move = function( x , y ){
+                    this.style.left = ( x - this.style.width/2 ) + 'px';
+                    this.style.top = ( y - this.style.height/2 ) + 'px';
+                };
+                document.body.appendChild(drag);
+            }
+            return drag;
+        },
+        'show':function( ){
+            var drag = this.getDraggable();
+            window.addEventListener('mousemove',function(e){
+                //console.log(e.offsetX);
+                drag.move( e.offsetX , e.offsetY );
+            });
+            drag.classList.add('show');
+            return this;
+        },
+        'clear':function( ){
+            var drag = document.getElementById('artpad-draggable');
+            if( drag !== null ){
+                drag.classList.remove('show');
+                drag.remove();
+            }
+            return this;
         }
-        return this;
     },
     /**
+     * @type HTMLElement
+     */
+    'item': null,
+    /**
+     * @param {HTMLElement} item
      * @returns {CollectionView.Drag}
      */
-    'capture': function( id ){
-        if( this.ID === 0 ){
-            this.timer = window.setTimeout( function(){
-                CollectionView.Drag.ID = parseInt(id);
-                console.log(CollectionView.Drag.ID + ' captured!');
-            },this.elapsed);
-            return true;
+    'capture': function( source ){
+        if( this.ID === 0  && source !== false ){
+            var id = source.getAttribute( 'data-id' );
+            if( typeof id !== 'undefined' ){
+                this.timer = window.setTimeout( function(){
+                    source.classList.add('captured');
+                    CollectionView.Drag.release();
+                    CollectionView.Drag.item = source;
+                    CollectionView.Drag.ID = parseInt(id);
+                    CollectionView.Drag.Icon.show();
+                    console.log(CollectionView.Drag.ID + ' captured!');
+                },this.elapsed);
+                return true;
+            }
         }
         return false;
     },
     /**
-     * @param {Number} id
-     * @returns {Boolean}
+     * @returns {CollectionView.Drag}
      */
-    'set': function( id ){
-        if( this.ID === 0 ){
-            this.ID = parseInt( id );
-            console.log(CollectionView.Drag.ID + ' captured!');
-            return true;
+    'stack': function(  ){
+        if( this.item !== null  ){
+            this.item.remove();
+            this.item = null;
         }
-        return false;
+        return this.release();
     },
     /**
      * @returns {CollectionView.Drag}
      */
-    'cancel': function(){
-        if( this.timer > 0 ){
-            window.clearTimeout(this.timer);
-            this.timer = 0;
-        }
-        return this;
-    },
-    /**
-     * @param {String|Number} id
-     * @returns {Boolean}
-     */
-    'stack':function (id) {
-        if (this.ID === 0) { return false; }
-        if (typeof id === 'undefined') { id = 0; }
-        return this.ID !== parseInt(id);
-    },
-    /**
-     * @returns {CollectionView.Drag}
-     */
-    'reset':function () {
+    'release': function(){
+        CollectionView.Drag.Icon.clear();
         if( this.ID ){
             console.log(this.ID + ' released!');
             this.ID = 0;
         }
-        return this.cancel();
+        if( this.timer > 0 ){
+            window.clearTimeout(this.timer);
+            this.timer = 0;
+        }
+        if( this.item !== null ){
+            this.item.classList.remove('captured');
+            this.item = null;
+        }
+        return this;
+    },
+    /**
+     * @returns {CollectionView.Drag}
+     */
+    'dragOut': function( target ){
+        if( typeof target !== 'undefined' ){
+            if( target.classList.contains('attached')){
+                window.setTimeout(function(){
+                    target.classList.remove('attached');
+                },1000);
+            }
+        }
+        return this;
+    },
+    /**
+     * @param {HTMLElement} target
+     * @returns {Number}
+     */
+    'dragOver':function ( target ) {
+        if (this.ID === 0) { return false; }
+        if( typeof target !== 'undefined' ){
+            var id = target.getAttribute('data-id') || 0;
+            if( id > 0 ){
+                id = parseInt( id );
+                target.classList.add('attached');
+                return this.ID !== id ? id : 0;
+            }
+        }
+        return 0;
     }
 };
 /**
@@ -1110,6 +1170,27 @@ function CollectionModel( syncHandler ){
         return this.enqueueUpload( files );
     };
     /**
+     * 
+     * @param {Number} id
+     * @param {Function} handler
+     * @returns {CollectionModel}
+     */
+    this.up = function( id , handler){
+        request( 'attach' , {'ID':id } , function( response ){
+            if( _client.debug ){
+                console.log( response );
+            }
+            if( parseInt( response.data ) > 0 ){
+                //handler( attach_id , to_id );
+                handler();
+            }
+            else{
+                console.log( 'Failed to move up ' + id );
+            }
+        } );
+        return this;
+    },
+    /**
      * Attach a resource under a parent resource by ID
      * @param {Number} attach_id
      * @param {Number} to_id
@@ -1119,10 +1200,11 @@ function CollectionModel( syncHandler ){
     this.attach = function( attach_id , to_id , handler ){
         request( 'attach' , {'ID':attach_id,'parent_id' : to_id } , function( response ){
             if( _client.debug ){
-                //console.log( response );
+                console.log( response );
             }
             if( parseInt( response.data ) > 0 ){
-                handler( attach_id , to_id );
+                //handler( attach_id , to_id );
+                handler();
             }
             else{
                 console.log( 'Failed to attach ' + attach_id + ' to ' + to_id );

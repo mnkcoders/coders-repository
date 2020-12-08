@@ -250,38 +250,52 @@ class ArtPad{
                 add_rewrite_endpoint( ArtPad::ENDPOINT, EP_ROOT );
                 //ArtPad::setupRewrite( );
             }
-        });
+        },10);
         //Setup Route management
+        //add_action( 'parse_query', function( ){
         add_action( 'template_redirect', function( ){
-            if( !ArtPad::check('redirect')) { return; }
-            global $wp , $wp_query;
-            $query = $wp->query_vars;
-            if (array_key_exists(ArtPad::ENDPOINT, $query)) {
+            $endpoint = get_query_var(ArtPad::ENDPOINT  );
+            if ( strlen($endpoint)) {
+                if( !ArtPad::check('redirect')) { return; }
+                global $wp_query;
                 $wp_query->set('is_404', FALSE);
-                $endpoint = $query[ArtPad::ENDPOINT];
-                $path = explode('.', $endpoint );
+                $path = explode('.', strtolower( $endpoint ) );
                 switch( $path[0] ){
                     case 'admin':
                         //locked in public
                         break;
                     case 'rid':
-                        $resource = CODERS\ArtPad\Resource::import($path[1]);
-                        if (FALSE !== $resource) {
-                            $resource->stream();
-                            exit;
+                        if( count( $path ) > 1){
+                            $resource = CODERS\ArtPad\Resource::import($path[1]);
+                            if (FALSE !== $resource) {
+                                $resource->stream();
+                            }
+                            ArtPad::terminate();
+                            //exit;
                         }
                         break;
                     default:
                         $module = ArtPad::module($path[0]);
                         if(FALSE !== $module && $module->run( $endpoint )){
-                            exit;
+                            ArtPad::terminate();
+                            //exit;
                         }
                         break;
                 }
                 //hooked repository app, exit WP framework into WP error display
-                wp_die('Invalid Endpoint');
+                //wp_die('Invalid Endpoint');
             }
-        });
+        },10);
+    }
+    /**
+     * 
+     */
+    public static final function RequestHack(){
+        $rid = \CODERS\ArtPad\Request::match();
+        if( strlen($rid) ){
+            \CODERS\ArtPad\Resource::load($rid);
+            exit;
+        }
     }
     /**
      * @global wpdb $wpdb
@@ -315,6 +329,14 @@ class ArtPad{
             }
         }
         return FALSE;
+    }
+    /**
+     * @global WP_Query $wp_query
+     */
+    public static final function terminate(){
+        global $wp_query;
+        $wp_query->set('is_404', FALSE);
+        exit;
     }
     /**
      * @param boolean $flush FALSE default

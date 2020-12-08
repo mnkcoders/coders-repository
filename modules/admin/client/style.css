@@ -1,11 +1,15 @@
 /**/
 #artpad-draggable{
     position: absolute;
-    display: block;
+    display: none;
     width: 100px;
     height: 100px;
     border-radius: 3px;
-    background-color: rgba(0,0,0,0.25);
+    background-color: rgba(255,255,255,0.55);
+    z-index: -100;
+}
+#artpad-draggable.show{
+    display: block;
     z-index: 100;
 }
 #artpad-draggable:before{
@@ -276,15 +280,30 @@
     box-shadow: 0 0 4px rgba(0,0,0,0.1);
     border-radius: 4px;
     transition: 140ms ease-in;
+    position: relative;
+}
+.coders-artpad ul.collection > li.item:before{
+    content: '';
+    opacity: 0;
+    display: block;
+    background-color: #d5d5d5;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    transition: ease-in 240ms;
+}
+.coders-artpad ul.collection > li.item.captured:before{
+    margin: 20% auto;
+    width: 60%; height: 60%;
+    opacity: 1;
+    border-radius: 50%;
 }
 .coders-artpad ul.collection > li.item.captured{
-    box-shadow: -1px -1px 2px rgba(0,0,0,0.5);
+    box-shadow: none;
 }
 .coders-artpad ul.collection > li.item.attached{
     background-color: rgba(255,255,255,1);
     box-shadow: 0 0 8px rgba(0,0,0,0.35);
 }
-
 
 
 .coders-artpad  ul.collection.grid-2 > li.item{
@@ -397,7 +416,7 @@
     transition: ease-in 250ms;
     cursor: pointer;
 }
-.coders-artpad ul.collection > li.item > .content .action:hover{
+.coders-artpad ul.collection > li.item:not(.captured) > .content .action:hover{
     background-color: rgba(255,255,255,0.85);
     color: rgba(24,24,24,0.85);
 }

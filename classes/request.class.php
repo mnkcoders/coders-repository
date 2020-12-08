@@ -218,6 +218,18 @@ final class Request{
         return '';
     }
     /**
+     * @param string $route
+     * @return \CODERS\ArtPad\Request
+     */
+    public final function redirect( $route = self::_DEFAULT , array $input = array( ) ){
+        $action = explode('.', $route);
+        $this->_module = $action[0];
+        $this->_controller = count( $action ) > 1 ? $action[1] : 'main';
+        $this->_action = count( $action ) > 2 ? $action[2] : 'default';
+        $this->_input = $input;
+        return $this;
+    }
+    /**
      * @param string $request
      * @param array $args
      * @return string
@@ -371,16 +383,32 @@ final class Request{
         return array();
     }
     /**
-     * @param string $route
-     * @return \CODERS\ArtPad\Request
+     * @return string|URL
      */
-    public final function redirect( $route = self::_DEFAULT , array $input = array( ) ){
-        $action = explode('.', $route);
-        $this->_module = $action[0];
-        $this->_controller = count( $action ) > 1 ? $action[1] : 'main';
-        $this->_action = count( $action ) > 2 ? $action[2] : 'default';
-        $this->_input = $input;
-        return $this;
+    public static final function fullPath(){
+        $host = filter_input(INPUT_SERVER, 'HTTP_HOST');
+        $uri = filter_input(INPUT_SERVER, 'REQUEST_URI');
+        
+        $https = ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' );
+        return sprintf(sprintf('%s://%s%s',
+                $https ? 'https' : 'http',
+                $host, $uri));
+    }
+    /**
+     * @return string
+     */
+    public static final function match( ){
+
+        $url = self::fullPath();
+        
+        if( preg_match('/\/artpad\/rid.[a-z\-0-9]/i', $url) ){
+            $match = sprintf('/%s/rid.', \ArtPad::ENDPOINT);
+            return preg_replace(
+                    '/\//', '', 
+                    substr($url, strpos($url, $match ) + strlen($match)));
+        }
+        
+        return '';
     }
 }
 

@@ -72,6 +72,17 @@ final class AjaxController extends \CODERS\ArtPad\Response{
         return $this->ajax($response);
     }
     /**
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
+    protected function up_action( \CODERS\ArtPad\Request $request ){
+        $id = $request->getInt('ID');
+        
+        $item = \CODERS\ArtPad\Resource::load($id );
+        
+        return $this->ajax( FALSE !== $item && $item->moveUp() );
+    }
+    /**
      * 
      * @param \CODERS\ArtPad\Request $request
      * @return boolean
