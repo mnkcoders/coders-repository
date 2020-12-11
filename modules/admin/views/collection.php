@@ -153,6 +153,35 @@ final class CollectionView extends \CODERS\ArtPad\View{
                 \CODERS\ArtPad\Request::url('admin.collection' , array('ID'=>$post_id)) :
                 \CODERS\ArtPad\Request::url('admin.collection') ;
     }
+    /**
+     * @return int
+     */
+    protected final function getGridOption(){
+        return \ArtPad::getOption('grid');
+    }
+    /**
+     * @return \CODERS\ArtPad\Model
+     */
+    protected final function getModel(){
+        return $this->model();
+    }
+    /**
+     * @return string
+     */
+    protected final function inputTier( ){
+        
+        $options = $this->hasModel() ? $this->model()->list_tiers : array();
+        
+        $value = 0;
+        
+        return count($options) ?
+                self::renderDropDown('tier', $options, $value) :
+                self::__HTML('a', array(
+                    'href'=> \CODERS\ArtPad\Request::url('admin.main'),
+                    'target' => '_self',
+                    'class' => 'link'
+                ),__('Create a tier','coders_artpad')) ;
+    }
 }
 
 

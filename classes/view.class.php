@@ -132,10 +132,10 @@ abstract class View{
                 if(is_array($arguments) && count($arguments)){
                     $action = $arguments[0];
                     $label = count( $arguments) > 1 ? $arguments[1] : $action;
-                    $class = count( $arguments) > 2 ? $arguments[2] : '';
+                    $class = count( $arguments) > 2 ? $arguments[2] : 'button';
                     $url = \CODERS\ArtPad\Request::url($action);
                     return self::__HTML('a', array(
-                        'class' => 'button ' . $class,
+                        'class' => $class,
                         'href' => $url,
                         'target' => '_self'
                     ), $label);

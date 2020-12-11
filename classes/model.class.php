@@ -388,7 +388,7 @@ abstract class Model{
      * @return \CODERS\ArtPad\Model | boolean
      * @throws \Exception
      */
-    public static final function create( $request , $data = array() ){
+    public static function create( $request , $data = array() ){
         
         try{
             $extract = explode('.', $request);

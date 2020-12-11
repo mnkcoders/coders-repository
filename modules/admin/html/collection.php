@@ -6,3 +6,4 @@
 </div>
 <?php //var_dump($this->list_items ) ?>
 <?php //var_dump($this->tree() ) ?>
+<?php var_dump(\ArtPad::getOption('grid')); ?>

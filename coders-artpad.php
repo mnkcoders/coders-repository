@@ -517,7 +517,27 @@ class ArtPad{
         }
         return self::$_status;
     }
+    /**
+     * @param string $option
+     * @param mixed $value
+     * @return boolean
+     */
+    public static final function setOption( $option , $value ){
+        return update_option(sprintf('%s_%s',self::ENDPOINT,$option), $value);
+    }
+    /**
+     * @param string $option
+     * @param mixed $default
+     * @return mixed
+     */
+    public static final function getOption( $option , $default = FALSE ){
+        return get_option(sprintf('%s_%s',self::ENDPOINT,$option), $default );
+    }
 }
 
 ArtPad::init();
+
+
+
+
 

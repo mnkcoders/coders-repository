@@ -273,7 +273,10 @@
     height: 0;
     clear: both;
 }
-
+.coders-artpad ul.collection.stacking > .item > .content{
+    pointer-events: none;
+    opacity: 0.75;
+}
 
 .coders-artpad ul.collection > li.item{
     box-sizing: border-box;
@@ -408,9 +411,9 @@
 .coders-artpad ul.collection > li.item > .content:hover > img{
     transform: scale(1.1);
 }
-.coders-artpad ul.collection > li.item > .content .action{
+.coders-artpad ul.collection > li.item > .content > .caption,
+.coders-artpad ul.collection > li.item > .content > .action{
     position: absolute;
-
     color: rgba(0,0,0,0);
     background-color: transparent;
     transition: ease-in 250ms;
@@ -425,10 +428,12 @@
     padding: 4px;
     margin: 2px;
 }
-.coders-artpad ul.collection > li.item > .content .action.center{
-    text-align: center;
+.coders-artpad ul.collection > li.item:not(.captured) > .content:hover > .caption{
+    color: rgba(0,0,0,1);
+    text-shadow: 0 0 8px rgba(0,0,0,0.1);
+    background-color: rgba(255,255,255,0.25);
 }
-.coders-artpad ul.collection > li.item > .content .action.cover{
+.coders-artpad ul.collection > li.item > .content .caption{
     top: 0; left: 0; right: 0; bottom: 0;
     width: 100%;
     color: transparent;

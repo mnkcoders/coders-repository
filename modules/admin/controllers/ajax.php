@@ -131,6 +131,29 @@ final class AjaxController extends \CODERS\ArtPad\Response{
      * @param \CODERS\ArtPad\Request $request
      * @return boolean
      */
+    protected final function set_grid_action( \CODERS\ArtPad\Request $request ){
+        
+        $size = $request->getInt('size');
+        //2,3,4,6,8
+        $success = \ArtPad::setOption('grid', $size);
+        
+        return $this->ajax($success ? $size : 0);
+    }
+    /**
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
+    protected final function get_grid_action( \CODERS\ArtPad\Request $request ){
+        
+        //2,3,4,6,8
+        $size = \ArtPad::getOption( 'grid' , 4 );
+
+        return $this->ajax( $size );
+    }
+    /**
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
     protected final function error(\CODERS\ArtPad\Request $request) {
 
         return $this->ajax(array(
