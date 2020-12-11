@@ -26,6 +26,13 @@ final class DashboardView extends \CODERS\ArtPad\View{
      * @param string $id
      * @return string
      */
+    protected final function getDashBoardUrl( ){
+        return \CODERS\ArtPad\Request::url('admin.main');
+    }
+    /**
+     * @param string $id
+     * @return string
+     */
     protected final function getProjectUrl( $id ){
         return \CODERS\ArtPad\Request::url('admin.main.project',array('ID'=>$id));
     }

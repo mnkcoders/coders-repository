@@ -51,12 +51,14 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_subscription` (
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_project` (
  `ID` varchar(12) NOT NULL,
  `title` varchar(64) NOT NULL,
- `content` longtext NOT NULL,
- `status` tinyint(1) NOT NULL,
- `image_id` bigint(20) NOT NULL COMMENT 'wordpress gallery',
- `collection_id` int(11) NOT NULL COMMENT 'repository collection',
+ `content` longtext,
+ `access_level` VARCHAR(12) NOT NULL DEFAULT 'private',
+ `status` tinyint(1) DEFAULT '0',
+ `image_id` bigint(20) DEFAULT '0' COMMENT 'wordpress gallery',
+ `collection_id` int(11) DEFAULT '0' COMMENT 'repository collection',
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL
+ PRIMARY KEY (`ID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE `{{TABLE_PREFIX}}_post` (
@@ -65,7 +67,7 @@ CREATE TABLE `{{TABLE_PREFIX}}_post` (
  `parent_id` int(11) NOT NULL DEFAULT '0',
  `name` varchar(32) NOT NULL,
  `type` varchar(12) NOT NULL,
- `collection` varchar(24) NOT NULL,
+ /*`collection` varchar(24) NOT NULL,*/
  `title` varchar(64) NOT NULL,
  `content` longtext NOT NULL,
  `tier_id` varchar(24) NOT NULL DEFAULT '',

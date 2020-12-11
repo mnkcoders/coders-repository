@@ -13,10 +13,16 @@ final class MainController extends \CODERS\ArtPad\Response{
         $view->setModel($model)->setLayout('dashboard')->display();
         return TRUE;
     }
-    
-    protected final function project_action( \CODERS\ArtPad\Request $request ){
+    /**
+     * @param \CODERS\ArtPad\Request $request
+     * @param \CODERS\ArtPad\Project|boolean $project
+     * @return boolean
+     */
+    protected final function project_action( \CODERS\ArtPad\Request $request , $project = FALSE ){
         
-        $project = \CODERS\ArtPad\Project::load( $request->get('ID',''));
+        if( $project === FALSE ){
+            $project = \CODERS\ArtPad\Project::load( $request->get('ID',''));
+        }
         
         $this->importView('admin.project')
                 ->setModel($project)
@@ -24,6 +30,29 @@ final class MainController extends \CODERS\ArtPad\Response{
                 ->display();
         
         return TRUE;
+    }
+    /**
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
+    protected final function save_project_action( \CODERS\ArtPad\Request $request ){
+        
+        $ID = $request->get('ID',0);
+        
+        if( $ID ){
+            $project = \CODERS\ArtPad\Project::load($ID);
+            if( FALSE !== $project){
+                var_dump($request->input());
+                if( $project->import( $request->input())->save()){
+                    
+                }
+                else{
+                    
+                }
+            }
+        }
+        
+        return $this->project_action($request);
     }
     /**
      * 
@@ -61,8 +90,24 @@ final class MainController extends \CODERS\ArtPad\Response{
         
         return TRUE;
     }
-    
+    /**
+     * @param \CODERS\ArtPad\Request $request
+     * @return boolean
+     */
     protected final function create_action( \CODERS\ArtPad\Request $request ){
+        
+        $title = $request->get('title','');
+        
+        if(strlen($title)){
+            $project = \CODERS\ArtPad\Project::New( $title );
+            $this->importView('admin.project')
+                    ->setModel($project)
+                    ->setLayout('project')
+                    ->display();
+        }
+        else{
+            return $this->default_action($request);
+        }
         
         return TRUE;
     }

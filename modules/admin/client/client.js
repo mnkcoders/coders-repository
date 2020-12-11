@@ -146,7 +146,7 @@ function ArtPadView( ){
         tabContainer.prepend( _view.element('ul',{'class':'tab-menu inline'},tabs));
         tabContainer.TabMenu = function(){ return this.children[0]; };
         tabContainer.toggleTab();
-        return rabContainer;
+        return tabContainer;
     };
     /**
      * @returns {ArtPadView}

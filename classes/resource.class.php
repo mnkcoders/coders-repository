@@ -13,7 +13,7 @@ final class Resource{
         'parent_id' => 0,
         'name'=>'',
         'type'=>'',
-        'collection'=>'default',
+        //'collection'=>'default',
         'title' => '',
         'tier_id' => '',
         'content' => '',
@@ -386,7 +386,7 @@ final class Resource{
                     throw new \Exception('EMPTY_FILETYPE_ERROR');
                     //break;
                 case !array_key_exists('collection', $meta):
-                    $meta['collection'] = 'default';
+                    //$meta['collection'] = 'default';
                     break;
             }
             

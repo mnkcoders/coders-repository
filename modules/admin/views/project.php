@@ -10,8 +10,16 @@ final class ProjectView extends \CODERS\ArtPad\View{
         
     }
     
-    protected final function getTierUrl( $tier_id ){
-        return \CODERS\ArtPad\Request::url('admin.main.tier',array('ID'=>$tier_id));
+    protected final function getTierUrl( $ID ){
+        return \CODERS\ArtPad\Request::url('admin.main.tier',array('ID'=>$ID));
+    }
+    
+    protected final function getProjectUrl( $ID ){
+        return \CODERS\ArtPad\Request::url('admin.main.project',array('ID'=>$ID));
+    }
+    
+    protected final function getSaveProjectUrl( $ID ){
+        return \CODERS\ArtPad\Request::url('admin.main.save_project',array('ID'=>$ID));
     }
     
     protected final function getTierTitle(){
@@ -25,6 +33,16 @@ final class ProjectView extends \CODERS\ArtPad\View{
             }
         }
         return '';
+    }
+    /**
+     * @return string
+     */
+    protected final function displayAccessLevel(){
+        $options = $this->hasModel() ? $this->model()->list_access_level : array();
+        $value = $this->hasModel() ? $this->model()->access_level : 'private';
+        $label = $this->hasModel() ? $this->model()->label_access_level : __('Access Level','coders_artpad');
+        
+        return self::renderDropDown('access_level', $options, $value, $label );
     }
     /**
      * @return string

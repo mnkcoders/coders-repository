@@ -1,5 +1,5 @@
 <?php defined ('ABSPATH') or die; ?>
-<table class="widefat fixed integrations tab-panel" data-tab="integrations">
+<table class="widefat fixed artpad-container">
     <thead>
         <tr>
             <th><h2><?php print __('Integrations','coders_artpad') ?></h2></th>

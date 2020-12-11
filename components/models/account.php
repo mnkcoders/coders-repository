@@ -94,7 +94,7 @@ final class Account extends \CODERS\ArtPad\Model{
                 $ts = $this->__ts();
                 $this->setValue('date_created',$ts)->setValue('date_updated',$ts);
 
-                $values = $this->values();
+                $values = $this->listValues();
 
                 $result += $query->insert( 'account' , $values );
             }

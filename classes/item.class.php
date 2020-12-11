@@ -35,7 +35,8 @@ final class Item extends Model{
                 ->define('date_created',parent::TYPE_DATETIME)
                 ->define('date_updated',parent::TYPE_DATETIME);
         
-        $this->populate($data);
+        //$this->populate($data);
+        parent::__construct($data);
     }
     /**
      * @return \CODERS\ArtPad\Query
@@ -288,7 +289,7 @@ final class Item extends Model{
     private static final function register( \CODERS\ArtPad\Item $item ){
         
         $db = self::newQuery();
-        $inserted = $db->insert('post', $item->values());
+        $inserted = $db->insert('post', $item->listValues());
         return $inserted !== FALSE && $inserted > 0;
 
     }

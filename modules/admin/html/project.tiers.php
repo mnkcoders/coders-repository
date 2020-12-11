@@ -1,5 +1,5 @@
 <?php defined ('ABSPATH') or die; ?>
-<table class="widefat fixed tiers tab-panel" data-tab="tiers">
+<table class="widefat fixed tiers artpad-container">
     <thead>
         <tr>
             <th colspan="2">

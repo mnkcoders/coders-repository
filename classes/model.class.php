@@ -25,7 +25,7 @@ abstract class Model{
     protected function __construct( array $data = array( ) ) {
         
         if( count( $data ) ){
-            $this->populate($data);
+            $this->__populate($data);
         }
     }
     /**
@@ -197,10 +197,25 @@ abstract class Model{
      * @param array $input
      * @return \CODERS\ArtPad\Model
      */
-    protected function populate( array $input ){
+    private final function __populate( array $input ){
         foreach( $input as $element => $value ){
             $this->setValue($element, $value);
         }
+        return $this;
+    }
+    /**
+     * Combine elements from
+     * @param array $data Import data from
+     * @return \CODERS\ArtPad\Model
+     */
+    public function import( array $data ){
+        
+        foreach( $data as $element => $value ){
+            if( $this->has($element)){
+                $this->setValue($element,$value);
+            }
+        }
+        
         return $this;
     }
     /**
@@ -242,19 +257,6 @@ abstract class Model{
             return FALSE;
         }
         return TRUE;
-    }
-    /**
-     * Combine elements from
-     * @param \CODERS\ArtPad\Model $model Model to import data from
-     * @return \CODERS\ArtPad\Model
-     */
-    public function import( \CODERS\ArtPad\Model $model ){
-        
-        foreach( $model->elements() as $element ){
-            $this->setValue($element,$model->value($element));
-        }
-        
-        return $this;
     }
     /**
      * @param string $element
@@ -368,7 +370,7 @@ abstract class Model{
     /**
      * @return array
      */
-    public final function values(){
+    public final function listValues(){
         $output = array();
         foreach( $this->elements() as $element ){
             $output[$element] = $this->value( $element );

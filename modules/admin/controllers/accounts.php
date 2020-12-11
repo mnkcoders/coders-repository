@@ -26,7 +26,7 @@ final class AccountsController extends \CODERS\ArtPad\Response{
             //mask the account model with a local model
             $form = $this->importModel('admin.account');
             
-            $form->import($account);
+            $form->import($account->listValues());
         
             $view->setModel($form)->setLayout('account.view')->display();
             
@@ -48,7 +48,7 @@ final class AccountsController extends \CODERS\ArtPad\Response{
         
         if( $form->validateData() ){
             
-            $account = \CODERS\ArtPad\Account::New($form->values());
+            $account = \CODERS\ArtPad\Account::New($form->listValues());
 
             if( FALSE !== $account ){
                 

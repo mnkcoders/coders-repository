@@ -6,8 +6,10 @@
         <tr>
             <td colspan="2">
                 <div class="panel right inline">
-                    <?php print $this->display_new(__('New project title','coders_artpad')) ?>
+                    <form name="create-project" action="<?php print $this->dashboard_url ?>" method="post">
+                    <?php print $this->display_new(__('Project title','coders_artpad')) ?>
                     <?php print $this->action_create(__('Create','coders_artpad'),'button-primary'); ?>
+                    </form>
                 </div>
             </td>
         </tr>
