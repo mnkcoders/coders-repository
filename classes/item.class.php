@@ -6,20 +6,7 @@ final class Item extends Model{
     
     //1024 * 1024
     const DEFAULT_CHUNK_SIZE = 1048576;
-    
-    private $_meta = array(
-        'ID' => 0,
-        'public_id' => '',
-        'parent_id' => 0,
-        'name'=>'',
-        'type'=>'',
-        'collection'=>'default',
-        'title' => '',
-        'tier_id' => '',
-        'content' => '',
-        'date_created'=>NULL,
-        'date_updated'=>NULL,
-    );
+
     /**
      * @param array $data
      */
@@ -30,6 +17,7 @@ final class Item extends Model{
                 ->define('name',parent::TYPE_TEXT)
                 ->define('type',parent::TYPE_TEXT)
                 ->define('title',parent::TYPE_TEXT)
+                ->define('order',parent::TYPE_NUMBER)
                 ->define('tier_id',parent::TYPE_TEXT)
                 ->define('content',parent::TYPE_TEXTAREA)
                 ->define('date_created',parent::TYPE_DATETIME)
@@ -200,13 +188,13 @@ final class Item extends Model{
     /**
      * @return array
      */
-    public final function meta(){ return $this->_meta; }
+    public final function meta(){ return $this->listValues(); }
     /**
      * Can be embedded in the webview?
      * @return boolean
      */
     public final function embeddable(){
-        switch( $this->_meta['type']){
+        switch( $this->value('type')){
             //images and media
             case 'image/jpg':
             case 'image/jpeg':
@@ -227,13 +215,13 @@ final class Item extends Model{
         
         $db = self::newQuery();
         
-        $deleted = $db->delete('post', array('ID'=>$this->_meta['ID']));
+        $deleted = $db->delete('post', array('ID'=>$this->value('ID')));
 
         if( $deleted ){
             
-            $db->update('post', array('parent_id'=>0), array('parent_id'=>$this->_meta['ID']));
+            $db->update('post', array('parent_id'=>0), array('parent_id'=>$this->value('ID')));
             
-            return self::remove($this->_meta['public_id']);
+            return self::remove($this->value('public_id'));
         }
 
         return FALSE;
@@ -294,14 +282,35 @@ final class Item extends Model{
 
     }
     /**
-     * @param string $parent_id
-     * @return array
+     * @param int $parent_id
+     * @return int
      */
-    public static final function collection( $parent_id = 0 ){
+    private static final function slots( $parent_id = 0 ){
         
         $db = self::newQuery();
         
-        return $db->select('post','*',array('parent_id'=>$parent_id),'ID' );
+        $slots = $db->query("SELECT COUNT(*) AS slots FROM `%s` WHERE `parent_id`='%s'",Query::table('post'),$parent_id);
+        
+        return count( $slots ) ? intval( $slots['slots'] ) : 0;
+    }
+    /**
+     * @param string $parent_id
+     * @param boolean $public_key (FALSE)
+     * @return array
+     */
+    public static final function collection( $parent_id = 0 , $public_key = FALSE ){
+        
+        $db = new \CODERS\ArtPad\Query();
+        
+        if( $public_key && strlen($parent_id) ){
+            $table = \CODERS\ArtPad\Query::table('post');
+            $sql = sprintf("SELECT * FROM `%s` WHERE `parent_id` IN (SELECT `ID` FROM `%s` WHERE `public_id`='%s')",
+                    $table,$table,$parent_id);
+            return $db->query($sql,'public_id');
+        }
+        else{
+            return $db->select('post','*',array('parent_id'=>$parent_id), 'date_created' , 'ID' );
+        }
     }
     /**
      * @return array
@@ -334,10 +343,13 @@ final class Item extends Model{
                     //break;
                 case !array_key_exists('type', $data):
                     throw new \Exception('EMPTY_FILETYPE_ERROR');
+                case !array_key_exists('parent_id', $data):
+                    $data['parent_id'] = 0;
+                    break;
             }
             
             $data['public_id'] = self::GenerateID( $data['name'] );
-                        
+            $data['slots'] = self::slots($data['parent_id']) + 1;
             $item = new Item( $data );
             
             if(strlen($buffer) && !$item->exists( ) ){
@@ -443,9 +455,15 @@ final class Item extends Model{
     /**
      * @param int|String $id
      * @param boolean $public use ID (default) or public_ID
+     * @param boolean $validate Require login
      * @return \CODERS\ArtPad\Resource
      */
-    public static final function load( $id , $public = FALSE ){
+    public static final function load( $id , $public = FALSE , $validate = FALSE ){
+
+        if( $validate && !self::validate() ){
+            //throw non validated output?
+            return FALSE;
+        }
 
         $filters = $public ?
                 array( 'public_id' => $id ) : 
@@ -454,6 +472,28 @@ final class Item extends Model{
         $data = self::query( $filters );
 
         return ( count($data)) ? new Item( $data[0] ) : FALSE;
+    }
+    /**
+     * @return boolean
+     */
+    private static final function validate(){
+
+        if( Request::UID() && current_user_can('administrator') ){
+            //return is administrator
+            return TRUE;
+        }
+        
+        $sid = Request::SID();
+        
+        if( FALSE !== $sid){
+            $db = new Query();
+            $session = $db->select('token', '*', array('ID'=>$sid,'type'=>'session','status'=>1));
+            if( count( $session )){
+                return TRUE;
+            }
+        }
+        
+        return FALSE;
     }
     /**
      * Disabled

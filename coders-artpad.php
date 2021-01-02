@@ -266,9 +266,13 @@ class ArtPad{
                         break;
                     case 'rid':
                         if( count( $path ) > 1){
-                            $resource = CODERS\ArtPad\Resource::import($path[1]);
+                            //load from public ID and validate
+                            $resource = CODERS\ArtPad\Resource::load($path[1],TRUE,TRUE);
                             if (FALSE !== $resource) {
                                 $resource->stream();
+                            }
+                            else{
+                                wp_die(sprintf('INVALID_REF#%s',$path[1]));
                             }
                             ArtPad::terminate();
                             //exit;

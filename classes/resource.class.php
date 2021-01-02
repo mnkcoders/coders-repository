@@ -14,6 +14,7 @@ final class Resource{
         'name'=>'',
         'type'=>'',
         //'collection'=>'default',
+        'slot' => 0,
         'title' => '',
         'tier_id' => '',
         'content' => '',
@@ -261,6 +262,18 @@ final class Resource{
         return $inserted !== FALSE && $inserted > 0;
     }
     /**
+     * @param int $parent_id
+     * @return int
+     */
+    private static final function slots( $parent_id = 0 ){
+        
+        $db = new Query();
+        
+        $slots = $db->query("SELECT COUNT(*) AS slots FROM `%s` WHERE `parent_id`='%s'",Query::table('post'),$parent_id);
+        
+        return count( $slots ) ? intval( $slots['slots'] ) : 0;
+    }
+    /**
      * @param string $collection
      * @return boolean
      */
@@ -345,13 +358,22 @@ final class Resource{
     }
     /**
      * @param string $id
+     * @param boolean $public_key = FALSE
      * @return array
      */
-    public static final function collection( $id = 0 ){
+    public static final function collection( $id = 0 , $public_key = FALSE ){
         
         $db = new \CODERS\ArtPad\Query();
         
-        return $db->select('post','*',array('parent_id'=>$id),'ID' );
+        if( $public_key && strlen($id) ){
+            $table = \CODERS\ArtPad\Query::table('post');
+            $sql = sprintf("SELECT * FROM `%s` WHERE `parent_id` IN (SELECT `ID` FROM `%s` WHERE `public_id`='%s')",
+                    $table,$table,$id);
+            return $db->query($sql,'ID');
+        }
+        else{
+            return $db->select('post','*',array('parent_id'=>$id), 'date_created' , 'ID' );
+        }
     }
     /**
      * @return array
@@ -385,12 +407,17 @@ final class Resource{
                 case !array_key_exists('type', $meta):
                     throw new \Exception('EMPTY_FILETYPE_ERROR');
                     //break;
-                case !array_key_exists('collection', $meta):
-                    //$meta['collection'] = 'default';
+                case !array_key_exists('parent_id', $meta):
+                    $meta['parent_id'] = 0;
                     break;
+                //case !array_key_exists('collection', $meta):
+                    //$meta['collection'] = 'default';
+                    //break;
             }
             
             $meta['public_id'] = self::GenerateID( $meta['name'] );
+            
+            $meta['slots'] = self::slots($meta['parent_id']) + 1;
                         
             $R = new Resource( $meta );
             
@@ -498,12 +525,19 @@ final class Resource{
         return $created;
     }
     /**
-     * @param int $ID
+     * @param int|string $ID
      * @return \CODERS\ArtPad\Resource
      */
-    public static final function load( $ID ){
+    public static final function load( $ID , $public = FALSE , $validate = FALSE ){
 
-        $result = self::query( array('ID'=>$ID) );
+        if( $validate && !self::validate() ){
+            //throw non validated output?
+            return FALSE;
+        }
+        
+        $filter = $public ? array('public_id' => $ID) : array('ID' => $ID );
+        
+        $result = self::query( $filter );
 
         return ( count($result)) ? new Resource( $result[0] ) : FALSE;
     }
@@ -516,6 +550,29 @@ final class Resource{
         $result = self::query( array('public_id' => $public_id ) );
 
         return ( count($result)) ? new Resource( $result[0] ) : FALSE;
+    }
+    /**
+     * @return boolean
+     */
+    public static final function validate(){
+
+        if( Request::UID() && current_user_can('administrator') ){
+            //return is administrator
+            return TRUE;
+        }
+        
+        $sid = Request::SID();
+        
+        if( FALSE !== $sid){
+            $db = new Query();
+            $session = $db->select('token', '*', array('ID'=>$sid,'type'=>'session','status'=>1));
+            if( count( $session )){
+                return TRUE;
+            }
+        }
+        
+        
+        return FALSE;
     }
 }
 

@@ -21,6 +21,19 @@ final class ProjectView extends \CODERS\ArtPad\View{
     protected final function getSaveProjectUrl( $ID ){
         return \CODERS\ArtPad\Request::url('admin.main.save_project',array('ID'=>$ID));
     }
+    /**
+     * @param string $ID
+     * @return string
+     */
+    protected final function getPublicUrl( $ID = '' ){
+        
+        if( strlen($ID) === 0 && $this->hasModel() ){
+            $ID = $this->model()->ID;
+        }
+        
+        return \CODERS\ArtPad\Request::url('pad',array('ID'=>$ID));
+    }
+
     
     protected final function getTierTitle(){
         

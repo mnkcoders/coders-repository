@@ -162,7 +162,7 @@ final class Account extends \CODERS\ArtPad\Model{
         
         $query = new Query();
         
-        $output = $query->select('account', '*', $filters , 'ID' );
+        $output = $query->select('account', '*', $filters , 'date_created', 'ID' );
         
         return $output;
     }

@@ -66,7 +66,7 @@ final class CollectionModel extends \CODERS\ArtPad\Model{
         $query = $this->newQuery();
         
         $storage = \CODERS\ArtPad\Resource::storage();
-        $projects = $query->select( 'project' , array('ID','title') , array() ,  'ID' );
+        $projects = $query->select( 'project' , array('ID','title') , array() , 'ID' , 'ID' );
         $output = array();
         
         foreach( $storage as $collection ){

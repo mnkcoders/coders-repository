@@ -40,6 +40,7 @@ final class ProjectModel extends \CODERS\ArtPad\Model{
         $collections = $this->newQuery()->select('post',
                 array('ID','name','title'),
                 array('parent_id' => $parent ) ,
+                'ID',
                 'ID' );
         
         var_dump($collections);

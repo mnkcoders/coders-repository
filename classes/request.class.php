@@ -188,25 +188,25 @@ final class Request{
         return md5( $this->_fingerprint );
     }
     /**
-     * @return string
+     * @return string|boolean
      */
     public static final function SID(){
         
-        $SID = filter_input(INPUT_COOKIE, sprintf('%s_SID', \ArtPad::ENDPOINT ) );
+        $SID = filter_input(INPUT_COOKIE, sprintf('%s_sid', \ArtPad::ENDPOINT ) );
         
-        return $SID !== NULL ? $SID : '';
+        return $SID !== NULL && strlen($SID) ? $SID : FALSE;
     }
     /**
      * @return int
      */
-    public final function userID(){
-        return 0;
+    public static final function UID(){
+        return get_current_user_id();
     }
     /**
      * @return WP_User
      */
-    public final function userName( $niceName = FALSE ){
-        $ID = $this->userID();
+    public static final function userName( $niceName = FALSE ){
+        $ID = self::UID();
         if( $ID ){
             $user = get_user_by('ID', $ID);
             
@@ -409,6 +409,18 @@ final class Request{
         }
         
         return '';
+    }
+    /**
+     * @return array
+     */
+    public static final function headers(){
+        if(function_exists('getallheaders')){
+            return getallheaders();
+        }
+        elseif( function_exists('apache_request_headers')){
+            return apache_request_headers();
+        }
+        return array();
     }
 }
 

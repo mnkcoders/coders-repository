@@ -4,6 +4,10 @@
     <ul class="inline toolbar">
         <li><?php print $this->action('admin.main', __('Back', 'coders_artpad')); ?></li>
         <li><?php print $this->action_save(__('Save', 'coders_artpad'), 'button-primary right'); ?></li>
+        <li><a href="<?php
+            print $this->public_url ?>" target="_blank"><?php
+            print __('Public','coders_artpad') ?></a>
+        </li>
     </ul>
     <div class="title"><?php print $this->display_title(__('Your project title :D', 'coders_artpad')) ?></div>
     <div class="media">

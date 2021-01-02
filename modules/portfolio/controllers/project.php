@@ -8,9 +8,12 @@ final class ProjectController extends \CODERS\ArtPad\Response{
      */
     protected final function default_action(\CODERS\ArtPad\Request $request) {
         
-        $ID = $request->getInt('ID');
+        $ID = $request->get('ID');
         
-        $project = \CODERS\ArtPad\Project::load($ID);
+        $item = $request->get('item','');
+        
+        //$project = \CODERS\ArtPad\Project::load($ID);
+        $project = $this->importModel('portfolio.project',array('ID'=>$ID,'item' => $item));
         
         $display = $this->importView('portfolio.project');
         
@@ -24,7 +27,6 @@ final class ProjectController extends \CODERS\ArtPad\Response{
         
         return TRUE;
     }
-    
 }
     
 

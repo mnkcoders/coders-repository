@@ -99,12 +99,28 @@ function ArtPadView( ){
      */
     function initTabControl( tabContainer ){
         //create tab switcher
+        var height = 0;
+        //capture children
         tabContainer.Tabs = tabContainer.children.length ?
             [].slice.call(tabContainer.children[0].children) :
             [];
+        //capture first tab
         tabContainer.firstTab = function(){
             return this.Tabs[0].getAttribute('data-tab');
         };
+        //apply height fix
+        tabContainer.Tabs.forEach( function(tab){
+            var th = 0;
+            for( var i = 0 ; i < tab.children.length ; i++ ){
+                th += tab.children[ i ].offsetHeight;
+                //console.log( tab.children[ i ].style );
+            }
+            //console.log( th ) ;
+            if( th > height ){
+                height = th;
+            }
+        });
+        //attach tab-toggle event
         tabContainer.toggleTab = function( tab ){
             if( typeof tab === 'undefined' ){
                 tab = this.firstTab();
@@ -146,6 +162,10 @@ function ArtPadView( ){
         tabContainer.prepend( _view.element('ul',{'class':'tab-menu inline'},tabs));
         tabContainer.TabMenu = function(){ return this.children[0]; };
         tabContainer.toggleTab();
+        console.log('ASAS');
+        console.log( tabContainer.style.height);
+        //apply tab-height fix
+        tabContainer.style.height = height + 'px';
         return tabContainer;
     };
     /**

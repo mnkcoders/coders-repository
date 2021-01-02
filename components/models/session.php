@@ -137,7 +137,7 @@ final class Session extends \CODERS\ArtPad\Model{
      */
     private static final function Register( $account_id , $expires = '' ){
         
-        $key = sprintf('%s_SID', \ArtPad::ENDPOINT );
+        $key = sprintf('%s_sid', \ArtPad::ENDPOINT );
         
         $offset = strlen($expires) ? strtotime($expires) : 3600;
 

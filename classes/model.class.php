@@ -503,10 +503,11 @@ final class Query {
      * @param string $table
      * @param array $columns
      * @param array $filters
+     * @param array|string $order_by
      * @param string $index
      * @return array
      */
-    public final function select( $table, $columns = '*', array $filters = array() , $index = '' ) {
+    public final function select( $table, $columns = '*', array $filters = array() , $order_by = array() , $index = '' ) {
         
         $select = array();
         
@@ -530,9 +531,15 @@ final class Query {
         $select[] = sprintf("FROM `%s`", self::table($table) );
         
         if (count($filters)) {
-            $select[] .= "WHERE " . implode(' AND ', self::where($filters ) );
+            $select[] = "WHERE " . implode(' AND ', self::where($filters ) );
         }
-        
+        if( !is_array( $order_by )){
+            $order_by = array( $order_by );
+        }
+        if( count( $order_by ) ){
+            $select[] = sprintf('ORDER BY (%s)', implode(',', $order_by) );
+        }
+
         return $this->query( implode(' ', $select) , $index );
     }
     /**
@@ -570,9 +577,12 @@ final class Query {
         
         $result = $db->query($sql_insert);
         
+        $id = $db->insert_id;
+        
         //var_dump($db->last_error);
         
-        return FALSE !== $result ? $result : 0;
+        //return FALSE !== $result ? $result : 0;
+        return FALSE !== $result ? $id : 0;
     }
     /**
      * @param string $table

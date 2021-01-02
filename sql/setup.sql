@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_account` (
 
 /*PAYMENTS TABLE*/
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_checkout` (
- `ID` int(11) NOT NULL,
+ `ID` int(11) NOT NULL AUTO_INCREMENT,
  `account_id` int(11) NOT NULL,
  `subscription_id` int(11) NOT NULL,
  `token` varchar(32) NOT NULL,
@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_checkout` (
 
 /*SUBSCRIPTIONS TABLE*/
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_subscription` (
- `ID` int(11) NOT NULL,
+ `ID` int(11) NOT NULL AUTO_INCREMENT,
  `account_id` int(11) NOT NULL,
- `tier_id` varchar(32) NOT NULL,
- `satus` tinyint(1) NOT NULL,
+ `tier_id` varchar(24) NOT NULL,
+ `status` tinyint(1) NOT NULL,
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
  `date_terminated` datetime NOT NULL,
