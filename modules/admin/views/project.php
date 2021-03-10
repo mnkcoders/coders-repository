@@ -38,7 +38,7 @@ final class ProjectView extends \CODERS\ArtPad\View{
     protected final function getTierTitle(){
         
         if( $this->hasModel() ){
-            $tier = $this->model()->exists('tier_id') ? $this->model()->tier_id : '';
+            $tier = $this->model()->has('tier_id') ? $this->model()->tier_id : '';
             
             if(strlen($tier)){
                 

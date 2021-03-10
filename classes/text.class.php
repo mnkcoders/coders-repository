@@ -27,17 +27,26 @@ final class Text {
         );
     }
     /**
-     * @return String
+     * 
+     * @return \CODERS\ArtPad\Text
      */
-    public static final function __( $string ){
-    
+    public static final function instance(){
         if(is_null(self::$_instance)){
             self::$_instance = new Text();
         }
+        return self::$_instance;
+    }
+    /**
+     * @return String
+     */
+    public static final function __( $string ){
         
-        return array_key_exists($string, self::$_instance->_strings) ? 
-                self::$_instance->_strings[ $string ] :
+        $text = self::instance();
+    
+        return array_key_exists($string, $text->_strings) ? 
+                $text->_strings[ $string ] :
                 $string;
     }
 }
-
+//Initialize
+Text::instance();

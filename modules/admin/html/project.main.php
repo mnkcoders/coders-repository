@@ -26,7 +26,7 @@
         <?php print $this->display_access_level ?>
     </div>
     <div>
-        <?php wp_editor($this->value_content, 'content'); ?>
+        <?php wp_editor($this->content, 'content'); ?>
     </div>
     <ul class="status inline">
         <li class="right"><?php

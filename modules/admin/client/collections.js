@@ -696,7 +696,7 @@ function CollectionView( ){
             return true;
         });
 
-        return _view.element('div',{'class': 'toolbox container inline solid clearfix centered'},[
+        return _view.element('div',{'class': 'toolbox container solid clearfix centered'},[
                 _controls.navigator,
                 btnUploader,
                 render_grid_resizer('panel right')

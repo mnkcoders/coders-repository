@@ -6,17 +6,22 @@ final class CollectionView extends \CODERS\ArtPad\View{
     
     const PAGE = 'coders-artpad';    
     const MAX_FILE_SIZE = 'coders.repository.max_file_size';
-    
-    private $_selected = 'default';
     /**
      * 
      * @return \CODERS\ArtPad\Admin\CollectionView
      */
     public final function display() {
         
+        $pathNodes = $this->isPost() ? $this->model()->list_route : array();
+        
+        foreach( $pathNodes as $id => $title ){
+            $this->addNavPath(
+                    $title,
+                    \CODERS\ArtPad\Request::url('admin.collection',array('ID'=>$id) ) );
+        }
+        
         return parent::display();
     }
-    
     /**
      * @param array $resource
      * @return string
@@ -74,22 +79,11 @@ final class CollectionView extends \CODERS\ArtPad\View{
         return \CODERS\ArtPad\Resource::link($resource_id);
     }
     /**
-     * @param string $collection
-     * @return array
+     * @param int $id
+     * @return string
      */
-    protected final function listCollection( $collection = '' ){
-        return strlen($collection) ?
-            \CODERS\ArtPad\Resource::collection( $collection ) :
-            array();
-    }
-    /**
-     * @return string|FALSE
-     */
-    protected final function listSelected(){
-        
-        $collection = $this->listCollection( $this->_selected );
-
-        return $collection;
+    protected final function getPostUrl( $id){
+        return \CODERS\ArtPad\Request::url('admin.collection.display2',array('ID'=>$id));
     }
     /**
      * @return array
@@ -100,29 +94,16 @@ final class CollectionView extends \CODERS\ArtPad\View{
     /**
      * @return array
      */
-    protected final function listRoute(){
-        
-        //add home here
-        
-        return $this->hasModel() ? $this->model()->list_route() : array();
+    protected final function listItems(){
+        return $this->isPost() ?
+                $this->model()->list_children :
+                \CODERS\ArtPad\Resource::collection();
     }
     /**
      * @return boolean
      */
-    protected final function isImage(){
-        return $this->hasModel() && $this->model()->is_image;
-    }
-    /**
-     * @return boolean
-     */
-    protected final function isText(){
-        return $this->hasModel() && $this->model()->is_text;
-    }
-    /**
-     * @return boolean
-     */
-    protected final function isPost(){
-        return $this->hasModel() && $this->model()->value('ID') > 0;
+    public final function isPost(){
+        return $this->getPostId() > 0;
     }
     /**
      * @return string
@@ -158,12 +139,6 @@ final class CollectionView extends \CODERS\ArtPad\View{
      */
     protected final function getGridOption(){
         return \ArtPad::getOption('grid');
-    }
-    /**
-     * @return \CODERS\ArtPad\Model
-     */
-    protected final function getModel(){
-        return $this->model();
     }
     /**
      * @return string

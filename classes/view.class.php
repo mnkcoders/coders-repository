@@ -19,7 +19,23 @@ abstract class View{
      * 
      */
     protected function __construct() {
-        
+
+        if(is_admin()){
+            $current = $this->getCurrentAdminPage();
+            $parent = $this->getAdminPageParent();
+            if( $current !== $parent ){
+                $this->addNavPath(
+                        __('Artist Pad','coders_artpad'),
+                        Request::url('admin.main'))->addNavPath(
+                                get_admin_page_title(),
+                                Request::url('admin.collection'));
+            }
+            else{
+                $this->addNavPath(
+                        __('Artist Pad','coders_artpad'),
+                        Request::url('admin.main'));
+            }
+        }
     }
     /**
      * @return string
@@ -56,20 +72,21 @@ abstract class View{
     public final function __get($name) {
         switch( TRUE ){
             case preg_match(  '/^action_/' , $name ):
+                //QUICK ACTION DISPLAY
                 $action = substr($name, strlen('action_'));
                 return $this->__action(
                         $action,
                         $this->__label($action),
                         'button-primary');
-            case preg_match(  '/^value_/' , $name ):
-                return $this->hasModel() ? $this->model()->$name : '';
             case preg_match(  '/^input_/' , $name ):
+                //FORM INPUT DISPLAY
                 $method = preg_replace('/_/', '', $name);
                 $element = substr($name, strlen('input_'));
                 return method_exists($this, $method) ?
                         $this->$method( ) :
                         $this->__input( $element );
             case preg_match(  '/^label_/' , $name ):
+                //LABEL DISPLAY
                 $element = substr($name, strlen('label_'));
                 $label = $this->__label($element);
                 return self::__HTML('label', array(
@@ -77,6 +94,7 @@ abstract class View{
                         'for' => 'id_' . $element
                     ), $label);
             case preg_match(  '/^fieldset_/' , $name ):
+                //FORM-FIELDSET DISPLAY
                 $element = substr($name, strlen('fieldset_'));
                 $label = sprintf('label_%s',$element);
                 $input = sprintf('input_%s',$element);
@@ -84,6 +102,7 @@ abstract class View{
                         array('class'=>'form-input'),
                         array($this->$label,$this->$input));
             case preg_match(  '/^view_/' , $name ):
+                //LOAD EXTRA VIEW
                 $layout = preg_replace('/_/', '.', substr($name, strlen('view_')));
                 $view = $this->getView( $layout );
                 if(file_exists($view)){
@@ -91,6 +110,7 @@ abstract class View{
                 }
                 return sprintf('<!-- VIEW [ %s ] -->',$name);
             case preg_match(  '/^display_/' , $name ):
+                //CUSTOM DISPLAY
                 $display = preg_replace('/_/', '', $name);
                 return method_exists($this, $display) ?
                         $this->$display( ) :
@@ -100,24 +120,23 @@ abstract class View{
                 $is = preg_replace('/_/', '', $name);
                 return method_exists($this, $is) ?
                         $this->$is( ) :
-                        $this->__model($name, FALSE );
+                        $this->model()->$is( );
             case preg_match(  '/^list_/' , $name ):
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
                 return method_exists($this, $list) ?
                         $this->$list() :
-                        $this->__model($name, array());
+                        $this->model()->$name();
             case preg_match(  '/^error_/' , $name ):
                 //RETURN LIST
-                $error = $this->hasModel() ? $this->model()->$name : '';
-                return strlen($error) ? self::__HTML('span', array(
-                    'class' => 'error'
-                ), $error) : '';
+                return $this->hasModel() ?
+                    $this->__error( $this->model()->$name ) :
+                    '';
             default:
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
                 return method_exists($this, $get) ?
                         $this->$get( ) :
-                        $this->__model($name, sprintf('<!-- INVALID DATA-SOURCE %s -->',$name));
+                        $this->model()->$get( );
         }
     }
     /**
@@ -160,18 +179,18 @@ abstract class View{
                 $is = preg_replace('/_/', '', $name);
                 return method_exists($this, $is) ?
                         $this->$is( $params ) :
-                        $this->__model($name, FALSE );
+                        $this->model()->$is( $params );
             case preg_match(  '/^list_/' , $name ):
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
                 return method_exists($this, $list) ?
                         $this->$list( $params ) :
-                        $this->__model($name, array());
+                        $this->model()->$list( $params );
             default:
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
                 return method_exists($this, $get) ?
                         $this->$get( $params ) :
-                        $this->__model($name, sprintf('<!-- INVALID DATA-SOURCE %s -->',$name));
+                        $this->model()->$get( $params );
         }
     }
     /**
@@ -276,19 +295,6 @@ abstract class View{
         return sprintf('<!-- INVALID INPUT [%s] -->',$element);
     }
     /**
-     * @param string $request
-     * @param mixed $default
-     * @param arary $args
-     * @return mixed
-     */
-    protected final function __model( $request , $default = '' , array $args = array( ) ){
-        if( $this->hasModel() ){
-            //pass request rightaway
-            return $this->model()->$request( $args );
-        }
-        return $default;
-    }
-    /**
      * @param string $action
      * @param string $label
      * @param string|array $class
@@ -302,6 +308,15 @@ abstract class View{
             'id' => 'id_'.$action,
             'class' => sprintf('button %s %s',$action,$class),
         ), $label );
+    }
+    /**
+     * @param string $error
+     * @return string Error display
+     */
+    protected function __error( $error ){
+        return strlen($error) ?
+            self::__HTML('span', array( 'class' => 'error' ), $error) :
+            '';
     }
     /**
      * @param string $input
@@ -864,13 +879,28 @@ abstract class View{
     /**
      * @return string
      */
+    protected final function getAdminPageParent(){
+        return get_admin_page_parent();
+    }
+    /**
+     * @return string
+     */
+    protected final function getCurrentAdminPage(){
+        if(is_admin()){
+            $current = explode('-',preg_replace('/_/', '-', get_current_screen()->id ));
+            return $current[count($current)-1];
+        }
+        return '';
+    }
+    /**
+     * @return string
+     */
     protected function displayNavigator(){
         
         $items = array();
         
-        if(is_admin()){
+        /*if(is_admin()){
             $current = explode('-',preg_replace('/_/', '-', get_current_screen()->id ));
-            
             if( $current[count($current)-1] !== get_admin_page_parent()){
                 $items[] = sprintf('<li class="root"><a href="%s" target="_self">%s</a></li>',
                         Request::url('admin.main'),
@@ -882,19 +912,32 @@ abstract class View{
             else{
                 $items[] = sprintf('<li class="root">%s</li>', get_admin_page_title());
             }
+        }*/
+        
+        $nodes = array_keys($this->_navigator);
+
+        for( $i = 0 ; $i < count($nodes) ; $i++ ){
+            
+            $class = $i === 0 ? 'home' : 'node';
+            $title = $nodes[$i ];
+            $url = $this->_navigator[ $title ];
+            
+            $content = $i < count($nodes) - 1 ?
+                    $this->renderLink($url, $title) :
+                    self::__HTML('span', array('class'=>$class),$title);
+            
+            $items[] = sprintf('<li class="%s">%s</li>',$class,$content);
         }
         
-        foreach( $this->_navigator as $title => $url ){
-            
+        /*foreach( $this->_navigator as $title => $url ){
             $content =  strlen($url) ?
                     $this->renderLink($url, $title) :
                     self::__HTML('span', array( 'class' => 'current', ), $title);
             
             $items[] = sprintf('<li>%s</li>',$content);
-        }
-
+        }*/
         return count( $items ) ?
-                self::__HTML('ul', array( 'class' => 'navigator inline' ), $items ) :
+                self::__HTML('ul', array( 'class' => 'navigator panel left inline','id'=>'id_artpad_nav' ), $items ) :
                 $this->__class();
     }
     /**
@@ -1068,6 +1111,51 @@ abstract class View{
         return NULL;
     }
 }
+/**
+ * 
+ */
+final class ModelAdapter{
+    /**
+     * @var \CODERS\ArtPad\Model
+     */
+    private $_model = null;
+    /**
+     * @param \CODERS\ArtPad\Model $model
+     */
+    private final function __construct( \CODERS\ArtPad\Model $model ) {
+        $this->_model = $model;
+    }
+    /**
+     * @return string
+     */
+    public final function __toString() {
+        return get_class($this->_model);
+    }
+    /**
+     * @param string $name
+     */
+    public final function __get($name) {
+        $this->_model->$name();
+    }
+    /**
+     * @param string $name
+     * @param array $arguments
+     */
+    public final function __call($name , $arguments ) {
+        $this->_model->$name( $arguments );
+    }
+    /**
+     * @param \CODERS\ArtPad\Model $model
+     */
+    public static final function import( \CODERS\ArtPad\Model $model ){
+
+        return new ModelAdapter( $model );
+    }
+}
+
+
+
+
 
 
 

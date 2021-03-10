@@ -1,97 +1,131 @@
-<?php namespace CODERS\ArtPad;
+<?php namespace CODERS\ArtPad\Deprecated;
 /**
- * Requires \CODERS\ArtPad\Model 
+ * 
  */
-final class Item extends Model{
+final class Resource{
     
     //1024 * 1024
     const DEFAULT_CHUNK_SIZE = 1048576;
-
+    
+    private $_meta = array(
+        'ID' => 0,
+        'public_id' => '',
+        'parent_id' => 0,
+        'name'=>'',
+        'type'=>'',
+        //'collection'=>'default',
+        'slot' => 0,
+        'title' => '',
+        'tier_id' => '',
+        'content' => '',
+        'date_created'=>NULL,
+        'date_updated'=>NULL,
+    );
+    //private $_ID,$_public_id,$_name,$_type,$_storage,$_date_created,$_date_updated = NULL;
     /**
-     * @param array $data
+     * @param array $meta
+     * @param string $buffer
      */
-    private final function __construct( array $data ) {
+    private final function __construct( array $meta ) {
         
-        $this->define('ID',parent::TYPE_NUMBER,array('value'=>0))
-                ->define('public_id',parent::TYPE_TEXT,array('size'=>32))
-                ->define('name',parent::TYPE_TEXT)
-                ->define('type',parent::TYPE_TEXT)
-                ->define('title',parent::TYPE_TEXT)
-                ->define('order',parent::TYPE_NUMBER)
-                ->define('tier_id',parent::TYPE_TEXT)
-                ->define('content',parent::TYPE_TEXTAREA)
-                ->define('date_created',parent::TYPE_DATETIME)
-                ->define('date_updated',parent::TYPE_DATETIME);
         
-        //$this->populate($data);
-        parent::__construct($data);
+        $this->populate($meta);
+    }
+    /**
+     * @param string $name
+     * @return Mixed
+     */
+    function __get($name) {
+        
+        return isset($this->_meta[$name]) ? strval( $this->_meta[$name] ) : '';
     }
     /**
      * @return \CODERS\ArtPad\Query
      */
     private static final function query( array $filters ){
         
-        $db = self::newQuery();
+        $db = new Query();
         
         return $db->select('post', '*', $filters );
     }
     /**
-     * @param string $id
+     * @param string $collection
      * @return string
      */
-    private static final function GenerateID( $id = 0 ){
-        return md5( uniqid( date( 'YmdHis' ) . $id , true ) );
+    private static final function GenerateID( $collection = '' ){
+        return md5( uniqid( date( 'YmdHis' ) . $collection , true ) );
+    }
+    /**
+     * @param array $input
+     * @return \CODERS\ArtPad\Resource
+     */
+    private final function populate( array $input ) {
+        
+        $ts = date('Y-m-d H:i:s');
+        
+        $this->_meta['date_created'] = $ts;
+        $this->_meta['date_updated'] = $ts;
+        
+        foreach($input as $var => $val ){
+            if(array_key_exists( $var, $this->_meta)){
+                switch($var){
+                    case 'parent_id':
+                    case 'ID':
+                        $this->_meta[$var] = intval($val);
+                        break;
+                    default:
+                        $this->_meta[$var] = $val;
+                        break;
+                }
+                
+            }
+        }
+
+        return $this;
+    }
+    /**
+     * @return string
+     */
+    public final function path(){
+        return \ArtPad::Storage( $this->public_id );
     }
     /**
      * @return array
      */
-    public final function listTree(){
-
-        $id = $this->ID;
-        $title = $this->getTitle();
-        $parent_id = $this->parent_id;
-        $output = array( $id => $title );
-
-        if( $parent_id > 0 ){
-            $parent = self::load($parent_id);
+    public final function tree(){
+        
+        $id = $this->_meta['ID'];
+        $name = strlen( $this->_meta['title'] ) ? $this->_meta['title'] : $this->_meta['name'];
+        
+        $output = array( $id => $name );
+        
+        if( $this->_meta['parent_id'] > 0 ){
+            $parent = self::load($this->_meta['parent_id']);
             if( FALSE !== $parent ){
-                return array_reverse( $parent->listTree() + $output , TRUE );
+                return array_reverse( $parent->tree() + $output , TRUE );
             }
         }
+        
         return $output;
-    }
-    /**
-     * @return string
-     */
-    public final function getPath(){
-        return \ArtPad::Storage( $this->public_id );
-    }
-    /**
-     * @return string
-     */
-    public final function getTitle(){
-        
-        $title = $this->title;
-        
-        return strlen($title) ? $title : $this->name;
-    }
-    /**
-     * @return string|URL
-     */
-    public final function getLink(){
-        return self::link( $this->public_id );
     }
     /**
      * @param string $rid
      * @return string
      */
     public static final function link( $rid ){
-        return sprintf('%s/%s/rid.%s',
+
+        return sprintf('%s?%s=rid.%s',
                 get_site_url(),
                 \ArtPad::ENDPOINT,
                 $rid);
+        
+        //return sprintf('%s?%s=%s',
+        //        get_site_url(),
+        //        \ArtPad::RESOURCE,
+        //        $rid);
     }
     /**
+     * 
      * @return boolean
      */
     public final function exists(){
@@ -132,7 +166,7 @@ final class Item extends Model{
                     //mark as attachment if cannot be embedded or not required as download
                     $attach || !$this->embeddable() ? 'attachment' : 'inline',
                     $this->name ),
-            sprintf( 'Content-Length: %s', $this->getSize() ),
+            sprintf( 'Content-Length: %s', $this->size() ),
             //sprintf( 'Cache-Control : %s, max-age=%s;', 'private' , 3600 )
             //'Cache-Control : public, max-age=3600;',
         );
@@ -182,19 +216,19 @@ final class Item extends Model{
     /**
      * @return int
      */
-    public final function getSize(){
+    public final function size(){
         return $this->exists() ? filesize($this->path()) : 0;
     }
     /**
      * @return array
      */
-    public final function meta(){ return $this->listValues(); }
+    public final function meta(){ return $this->_meta; }
     /**
      * Can be embedded in the webview?
      * @return boolean
      */
     public final function embeddable(){
-        switch( $this->value('type')){
+        switch( $this->_meta['type']){
             //images and media
             case 'image/jpg':
             case 'image/jpeg':
@@ -209,19 +243,60 @@ final class Item extends Model{
         return FALSE;
     }
     /**
+     * @global \wpdb $wpdb
+     * @global string $table_prefix
+     * @return boolean
+     */
+    private static final function register( \CODERS\ArtPad\Resource $R ){
+        
+        $db = new Query();
+        
+        $inserted = $db->insert('post', $R->meta());
+        
+        //global $wpdb,$table_prefix;
+        
+        //$inserted = $wpdb->insert(sprintf('%scoders_post',$table_prefix),$R->_meta);
+        
+        //$wpdb->show_errors();
+        
+        return $inserted !== FALSE && $inserted > 0;
+    }
+    /**
+     * @param int $parent_id
+     * @return int
+     */
+    private static final function slots( $parent_id = 0 ){
+        
+        $db = new Query();
+        
+        $slots = $db->query("SELECT COUNT(*) AS slots FROM `%s` WHERE `parent_id`='%s'",Query::table('post'),$parent_id);
+        
+        return count( $slots ) ? intval( $slots['slots'] ) : 0;
+    }
+    /**
+     * @param string $collection
+     * @return boolean
+     */
+    public static final function createCollection( $collection ){
+        
+        $path = \ArtPad::Storage($collection);
+        
+        return ( file_exists( $path ) ) ? TRUE : mkdir($path);
+    }
+    /**
      * @return boolean
      */
     public final function delete(){
         
-        $db = self::newQuery();
+        $db = new Query();
         
-        $deleted = $db->delete('post', array('ID'=>$this->value('ID')));
+        $deleted = $db->delete('post', array('ID'=>$this->_meta['ID']));
 
         if( $deleted ){
             
-            $db->update('post', array('parent_id'=>0), array('parent_id'=>$this->value('ID')));
+            $db->update('post', array('parent_id'=>0), array('parent_id'=>$this->_meta['ID']));
             
-            return self::remove($this->value('public_id'));
+            return self::remove($this->_meta['public_id']);
         }
 
         return FALSE;
@@ -230,11 +305,14 @@ final class Item extends Model{
      * @return boolean
      */
     public final function moveUp(){
-        $parent_id = $this->value('parent_id');
+        $parent_id = $this->_meta['parent_id'];
         if( $parent_id > 0 ){
+            
             $parent = self::load($parent_id);
+            
             if( FALSE !== $parent ){
-                return $this->setParent( $parent->parent_id );
+                
+                return $this->setParent( $parent->_meta['parent_id'] );
             }
         }
         return FALSE;
@@ -244,13 +322,13 @@ final class Item extends Model{
      * @return boolean
      */
     public final function setParent( $parent_id = 0 ){
-        if( $parent_id !== $this->ID ){
-            $db = self::newQuery();
+        if( $parent_id !== $this->_meta['ID']){
+            $db = new Query();
             $result = $db->update('post',
                     array('parent_id'=> $parent_id),
-                    array('ID'=>$this->ID));
+                    array('ID'=>$this->_meta['ID']));
             if( $result > 0 ){
-                $this->setValue('parent_id', $parent_id );
+                $this->_meta['parent_id'] = $parent_id;
                 return TRUE;
             }
         }
@@ -262,7 +340,7 @@ final class Item extends Model{
      * @param string $public_id
      * @return boolean
      */
-    private static final function remove( $public_id ){
+    public static final function remove( $public_id ){
         $path = \ArtPad::Storage($public_id);
         if (file_exists($path)) {
             return unlink($path);
@@ -270,52 +348,37 @@ final class Item extends Model{
         return FALSE;
     }
     /**
-     * @global \wpdb $wpdb
-     * @global string $table_prefix
-     * @return boolean
-     */
-    private static final function register( \CODERS\ArtPad\Item $item ){
-        
-        $db = self::newQuery();
-        $inserted = $db->insert('post', $item->listValues());
-        return $inserted !== FALSE && $inserted > 0;
-
-    }
-    /**
-     * @param int $parent_id
-     * @return int
-     */
-    private static final function slots( $parent_id = 0 ){
-        
-        $db = self::newQuery();
-        
-        $slots = $db->query("SELECT COUNT(*) AS slots FROM `%s` WHERE `parent_id`='%s'",Query::table('post'),$parent_id);
-        
-        return count( $slots ) ? intval( $slots['slots'] ) : 0;
-    }
-    /**
-     * @param string $parent_id
-     * @param boolean $public_key (FALSE)
      * @return array
      */
-    public static final function collection( $parent_id = 0 , $public_key = FALSE ){
+    public static final function find( $search ){
+        
+        $filters = is_array($search) ? $search : array('ID'=>$search);
+        
+        return self::query($filters);
+    }
+    /**
+     * @param string $id
+     * @param boolean $public_key = FALSE
+     * @return array
+     */
+    public static final function collection( $id = 0 , $public_key = FALSE ){
         
         $db = new \CODERS\ArtPad\Query();
         
-        if( $public_key && strlen($parent_id) ){
+        if( $public_key && strlen($id) ){
             $table = \CODERS\ArtPad\Query::table('post');
             $sql = sprintf("SELECT * FROM `%s` WHERE `parent_id` IN (SELECT `ID` FROM `%s` WHERE `public_id`='%s')",
-                    $table,$table,$parent_id);
-            return $db->query($sql,'public_id');
+                    $table,$table,$id);
+            return $db->query($sql,'ID');
         }
         else{
-            return $db->select('post','*',array('parent_id'=>$parent_id), 'date_created' , 'ID' );
+            return $db->select('post','*',array('parent_id'=>$id), 'date_created' , 'ID' );
         }
     }
     /**
      * @return array
      */
-    public static final function listStorage(){
+    public static final function storage(){
         
         $output = array();
         $root = \ArtPad::Storage();
@@ -329,40 +392,49 @@ final class Item extends Model{
     }
     /**
      * 
-     * @param array $data
+     * @param array $meta
      * @param string $buffer
      * @return boolean|\CODERS\ArtPad\Resource
      * @throws \Exception
      */
-    public static final function new( array $data , $buffer = '' ){
+    public static final function create( array $meta , $buffer = '' ){
         
         try{
             switch( TRUE ){
-                case !array_key_exists('name', $data):
+                case !array_key_exists('name', $meta):
                     throw new \Exception('EMPTY_NAME_ERROR');
                     //break;
-                case !array_key_exists('type', $data):
+                case !array_key_exists('type', $meta):
                     throw new \Exception('EMPTY_FILETYPE_ERROR');
-                case !array_key_exists('parent_id', $data):
-                    $data['parent_id'] = 0;
+                    //break;
+                case !array_key_exists('parent_id', $meta):
+                    $meta['parent_id'] = 0;
                     break;
+                //case !array_key_exists('collection', $meta):
+                    //$meta['collection'] = 'default';
+                    //break;
             }
             
-            $data['public_id'] = self::GenerateID( $data['name'] );
-            $data['slots'] = self::slots($data['parent_id']) + 1;
-            $item = new Item( $data );
+            $meta['public_id'] = self::GenerateID( $meta['name'] );
             
-            if(strlen($buffer) && !$item->exists( ) ){
-                //
+            $meta['slots'] = self::slots($meta['parent_id']) + 1;
+                        
+            $R = new Resource( $meta );
+            
+            if(strlen($buffer) && !$R->exists( ) ){
+                
             }
-            if( $item->exists()){
-                throw new \Exception(sprintf('File ID:%s already exists.',$data['public_id']));
+            //if( !self::createCollection($meta['collection'])){
+            //    throw new \Exception('Cannot create a new collection. Check file permissions.' );
+            //}
+            if( $R->exists()){
+                throw new \Exception(sprintf('File ID:%s already exists.',$meta['public_id']));
             }
-            if( !$item->write($buffer)){
-                throw new \Exception(sprintf('Cannot write file %s. Check file permissions.',$data['name']));
+            if( !$R->write($buffer)){
+                throw new \Exception(sprintf('Cannot write file %s. Check file permissions.',$meta['name']));
             }
-            if( self::register($item)){
-                return $item;
+            if( self::register($R)){
+                return $R;
             }
             else{
                 throw new \Exception('Cannot register new resource in database');
@@ -377,7 +449,7 @@ final class Item extends Model{
      * @param string $input
      * @return array
      */
-    private static final function uploadMeta( $input ){
+    private static final function parseUploadMeta( $input ){
             
             $upload = array_key_exists($input, $_FILES) ? $_FILES[ $input ] : array();
 
@@ -409,9 +481,9 @@ final class Item extends Model{
      */
     public static final function upload( $input , $parent_id = 0 ){
         
-        $collection = array();
+        $created = array();
         
-        foreach( self::uploadMeta($input) as $upload ) {
+        foreach( self::parseUploadMeta($input) as $upload ) {
             try{
                 switch( $upload['error'] ){
                     case UPLOAD_ERR_CANT_WRITE:
@@ -438,9 +510,9 @@ final class Item extends Model{
 
                 if( $buffer !== FALSE ){
                     $upload['parent_id'] = $parent_id;
-                    $item = self::new($upload , $buffer );
-                    if( $item !== FALSE ){
-                        $collection[ $item->ID ] = $item;
+                    $resource = self::create($upload , $buffer );
+                    if( $resource !== FALSE ){
+                        $created[ $resource->ID ] = $resource;
                     }
                 }
             }
@@ -450,33 +522,39 @@ final class Item extends Model{
             }
         }
         
-        return $collection;
+        return $created;
     }
     /**
-     * @param int|String $id
-     * @param boolean $public use ID (default) or public_ID
-     * @param boolean $validate Require login
+     * @param int|string $ID
      * @return \CODERS\ArtPad\Resource
      */
-    public static final function load( $id , $public = FALSE , $validate = FALSE ){
+    public static final function load( $ID , $public = FALSE , $validate = FALSE ){
 
         if( $validate && !self::validate() ){
             //throw non validated output?
             return FALSE;
         }
-
-        $filters = $public ?
-                array( 'public_id' => $id ) : 
-                array( 'ID' => $id );
         
-        $data = self::query( $filters );
+        $filter = $public ? array('public_id' => $ID) : array('ID' => $ID );
+        
+        $result = self::query( $filter );
 
-        return ( count($data)) ? new Item( $data[0] ) : FALSE;
+        return ( count($result)) ? new Resource( $result[0] ) : FALSE;
+    }
+    /**
+     * @param string $public_id
+     * @return \CODERS\ArtPad\Resource
+     */
+    public static final function import( $public_id ){
+        
+        $result = self::query( array('public_id' => $public_id ) );
+
+        return ( count($result)) ? new Resource( $result[0] ) : FALSE;
     }
     /**
      * @return boolean
      */
-    private static final function validate(){
+    public static final function validate(){
 
         if( Request::UID() && current_user_can('administrator') ){
             //return is administrator
@@ -493,15 +571,7 @@ final class Item extends Model{
             }
         }
         
-        return FALSE;
-    }
-    /**
-     * Disabled
-     * @param type $request
-     * @param type $data
-     * @return boolean
-     */
-    public static final function create($request, $data = array()) {
+        
         return FALSE;
     }
 }

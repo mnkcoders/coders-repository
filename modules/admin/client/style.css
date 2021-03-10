@@ -82,7 +82,7 @@
     text-align: center;
 }
 .coders-artpad .container{
-    padding: 5px 10px;
+    padding: 5px 0;
     margin: 20px auto;
     box-sizing: border-box;
     
@@ -90,6 +90,19 @@
     
     position: relative;
 }
+.coders-artpad .container.inline{ display: inline-block; float: left; }
+.coders-artpad .container:after{
+    content: '';
+    display: block;
+    clear: both;
+    height: 0;
+}
+
+@media only screen and (min-width:960px ){
+    .coders-artpad .container.inline.grid-8{ width: 64%; }
+    .coders-artpad .container.inline.grid-4{ width: 36%; }
+}
+
 .coders-artpad .container.wide{
     padding: 20px 0 20px;
 }

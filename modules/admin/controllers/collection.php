@@ -15,13 +15,17 @@ final class CollectionController extends \CODERS\ArtPad\Response{
      * @return boolean
      */
     protected final function display_action( \CODERS\ArtPad\Request $request ){
-        $collection = $this->importModel('admin.collection');
-        $collection->parent_id = $request->getInt('id');
-        //var_dump($collection);
-        //die;
+        
+        $ID = $request->getInt('ID');
+        
+        $collection = $ID > 0 ?
+                \CODERS\ArtPad\Resource::load($ID) :
+                $this->importModel('admin.collection');
+
         $this->importView('admin.collection')
                 ->setModel($collection)
-                ->setLayout('collection')
+                //->setLayout('collection')
+                ->setLayout('collection.new')
                 ->display();
         return TRUE;
     }
@@ -30,7 +34,9 @@ final class CollectionController extends \CODERS\ArtPad\Response{
      * @return boolean
      */
     protected final function display2_action( \CODERS\ArtPad\Request $request ){
-        $collection = $this->importModel('admin.collection',array('ID'=> $request->getInt('ID')));
+        //$collection = $this->importModel('admin.collection');
+        $collection = \CODERS\ArtPad\Resource::load($request->getInt('ID'));
+        //$collection->post( $request->getInt('ID') );
         $this->importView('admin.collection')
                 ->setModel($collection)
                 ->setLayout('collection.new')

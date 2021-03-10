@@ -1,5 +1,9 @@
 <?php namespace CODERS\ArtPad;
-
+/**
+ * 
+ * \CODERS\ArtPad\Model Abstract Class
+ * 
+ */
 abstract class Model{
     
     const TYPE_CHECKBOX = 'checkbox';
@@ -49,36 +53,34 @@ abstract class Model{
      * @return mixed
      */
     public final function __get($name) {
+        
         switch( TRUE ){
-            case preg_match(  '/^is_/' , $name ):
-                //RETURN BOOLEAN
-                $is = preg_replace('/_/', '', $name);
-                return method_exists($this, $is) ? $this->$is( ) : FALSE;
-            case preg_match(  '/^value_/' , $name ):
-                //RETURN VALUE
-                $element = substr($name, strlen('value_'));
-                return $this->value($element);
+            case preg_match(  '/^updated_/' , $name ):
+                //RETURN ATTRIBUTE IS UPDATED (BOOLEAN)
+                $updated = substr($name, strlen('updated_'));
+                return $this->get($updated, 'updated',FALSE);
             case preg_match(  '/^type_/' , $name ):
-                //RETURN LIST
+                //RETURN ATTRIBUTE TYPE
                 $type = substr($name, strlen('type_'));
-                return $this->get($type, 'type', self::TYPE_TEXT);
+                return $this->type($type);
             case preg_match(  '/^label_/' , $name ):
-                //RETURN LIST
+                //RETURN ATTRIBUTE LABEL
                 $label = substr($name, strlen('label_'));
                 return $this->get($label, 'label', $label );
-            case preg_match(  '/^list_/' , $name ):
-                //RETURN LIST
-                $list = preg_replace('/_/', '', $name);
-                return method_exists($this, $list) ? $this->$list() : array();
             case preg_match(  '/^error_/' , $name ):
-                //RETURN LIST
+                //RETURN ATTRIBUTE ERROR
                 $element = substr($name, strlen('error_'));
                 return $this->get($element, 'error', '');
+            case preg_match(  '/^is_/' , $name ):
+            case preg_match(  '/^list_/' , $name ):
+                //RETURN CALLABLE FALLBACK WITH NO PARAMETERS
+                return $this->$name();
             default:
-                //RETURN CUSTOMIZER GETTER
+                //RETURN RAW ATTRIBUTE VALUE
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
-                //OR DEFAULT FALLBACK IF DEFINED IN THE DICTIONARY
-                return method_exists($this, $get) ? $this->$get() : $this->value($name);
+                return method_exists($this, $get) ?
+                    $this->$get( /*empty argument call*/) :
+                    $this->get($name,'value','');
         }
     }
     /**
@@ -88,10 +90,6 @@ abstract class Model{
      */
     public final function __call($name, $arguments) {
         switch( TRUE ){
-            case preg_match(  '/^label_/' , $name ):
-                //RETURN LIST
-                $input = substr($name, strlen('label_'));
-                return $this->get($input, 'label', $input);
             case preg_match(  '/^is_/' , $name ):
                 //RETURN BOOLEAN
                 $is = preg_replace('/_/', '', $name);
@@ -100,17 +98,14 @@ abstract class Model{
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
                 return method_exists($this, $list) ? $this->$list( $arguments ) : array();
-            case preg_match(  '/^error_/' , $name ):
-                if( count( $arguments )){
-                    $element = substr($name, strlen('error_'));
-                    $this->set($element, 'error', $arguments[0] );
-                    return TRUE;
-                }
-                return FALSE;
+            case preg_match(  '/^label_/' , $name ):
+                //RETURN LIST
+                $label = preg_replace('/_/', '', $name);
+                return method_exists($this, $label) ? $this->$label( $arguments ) : $label;
             default:
-                //RETURN STRING
+                //RETURN ATTRIBUTE VALUE
                 $get = sprintf('get%s',preg_replace('/_/', '', $name));
-                return method_exists($this, $get) ? $this->$get( $arguments ) : $this->value($name);
+                return method_exists($this, $get) ? $this->$get( $arguments ) : $this->get($name,'value','');
         }
     }
     /**
@@ -118,7 +113,7 @@ abstract class Model{
      * @param mixed $value
      */
     public final function __set($name, $value) {
-        if( $this->exists($name)){
+        if( $this->has($name)){
             $this->setValue($name, $value);
         }
     }
@@ -260,14 +255,6 @@ abstract class Model{
     }
     /**
      * @param string $element
-     * @return boolean
-     */
-    public function exists( $element ){
-        //return array_key_exists($element, $this->_dictionary);
-        return $this->has($element);
-    }
-    /**
-     * @param string $element
      * @param string $attribute
      * @return boolean
      */
@@ -335,7 +322,7 @@ abstract class Model{
             //define a custom setter for a more extended behavior
             $this->$customSetter( $value );
         }
-        elseif( $this->exists($element)){
+        elseif( $this->has($element)){
             switch( $this->type($element)){
                 case self::TYPE_CHECKBOX:
                     return $this->set($element,
@@ -366,7 +353,11 @@ abstract class Model{
     /**
      * @return array
      */
-    public final function elements(){ return array_keys($this->_dictionary); }
+    public final function elements(){ return $this->listElements(); }
+    /**
+     * @return array
+     */
+    public final function listElements(){ return array_keys($this->_dictionary); }
     /**
      * @return array
      */
@@ -376,6 +367,22 @@ abstract class Model{
             $output[$element] = $this->value( $element );
         }
         return $output;
+    }
+    /**
+     * @return array
+     */
+    public static function listTypes(){
+        return array(
+            self::TYPE_CHECKBOX => __('Checkbox','coders_artpad'),
+            self::TYPE_CURRENCY => __('Currency','coders_artpad'),
+            self::TYPE_DATE => __('Date','coders_artpad'),
+            self::TYPE_DATETIME => __('DateTime','coders_artpad'),
+            self::TYPE_EMAIL => __('Email','coders_artpad'),
+            self::TYPE_FLOAT => __('Float','coders_artpad'),
+            self::TYPE_NUMBER => __('Number','coders_artpad'),
+            self::TYPE_TEXT => __('Text','coders_artpad'),
+            self::TYPE_TEXTAREA => __('Text Area','coders_artpad'),
+        );
     }
     /**
      * @return \CODERS\ArtPad\Query
@@ -434,6 +441,7 @@ abstract class Model{
 }
 /**
  * WPDB Query Handler
+ * \CODERS\ArtPad\Query Class
  */
 final class Query {
     
