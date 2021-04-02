@@ -486,19 +486,25 @@ final class Query {
     private final function where(array $filters) {
         
         $where = array();
-
         foreach ($filters as $var => $val) {
             switch (TRUE) {
+                // LIKE CLAUSE
+                case preg_match('/%/', $val):
+                    $where[] = sprintf("`%s` LIKE '%s'",$var,$val);
+                    break;
+                //STRING
                 case is_string($val):
                     $where[] = sprintf("`%s`='%s'", $var, $val);
                     break;
                 case is_object($val):
                     $where[] = sprintf("`%s`='%s'", $var, $val->toString());
                     break;
+                //LIST
                 case is_array($val):
                     $where[] = sprintf("`%s` IN ('%s')", $var, implode("','", $val));
                     break;
                 default:
+                    //SIMPLE TYPE
                     $where[] = sprintf('`%s`=%s', $var, $val);
                     break;
             }

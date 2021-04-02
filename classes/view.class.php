@@ -380,7 +380,7 @@ abstract class View{
     public static final function assetUrl( $url , $module = '' ){
         
         if(strlen($module)){
-            return sprintf('%smodules/%s/client/%s',
+            return sprintf('%smodules/%s/views/client/%s',
                     CODERS__REPOSITORY__URL, $module, $url );
         }
         
@@ -1007,7 +1007,7 @@ abstract class View{
      * @return string
      */
     protected final function getView( $view ){
-        return sprintf('%s/modules/%s/html/%s.php',
+        return sprintf('%s/modules/%s/views/html/%s.php',
                 CODERS__REPOSITORY__DIR,
                 strtolower( $this->module( true ) ),
                 $view );

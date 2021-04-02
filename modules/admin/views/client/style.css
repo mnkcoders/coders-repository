@@ -25,6 +25,12 @@
     /*max-width: 90%;*/
     margin-bottom: 100px;
 }
+.coders-artpad:after{
+    content: '';
+    display: block;
+    height: 0;
+    clear: both;
+}
 .coders-artpad input[type="text"]{
     margin: 0;
 }
@@ -89,6 +95,17 @@
     background-color: transparent;
     
     position: relative;
+}
+@media only screen and (min-width: 1024px){
+    .coders-artpad .container.stack-col:not(:first-child),
+    .coders-artpad .container.stack-col:not(:last-child){
+        width: 49%;
+        display: inline-block;
+        float: left;
+        vertical-align: top;
+        margin-right: 2%;
+    }
+    .coders-artpad .container.stack-col:nth-child(2n){ margin-right: 0; }
 }
 .coders-artpad .container.inline{ display: inline-block; float: left; }
 .coders-artpad .container:after{

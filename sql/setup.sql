@@ -2,8 +2,8 @@
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_account` (
  `ID` int(11) NOT NULL AUTO_INCREMENT,
  `token` varchar(32) NOT NULL,
- `name` varchar(16) NOT NULL,
- `alias` varchar(32) NOT NULL,
+ `name` varchar(16) NOT NULL DEFAULT '',
+ /*`alias` varchar(32) NOT NULL,*/
  `status` tinyint(1) NOT NULL,
  `email_address` varchar(128) NOT NULL,
  `address_city` varchar(255) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_account` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*PAYMENTS TABLE*/
-CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_checkout` (
+/*CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_checkout` (
  `ID` int(11) NOT NULL AUTO_INCREMENT,
  `account_id` int(11) NOT NULL,
  `subscription_id` int(11) NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_checkout` (
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
  PRIMARY KEY (`ID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;*/
 
 /*SUBSCRIPTIONS TABLE*/
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_subscription` (
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_project` (
  `access_level` VARCHAR(12) NOT NULL DEFAULT 'private',
  `status` tinyint(1) DEFAULT '0',
  `image_id` bigint(20) DEFAULT '0' COMMENT 'wordpress gallery',
- `collection_id` int(11) DEFAULT '0' COMMENT 'repository collection',
+ /*`collection_id` int(11) DEFAULT '0' COMMENT 'repository collection (deprecated, now handled by collections in 1-n rel)',*/
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL
  PRIMARY KEY (`ID`)
@@ -70,7 +70,7 @@ CREATE TABLE `{{TABLE_PREFIX}}_post` (
  /*`collection` varchar(24) NOT NULL,*/
  `title` varchar(64) NOT NULL,
  `content` longtext NOT NULL,
- `tier_id` varchar(24) NOT NULL DEFAULT '',
+ `tier_id` varchar(12) NOT NULL DEFAULT '' COMMENT 'combination of project + tier-id',
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
  PRIMARY KEY (`ID`)

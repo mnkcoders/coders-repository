@@ -11,7 +11,7 @@ final class ProjectModel extends \CODERS\ArtPad\Model{
                 ->define('content',parent::TYPE_TEXTAREA)
                 ->define('status',parent::TYPE_NUMBER)
                 ->define('image_id',parent::TYPE_NUMBER,array('value'=>0))
-                ->define('collection_id',parent::TYPE_NUMBER,array('value'=>0))
+                //->define('collection_id',parent::TYPE_NUMBER,array('value'=>0))
                 ->define('date_created',parent::TYPE_DATETIME)
                 ->define('date_updated',parent::TYPE_DATETIME);
         
@@ -37,18 +37,29 @@ final class ProjectModel extends \CODERS\ArtPad\Model{
      */
     protected final function listCollections( $parent = 0 ){
         
-        $collections = $this->newQuery()->select('post',
+        $collections = $this->newQuery()->select('post', '*',
+            array( 'parent_id' => $parent, 'tier_id' => $this->ID . '.%' ) ,
+            'ID', 'ID' );
+        
+        //obsolete
+        /*$collections = $this->newQuery()->select('post',
                 array('ID','name','title'),
                 array('parent_id' => $parent ) ,
                 'ID',
                 'ID' );
+         * 
+         */
         
-        var_dump($collections);
+        //var_dump($collections);
         
         $output = array();
 
         foreach( $collections as $ID => $data ){
-            $output[ $ID ] = strlen($data['title']) ? $data['title'] : $data['name'];
+            //$output[ $ID ] = strlen($data['title']) ? $data['title'] : $data['name'];
+            $output[ $ID ] = $data;
+            if(strlen($data['title']) === 0 ){
+                $data['title'] = $data['name'];
+            }
         }
         
         return $output;

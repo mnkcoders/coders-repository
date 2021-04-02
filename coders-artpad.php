@@ -35,7 +35,7 @@ class ArtPad{
         'model',
         'request',
         'resource',
-        'response'
+        'response',
     );
     /**
      * @var array
@@ -254,12 +254,12 @@ class ArtPad{
         //Setup Route management
         //add_action( 'parse_query', function( ){
         add_action( 'template_redirect', function( ){
-            $endpoint = get_query_var(ArtPad::ENDPOINT  );
+            $endpoint = get_query_var( ArtPad::ENDPOINT  );
             if ( strlen($endpoint)) {
                 if( !ArtPad::check('redirect')) { return; }
                 global $wp_query;
                 $wp_query->set('is_404', FALSE);
-                $path = explode('.', strtolower( $endpoint ) );
+                $path = explode('-', strtolower( $endpoint ) );
                 switch( $path[0] ){
                     case 'admin':
                         //locked in public
@@ -451,6 +451,32 @@ class ArtPad{
         register_post_type( 'coderepo_post', $coderepo_post );
         register_post_type( 'coderepo_project', $coderepo_project );
 
+    }
+    /**
+     * @param int $product_id
+     * @param string $email
+     * @param float $amount
+     * @param string $label
+     * @return boolean
+     */
+    public static final function Subscribe( $product_id , $email , $amount , $label  ){
+        
+        $products = self::product();
+        
+        if(in_array($product_id, $products)){
+            
+            $account = \CODERS\ArtPad\Account::LoadByEmail($email);
+            if( FALSE !== $account ){
+                $account->subscribe();
+            }
+            else{
+                $account = \CODERS\ArtPad\Account::New(array('email_address'=>$email));
+                $account->subscribe($amount);
+            }
+            return TRUE;
+        }
+        
+        return FALSE;
     }
     /**
      * Send a message through the admin notifier

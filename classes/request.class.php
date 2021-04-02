@@ -256,11 +256,11 @@ final class Request{
             //public modules using permalink format SEF
             $url .= sprintf( '/%s/%s' ,
                     $EP ,
-                    count( $route ) > 1 ? $route[0].'.'.$route[1] : $route[0] . '.main' );
+                    count( $route ) > 1 ? $route[0] . '-' . $route[1] : $route[0] . '-main' );
 
             if( count( $route ) > 2  && $route[2] !== 'default' ){
                 //append action
-                $url .= '.' . $route[2];
+                $url .= '-' . $route[2];
             }
             
             $url .= '/';

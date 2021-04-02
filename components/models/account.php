@@ -8,7 +8,7 @@ final class Account extends \CODERS\ArtPad\Model{
     
     protected final function __construct(array $data = array()) {
         $this->define('ID', parent::TYPE_NUMBER , array('value'=>0))
-                ->define('token', parent::TYPE_TEXT, array('size'=>32))
+                ->define('token', parent::TYPE_TEXT, array('size'=>32,'required'=>TRUE))
                 ->define('name', parent::TYPE_TEXT, array('size'=>16,'label' => __('Name','coders_artpad')))
                 ->define('status', parent::TYPE_NUMBER, array('value'=>0,'label' => __('Status','coders_artpad')))
                 ->define('email_address', parent::TYPE_EMAIL, array('size'=>128,'label' => __('Email','coders_artpad')))
@@ -131,6 +131,16 @@ final class Account extends \CODERS\ArtPad\Model{
         return count( $result ) === 0;
     }
     /**
+     * 
+     * @param float $amount
+     * @return \CODERS\ArtPad\Account
+     */
+    public final function subscribe( $amount ){
+
+
+      return $this;
+    }
+    /**
      * @param string $text
      * @return string
      */
@@ -172,16 +182,18 @@ final class Account extends \CODERS\ArtPad\Model{
      * @return boolean|\CODERS\ArtPad\Account
      */
     public static final function LoadByEmail( $email , $hash = FALSE ){
-        var_dump($email);
+        //var_dump($email);
         if( self::ValidateEmail($email)){
             
             $email = self::normalizeEmail($email);
         
-            $hash = $hash ? self::GenerateHash($email) : $email;
+            $filters = $hash ? 
+                    array( 'token' => self::GenerateHash($email) ) :
+                    array( 'email_address' => $email );
 
             $query = new Query();
 
-            $data = $query->select('account', '*', array( 'token' => $hash ) );
+            $data = $query->select('account', '*', $filters );
 
             if( count( $data ) ){
                 return new Account( $data[0] );
@@ -206,6 +218,21 @@ final class Account extends \CODERS\ArtPad\Model{
         }
         
         return FALSE;
+    }
+    /**
+     * @param string $email
+     * @param float $amount
+     * @return \CODERS\ArtPad\Account
+     */
+    public static final function Register( $email , $amount ){
+        
+        $account = self::LoadByEmail($email, TRUE);
+        
+        if( FALSE === $account ){
+            $account = self::New(array('email_address' => $email));
+        }
+        
+        return $account->subscribe($amount);
     }
     /**
      * @param array $data
