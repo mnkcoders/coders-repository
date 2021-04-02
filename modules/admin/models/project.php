@@ -11,6 +11,8 @@ final class ProjectModel extends \CODERS\ArtPad\Model{
                 ->define('content',parent::TYPE_TEXTAREA)
                 ->define('status',parent::TYPE_NUMBER)
                 ->define('image_id',parent::TYPE_NUMBER,array('value'=>0))
+                ->define('connect_patreon',parent::TYPE_CHECKBOX,array('label' => __('Connect to Patreon','coders_artpad')))
+                ->define('connect_wc',parent::TYPE_CHECKBOX,array('label' => __('Connect to WooCommerce','coders_artpad')))
                 //->define('collection_id',parent::TYPE_NUMBER,array('value'=>0))
                 ->define('date_created',parent::TYPE_DATETIME)
                 ->define('date_updated',parent::TYPE_DATETIME);

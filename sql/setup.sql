@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_project` (
  `access_level` VARCHAR(12) NOT NULL DEFAULT 'private',
  `status` tinyint(1) DEFAULT '0',
  `image_id` bigint(20) DEFAULT '0' COMMENT 'wordpress gallery',
+ `connect_patreon` tinyint(1) DEFAULT '0',
+ `connect_wc` tinyint(1) DEFAULT '0',
  /*`collection_id` int(11) DEFAULT '0' COMMENT 'repository collection (deprecated, now handled by collections in 1-n rel)',*/
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL
@@ -78,7 +80,8 @@ CREATE TABLE `{{TABLE_PREFIX}}_post` (
 
 /*TIERS TABLE*/
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_tier` (
- `tier_id` varchar(24) NOT NULL COMMENT 'project_id + tier_id',
+ `project_id` varchar(12) NOT NULL COMMENT 'project_id',
+ `tier_id` varchar(12) NOT NULL COMMENT 'project_id + tier_id',
  `title` varchar(16) NOT NULL,
  `level` tinyint(1) NOT NULL DEFAULT '1',
  `description` longtext NOT NULL,
@@ -86,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_tier` (
  `status` tinyint(1) NOT NULL DEFAULT '0',
  `date_created` datetime NOT NULL,
  `date_updated` datetime NOT NULL,
- PRIMARY KEY( `tier_id`)
+ PRIMARY KEY (`project_id`,`tier_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_token` (

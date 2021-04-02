@@ -71,6 +71,7 @@ abstract class Model{
                 //RETURN ATTRIBUTE ERROR
                 $element = substr($name, strlen('error_'));
                 return $this->get($element, 'error', '');
+            case preg_match(  '/^count_/' , $name ):
             case preg_match(  '/^is_/' , $name ):
             case preg_match(  '/^list_/' , $name ):
                 //RETURN CALLABLE FALLBACK WITH NO PARAMETERS
@@ -90,6 +91,9 @@ abstract class Model{
      */
     public final function __call($name, $arguments) {
         switch( TRUE ){
+            case preg_match(  '/^count_/' , $name ):
+                $count = preg_replace('/_/', '', $name);
+                return method_exists($this, $count) ? $this->$count( $arguments ) : array();
             case preg_match(  '/^is_/' , $name ):
                 //RETURN BOOLEAN
                 $is = preg_replace('/_/', '', $name);
@@ -486,8 +490,12 @@ final class Query {
     private final function where(array $filters) {
         
         $where = array();
-        foreach ($filters as $var => $val) {
+        foreach ($filters as $var => $val ) {
             switch (TRUE) {
+                //LIST
+                case is_array($val):
+                    $where[] = sprintf("`%s` IN ('%s')", $var, implode("','", $val));
+                    break;
                 // LIKE CLAUSE
                 case preg_match('/%/', $val):
                     $where[] = sprintf("`%s` LIKE '%s'",$var,$val);
@@ -498,10 +506,6 @@ final class Query {
                     break;
                 case is_object($val):
                     $where[] = sprintf("`%s`='%s'", $var, $val->toString());
-                    break;
-                //LIST
-                case is_array($val):
-                    $where[] = sprintf("`%s` IN ('%s')", $var, implode("','", $val));
                     break;
                 default:
                     //SIMPLE TYPE

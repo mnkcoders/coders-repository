@@ -58,6 +58,29 @@ final class ProjectView extends \CODERS\ArtPad\View{
         return self::renderDropDown('access_level', $options, $value, $label );
     }
     /**
+     * @return string|html
+     */
+    protected final function displayPatreonIntegration(){
+        
+        $value = 0;
+        
+        return self::renderDropDown('connect_patreon',
+                array(0 => __('No'),1=>__('Yes')),
+                $value );
+        
+    }
+    /**
+     * @return string|html
+     */
+    protected final function displayWoocommerceIntegration(){
+        
+        $value = 0;
+        
+        return self::renderDropDown('connect_wc',
+                array(0 => __('No'),1=>__('Yes')),
+                $value );
+    }
+    /**
      * @return string
      */
     protected final function displayImage(){

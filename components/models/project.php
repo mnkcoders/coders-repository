@@ -13,8 +13,11 @@ final class Project extends \CODERS\ArtPad\Model{
                 ->define('content',parent::TYPE_TEXTAREA , array('label'=>'Content') )
                 ->define('access_level',parent::TYPE_TEXT, array('label'=>'Access Level','value'=>'private'))
                 ->define('status',parent::TYPE_NUMBER , array('label'=>'Status','value'=>self::STATUS_INACTIVE))
+                ->define('connect_patreon',parent::TYPE_CHECKBOX,array('label' => __('Connect to Patreon','coders_artpad')))
+                ->define('connect_wc',parent::TYPE_CHECKBOX,array('label' => __('Connect to WooCommerce','coders_artpad')))
+
                 ->define('image_id',parent::TYPE_NUMBER,array('value'=>0))
-                ->define('collection_id',parent::TYPE_NUMBER,array('value'=>0))
+                //->define('collection_id',parent::TYPE_NUMBER,array('value'=>0))
                 ->define('date_created',parent::TYPE_DATETIME , array('label'=>'Created'))
                 ->define('date_updated',parent::TYPE_DATETIME , array('label'=>'Updated'));
         
@@ -68,6 +71,39 @@ final class Project extends \CODERS\ArtPad\Model{
     public final function listTiers(){
         //var_dump($this->ID);
         return Tier::List($this->ID);
+    }
+    /**
+     * @return int
+     */
+    public final function countTiers(){
+        return count( $this->listTiers());
+    }
+    /**
+     * @param int $parent
+     * @return array
+     */
+    protected final function listCollections( $parent = 0 ){
+        
+        $output = array();
+
+        $collections = $this->newQuery()->select('post', '*',
+            array( 'parent_id' => $parent, 'tier_id' => $this->ID . '.%' ) ,
+            'ID', 'ID' );
+
+        foreach( $collections as $ID => $data ){
+            $output[ $ID ] = $data;
+            if(strlen($data['title']) === 0 ){
+                $data['title'] = $data['name'];
+            }
+        }
+        
+        return $output;
+    }
+    /**
+     * @return int
+     */
+    public final function hasCollections(){
+        return count( $this->listCollections()) > 0;
     }
     /**
      * @return boolean

@@ -14,10 +14,6 @@
         <?php print $this->display_image ?>
     </div>
     <div>
-        <?php print $tihs->label_collection ?>
-        <?php print $this->display_collection ?>
-    </div>
-    <div>
         <?php print $this->label_status; ?>
         <?php print $this->display_status ?>
     </div>
@@ -25,6 +21,27 @@
         <?php print $this->label_access_level; ?>
         <?php print $this->display_access_level ?>
     </div>
+    <div>
+        <?php print $this->label_connect_patreon ?>
+        <?php print $this->display_patreon_integration ?>
+    </div>
+    <div>
+        <?php print $this->label_connect_wc ?>
+        <?php print $this->display_woocommerce_integration ?>
+    </div>
+    <ul class="container solid widefat">
+        <?php if( $this->has_collections ) : ?>
+        <?php foreach( $this->list_collections as $id => $collection ) : ?>
+        <li class="collection">
+            <a href="<?php print '#' ?>" target="_self"><?php print $id ?></a>
+        </li>
+        <?php endforeach; ?>
+        <?php else: ?>
+        <li class="collection">
+            <a href="<?php print \CODERS\ArtPad\Request::url('admin.collection') ?>" target="_self"><?php print __('Find Collections','coders_artpad'); ?></a>
+        </li>
+        <?php endif; ?>
+    </ul>
     <div>
         <?php wp_editor($this->content, 'content'); ?>
     </div>

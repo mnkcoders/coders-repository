@@ -87,40 +87,22 @@ abstract class View{
                         $this->__input( $element );
             case preg_match(  '/^label_/' , $name ):
                 //LABEL DISPLAY
-                $element = substr($name, strlen('label_'));
-                $label = $this->__label($element);
-                return self::__HTML('label', array(
-                        'class' => 'label',
-                        'for' => 'id_' . $element
-                    ), $label);
-            case preg_match(  '/^fieldset_/' , $name ):
-                //FORM-FIELDSET DISPLAY
-                $element = substr($name, strlen('fieldset_'));
-                $label = sprintf('label_%s',$element);
-                $input = sprintf('input_%s',$element);
-                return self::__HTML('fieldset',
-                        array('class'=>'form-input'),
-                        array($this->$label,$this->$input));
+                return $this->$name();
             case preg_match(  '/^view_/' , $name ):
                 //LOAD EXTRA VIEW
-                $layout = preg_replace('/_/', '.', substr($name, strlen('view_')));
-                $view = $this->getView( $layout );
-                if(file_exists($view)){
-                    require $view;
-                }
-                return sprintf('<!-- VIEW [ %s ] -->',$name);
+                return $this->$name();
             case preg_match(  '/^display_/' , $name ):
                 //CUSTOM DISPLAY
-                $display = preg_replace('/_/', '', $name);
-                return method_exists($this, $display) ?
-                        $this->$display( ) :
-                        sprintf('<!-- INVALID DISPLAY %s -->',$display);
+                return $this->$name( /*no params*/ );
             case preg_match(  '/^is_/' , $name ):
                 //RETURN BOOLEAN
                 $is = preg_replace('/_/', '', $name);
                 return method_exists($this, $is) ?
                         $this->$is( ) :
                         $this->model()->$is( );
+            case preg_match(  '/^count_/' , $name ):
+                //COUNT ELEMENTS FROM LISTS OR OTHER RESOURCES
+                return $this->hasModel() ? $this->model()->$name : 0;
             case preg_match(  '/^list_/' , $name ):
                 //RETURN LIST
                 $list = preg_replace('/_/', '', $name);
@@ -174,6 +156,24 @@ abstract class View{
                 return method_exists($this, $display) ?
                         $this->$display( $params ) :
                         sprintf('<!-- INVALID DISPLAY %s -->',$name);
+            case preg_match(  '/^view_/' , $name ):
+                //LOAD EXTRA VIEW
+                $layout = preg_replace('/_/', '.', substr($name, strlen('view_')));
+                $view = $this->getView( $layout );
+                if(file_exists($view)){
+                    require $view;
+                }
+                return sprintf('<!-- VIEW [ %s ] -->',$name);
+            case preg_match(  '/^label_/' , $name ):
+                //LABEL DISPLAY
+                $label = preg_replace('/_/', '', $name);
+                if(method_exists($this, $label)){
+                    return $this->$label();
+                }
+                elseif( $this->hasModel() ){
+                    return $this->model()->$name;
+                }
+                return $name;
             case preg_match(  '/^is_/' , $name ):
                 //RETURN BOOLEAN
                 $is = preg_replace('/_/', '', $name);
