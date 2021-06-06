@@ -6,7 +6,7 @@ final class SubscriptionsController extends \CODERS\ArtPad\Response{
 
     protected function default_action(\CODERS\ArtPad\Request $request) {
         
-        $this->importView('admin.subscriptions')->setLayout('subscriptions')->display();
+        $this->view('admin.subscriptions')->setLayout('subscriptions')->display();
         
         var_dump($request);
         

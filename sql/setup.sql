@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_tier` (
 CREATE TABLE IF NOT EXISTS `{{TABLE_PREFIX}}_token` (
  `ID` varchar(32) NOT NULL,
  `type` varchar(16) NOT NULL,
- `target` int(11) NOT NULL,
+ `owner` int(11) NOT NULL,
  `status` tinyint(1) NOT NULL,
  `date_created` datetime NOT NULL,
  `date_expired` datetime NOT NULL,

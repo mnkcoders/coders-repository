@@ -14,8 +14,12 @@ class TestModule extends \ArtPad{
         
         parent::__construct();
     }
-    
-    public final function run($route = '') {
+    /**
+     * @param String $route
+     */
+    public final function run( $route = '') {
+        
+        return parent::run( $route );
         
         $account = \CODERS\ArtPad\Account::Load(1);
         $tier = \CODERS\ArtPad\Tier::Load('artpad.copper');

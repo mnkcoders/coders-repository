@@ -394,14 +394,13 @@ abstract class Model{
     protected static final function newQuery(){
         return new Query();
     }
-    
     /**
      * @param string $request
      * @param array $data
      * @return \CODERS\ArtPad\Model | boolean
      * @throws \Exception
      */
-    public static function create( $request , $data = array() ){
+    public static final function Instance( $request , $data = array() ){
         
         try{
             $extract = explode('.', $request);
@@ -563,9 +562,10 @@ final class Query {
     /**
      * @param string $table
      * @param array $data
+     * @param boolean $return_id
      * @return int
      */
-    public final function insert( $table , array $data ){
+    public final function insert( $table , array $data , $return_id = FALSE ){
         
         $db = self::db();
         
@@ -595,7 +595,12 @@ final class Query {
         
         $result = $db->query($sql_insert);
         
-        $id = $db->insert_id;
+        if(  $db->rows_affected ){
+            $id = $return_id ? $db->insert_id : 1;
+            return $id;
+        }
+        
+        return 0;
         
         //var_dump($db->last_error);
         
@@ -634,9 +639,9 @@ final class Query {
                 implode(',', $values),
                 implode(' AND ', self::where( $filters )));
 
-        $result = $db->query($sql_update);
+        $db->query($sql_update);
         
-        return FALSE !== $result ? $result : 0;
+        return $db->rows_affected;
     }
     /**
      * @param string $table

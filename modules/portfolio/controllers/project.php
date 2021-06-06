@@ -13,9 +13,9 @@ final class ProjectController extends \CODERS\ArtPad\Response{
         $item = $request->get('item','');
         
         //$project = \CODERS\ArtPad\Project::load($ID);
-        $project = $this->importModel('portfolio.project',array('ID'=>$ID,'item' => $item));
+        $project = $this->model('portfolio.project',array('ID'=>$ID,'item' => $item));
         
-        $display = $this->importView('portfolio.project');
+        $display = $this->view('portfolio.project');
         
         if( FALSE !== $project ){
             

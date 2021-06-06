@@ -13,7 +13,6 @@ class AdminModule extends \ArtPad{
     protected final function __construct() {
         //register componetns
         $this->include('Models.Account' )
-                ->include('Models.Project' )
                 ->include('Models.Tier' )
                 ->include('Services.Mailer' );
         
@@ -65,9 +64,10 @@ class AdminModule extends \ArtPad{
     }
     /**
      * @return \CODERS\ArtPad\Admin\AdminModule
+     * @global array $submenu
      */
     private final function initAdminMenu(){
-
+        global $submenu;
         if( count( $this->_menu ) ){
             
             $menu = $this->_menu;
@@ -94,6 +94,19 @@ class AdminModule extends \ArtPad{
                         }, 'dashicons-art', 51);
                     }
                 }
+                //static posts
+                add_submenu_page(
+                        $this->root(),
+                        __('Projects (post)','coders_artpad'),
+                        __('Projects (post)','coders_artpad'),
+                        'administrator',
+                        'edit.php?post_type=artpad_project');
+                add_submenu_page(
+                        $this->root(),
+                        __('Collection (post)','coders_artpad'),
+                        __('Collection (post)','coders_artpad'),
+                        'administrator',
+                        'edit.php?post_type=artpad_post');
             } , 100000 );
         }
         return $this;

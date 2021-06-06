@@ -68,7 +68,7 @@ final class Post extends Model{
      * @return string
      */
     public static final function link( $rid ){
-        return sprintf('%s/%s/rid.%s',
+        return sprintf('%s/%s/rid-%s',
                 get_site_url(),
                 \ArtPad::ENDPOINT,
                 $rid);

@@ -8,8 +8,8 @@ final class MainController extends \CODERS\ArtPad\Response{
      * @return boolean
      */
     protected final function default_action(\CODERS\ArtPad\Request $request) {
-        $model = $this->importModel('user.account');
-        $view = $this->importView('user.profile');
+        $model = $this->model('user.account');
+        $view = $this->view('user.profile');
         $view->setModel($model)->setLayout('profile')->display();
         return TRUE;
     }

@@ -6,6 +6,10 @@ final class Resource extends Model{
     
     //1024 * 1024
     const DEFAULT_CHUNK_SIZE = 1048576;
+    /**
+     * @var WP_Post
+     */
+    private $_post = null;
 
     /**
      * @param array $data
@@ -18,6 +22,8 @@ final class Resource extends Model{
                 ->define('type',parent::TYPE_TEXT)
                 ->define('title',parent::TYPE_TEXT)
                 ->define('order',parent::TYPE_NUMBER)
+                ->define('parent',parent::TYPE_NUMBER,array('value'=>0))
+                //->define('storage',parent::TYPE_TEXT)
                 ->define('tier_id',parent::TYPE_TEXT)
                 ->define('content',parent::TYPE_TEXTAREA)
                 ->define('date_created',parent::TYPE_DATETIME)
@@ -46,7 +52,8 @@ final class Resource extends Model{
      * @return string
      */
     public final function getPath(){
-        return \ArtPad::Storage( $this->public_id );
+        return self::Storage( $this->public_id ); 
+        //return \ArtPad::Storage( $this->public_id );
     }
     /**
      * @return string
@@ -68,9 +75,10 @@ final class Resource extends Model{
      * @return string
      */
     public static final function link( $rid ){
-        return sprintf('%s/%s/rid-%s',
+        return sprintf('%s/%s/%s-%s',
                 get_site_url(),
                 \ArtPad::ENDPOINT,
+                \ArtPad::RESOURCE,
                 $rid);
     }
     /**
@@ -245,7 +253,8 @@ final class Resource extends Model{
      * @return boolean
      */
     private static final function remove( $public_id ){
-        $path = \ArtPad::Storage($public_id);
+        $path = self::Storage( $public_id );
+        //$path = \ArtPad::Storage($public_id);
         if (file_exists($path)) {
             return unlink($path);
         }
@@ -295,12 +304,30 @@ final class Resource extends Model{
         }
     }
     /**
+     * @param string $resource
+     * @return string
+     */
+    public static final function Storage( $resource = '' ){
+        
+        $coders_dir = get_option( 'coders_repo_base' , \ArtPad::ENDPOINT );
+        $path = preg_replace('/\\\\/', '/', ABSPATH)
+                . '/wp-content/uploads/'
+                . $coders_dir;
+        
+        if( strlen( $resource ) ){
+            $path .= '/' . $resource;
+        }
+        
+        return $path;
+    }
+    /**
      * @return array
      */
-    public static final function listStorage(){
+    public static final function List( $drive = '' ){
         
         $output = array();
-        $root = \ArtPad::Storage();
+        $root = self::Storage( $drive );
+        //$root = \ArtPad::Storage();
         foreach(scandir($root) as $item ){
             if( is_dir($root . '/' . $item ) && $item !== '.' && $item !== '..' ){
                 $output[] = $item;
@@ -549,12 +576,97 @@ final class Resource extends Model{
     }
     /**
      * Disabled
-     * @param type $request
-     * @param type $data
-     * @return boolean
+     * @param array $data post metadata
+     * @param string $buffer attachment content data
+     * @return \CODERS\ArtPad\Resource
      */
-    public static final function create($request, $data = array()) {
+    public static final function create($data = array() , $buffer = '' ) {
+        
+        $author = 1;
+        $status = 'publish';
+        
+        $data['ID'] = wp_insert_post(array(
+            'post_type' => 'artpad_post',
+            'post_title'    => wp_strip_all_tags( $data['title'] ),
+            'post_content'  => $data['content'],
+            'post_status'   => $status,
+            'post_author'   => $author,
+        ), TRUE, FALSE);
+        
+        if( $data['ID'] ){
+            
+            add_post_meta($data['ID'], 'public_id', $data['public_id'] );
+            add_post_meta($data['ID'], 'order', $data['order'] );
+            add_post_meta($data['ID'], 'tier_id', $data['tier_id'] );
+            
+            return self::new( $data , $buffer ); 
+        }
+        
         return FALSE;
     }
 }
 
+
+
+add_action('init', function() {
+
+    register_post_type('artpad_post', array(
+        'public' => FALSE,
+        'publicly_queryable' => FALSE,
+        'show_ui' => TRUE,
+        'show_in_menu' => FALSE,
+        'query_var' => TRUE,
+        'rewrite' => array('slug' => 'artpad-post'),
+        'capability_type' => 'post',
+        'has_archive' => FALSE,
+        'hierarchical' => TRUE,
+        'menu_position' => null,
+        'supports' => array('title', 'editor', 'author', 'excerpt', 'comments', 'thumbnail'),
+        'labels' => array(
+            'name' => _x('Collection', 'Collection', 'coders_artpad'),
+            'singular_name' => _x('Posts', 'Post', 'coders_artpad'),
+            'menu_name' => _x('Collection', 'Collection', 'coders_artpad'),
+            'name_admin_bar' => _x('Item', 'Item', 'coders_artpad'),
+            'add_new' => __('Add', 'coders_artpad'),
+            'add_new_item' => __('Add', 'coders_artpad'),
+            'new_item' => __('New', 'coders_artpad'),
+            'edit_item' => __('Edit', 'coders_artpad'),
+            'view_item' => __('View', 'coders_artpad'),
+            'all_items' => __('Collection', 'coders_artpad'),
+            'search_items' => __('Search', 'coders_artpad'),
+            'parent_item_colon' => __('Parent', 'coders_artpad'),
+            'not_found' => __('Empty', 'coders_artpad'),
+            'not_found_in_trash' => __('Trash is empty', 'coders_artpad'),
+            'featured_image' => _x('Cover', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'set_featured_image' => _x('Set cover', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'remove_featured_image' => _x('Remove cover', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'use_featured_image' => _x('Use as cover', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'archives' => _x('Archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_artpad'),
+            'insert_into_item' => _x('Insert', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_artpad'),
+            'uploaded_to_this_item' => _x('Uploaded to this Resource', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_artpad'),
+            'filter_items_list' => _x('Filter Resources', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_artpad'),
+            'items_list_navigation' => _x('Repository Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_artpad'),
+            'items_list' => _x('Resource List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_artpad'),
+        ),
+    ));
+    
+    if(is_admin()){
+        add_filter('page_row_actions',function( $actions , $post ){
+                //check for your post type
+                if ($post->post_type === 'artpad_post' ){
+                    /*do you stuff here
+                    you can unset to remove actions
+                    and to add actions ex:
+                    $actions['in_google'] = '<a href="http://www.google.com/?q='.get_permalink($post->ID).'">check if indexed</a>';
+                    */
+                   
+                   $link = sprintf('<a href="%s" target="_self" class="children">%s</a>',
+                            '#',
+                            __('Children','coders_artpad'));
+                   
+                   $actions[ 'children' ] = $link;
+                }
+                return $actions;
+        }, 10, 2);
+    }
+});

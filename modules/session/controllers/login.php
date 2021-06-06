@@ -49,12 +49,12 @@ final class LoginController extends \CODERS\ArtPad\Response{
             if( FALSE !== $invite ){
                 if( FALSE !== $invite->activate( ) ){
                     $account = $invite->account();
-                    $this->importView('session.main')->setModel($account)->setLayout('logged')->display();
+                    $this->view('session.main')->setModel($account)->setLayout('logged')->display();
                 }
             }
         }
 
-        $this->importView('session.main')->setLayout('invalid.link')->display();
+        $this->view('session.main')->setLayout('invalid.link')->display();
 
         return TRUE;
     }

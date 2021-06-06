@@ -68,14 +68,14 @@ abstract class Response {
      * @param array $data
      * @return \CODERS\ArtPad\Model
      */
-    protected final function importModel( $model , array $data = array() ){
-        return Model::create( $model , $data );
+    protected final function model( $model , array $data = array() ){
+        return Model::Instance( $model , $data );
     }
     /**
      * @param string $view
      * @return \CODERS\ArtPad\View
      */
-    protected final function importView( $view ){
+    protected final function view( $view ){
         return View::create( $view );
     }
     /**
@@ -169,7 +169,7 @@ abstract class Response {
                     strtolower( $request->module() ), strtolower( $request->controller() ) );
 
             $class = sprintf('\CODERS\ArtPad\%s\%sController',
-                    $request->module(), $request->controller() );
+                    $request->module( TRUE ), $request->controller() );
 
             if(file_exists($path)){
                 require_once $path;
@@ -178,11 +178,11 @@ abstract class Response {
                     return $C->execute( $request );
                 }
                 else{
-                    throw new \Exception(sprintf('Invalid Controller %s',$class) );
+                    throw new \Exception(sprintf('Invalid Controller <b>%s</b>',$class) );
                 }
             }
             else{
-                throw new \Exception(sprintf('Invalid path %s',$path) );
+                throw new \Exception(sprintf('Invalid path <b>%s</b>',$path) );
             }
         }
         catch (\Exception $ex) {
@@ -202,8 +202,10 @@ abstract class Response {
     public static final function Route( $route = Request::_DEFAULT ){
         
         $request = Request::route( $route );
-
-        return self::create( $request );
+        var_dump( strval( $request ) ); 
+        $controller = self::create( $request );
+        var_dump($controller);
+        return $controller;
     }
 }
 

@@ -8,9 +8,9 @@ final class MainController extends \CODERS\ArtPad\Response{
      */
     protected final function default_action(\CODERS\ArtPad\Request $request) {
         
-        $portfolio = $this->importModel('portfolio.project');
+        $portfolio = $this->model('portfolio.project');
         
-        $this->importView('portfolio')
+        $this->view('portfolio')
                 ->setModel($portfolio)
                 ->setLayout('project.list')
                 ->display();

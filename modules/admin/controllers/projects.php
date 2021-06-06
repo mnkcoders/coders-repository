@@ -6,9 +6,9 @@ final class ProjectsController extends \CODERS\ArtPad\Response{
 
     protected function default_action(\CODERS\ArtPad\Request $request) {
         
-        $project = $this->importModel('admin.project');
+        $project = $this->model('admin.project');
         
-        $view = $this->importView('admin.projects');
+        $view = $this->view('admin.projects');
         
         $view->setModel($project)->setLayout('project.list')->display();
         

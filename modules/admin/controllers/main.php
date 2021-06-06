@@ -8,8 +8,8 @@ final class MainController extends \CODERS\ArtPad\Response{
      * @return boolean
      */
     protected final function default_action(\CODERS\ArtPad\Request $request) {
-        $model = $this->importModel('admin.dashboard');
-        $view = $this->importView('admin.dashboard');
+        $model = $this->model('admin.dashboard');
+        $view = $this->view('admin.dashboard');
         $view->setModel($model)->setLayout('dashboard')->display();
         return TRUE;
     }
@@ -24,7 +24,7 @@ final class MainController extends \CODERS\ArtPad\Response{
             $project = \CODERS\ArtPad\Project::load( $request->get('ID',''));
         }
         
-        $this->importView('admin.project')
+        $this->view('admin.project')
                 ->setModel($project)
                 ->setLayout('project')
                 ->display();
@@ -63,7 +63,7 @@ final class MainController extends \CODERS\ArtPad\Response{
         
         $tier_id = $request->get('ID','');
         
-        $display = $this->importView('admin.tier');
+        $display = $this->view('admin.tier');
         
         if(strlen($tier_id)){
             $tier = \CODERS\ArtPad\Tier::Load( $tier_id );
@@ -100,7 +100,7 @@ final class MainController extends \CODERS\ArtPad\Response{
         
         if(strlen($title)){
             $project = \CODERS\ArtPad\Project::New( $title );
-            $this->importView('admin.project')
+            $this->view('admin.project')
                     ->setModel($project)
                     ->setLayout('project')
                     ->display();

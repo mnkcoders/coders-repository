@@ -6,7 +6,7 @@ final class LogsController extends \CODERS\ArtPad\Response{
     
     protected function default_action(\CODERS\ArtPad\Request $request) {
         
-        $this->importView('admin.logs')->setLayout('logs')->display();
+        $this->view('admin.logs')->setLayout('logs')->display();
         
         return TRUE;
     }

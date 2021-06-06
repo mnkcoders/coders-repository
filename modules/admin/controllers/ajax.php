@@ -18,7 +18,7 @@ final class AjaxController extends \CODERS\ArtPad\Response{
     protected final function list_collections_action( \CODERS\ArtPad\Request $request ){
         
         //$collections = \CODERS\ArtPad\Resource::storage();
-        $repo = $this->importModel('admin.repository');
+        $repo = $this->model('admin.repository');
         
         return $this->ajax( $repo->list_collections );
     }

@@ -6,9 +6,9 @@ final class AccountsController extends \CODERS\ArtPad\Response{
 
     protected function default_action(\CODERS\ArtPad\Request $request) {
         //var_dump($request);
-        $account = $this->importModel('admin.account');
+        $account = $this->model('admin.account');
         
-        $view = $this->importView('admin.accounts');
+        $view = $this->view('admin.accounts');
         
         $view->setModel($account)->setLayout('account.list')->display();
         
@@ -20,11 +20,11 @@ final class AccountsController extends \CODERS\ArtPad\Response{
         
         $account = \CODERS\ArtPad\Account::Load($request->get('ID',0));
         
-        $view = $this->importView('admin.accounts');
+        $view = $this->view('admin.accounts');
         
         if( FALSE !== $account ){
             //mask the account model with a local model
-            $form = $this->importModel('admin.account');
+            $form = $this->model('admin.account');
             
             $form->import($account->listValues());
         
@@ -44,7 +44,7 @@ final class AccountsController extends \CODERS\ArtPad\Response{
      */
     protected final function create_action( \CODERS\ArtPad\Request $request ){
         
-        $form = $this->importModel('admin.account' , $request->input( ) );
+        $form = $this->model('admin.account' , $request->input( ) );
         
         if( $form->validateData() ){
             
@@ -52,7 +52,7 @@ final class AccountsController extends \CODERS\ArtPad\Response{
 
             if( FALSE !== $account ){
                 
-                $this->importView('admin.accounts')
+                $this->view('admin.accounts')
                         ->setModel($account)
                         ->setLayout('account.view')
                         ->display();
@@ -67,7 +67,7 @@ final class AccountsController extends \CODERS\ArtPad\Response{
                 //var_dump($form);
         }
         
-        $this->importView('admin.accounts')
+        $this->view('admin.accounts')
                 ->setModel($form)
                 ->setLayout('account.list')
                 ->display();

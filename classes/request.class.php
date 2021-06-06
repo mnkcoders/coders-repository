@@ -136,29 +136,63 @@ final class Request{
      * @return array
      */
     public final function input(){
+        return $_REQUEST;
         return $this->_input;
     }
     /**
      * @return string
      */
     //public final function action(){ return $this->_input[self::ACTION]; }
-    public final function action(){ return $this->_action; }
+    public final function action(){
+        return $this->_action;
+        }
     /**
      * @return string
      */
     //public final function controller(){ return $this->_input[self::CONTROLLER] ; }
     public final function controller(){ return $this->_controller; }
     /**
+     * @param boolean $capitalize
      * @return string
      */
     //public final function module(){ return $this->_input[self::MODULE]; }
-    public final function module(){ return $this->_module; }
+    public final function module( $capitalize = FALSE ){
+        return $capitalize ? ucfirst($this->_module) : $this->_module;
+    }
+    /**
+     * @param string $var
+     * @param string $default
+     * @return string
+     */
+    public static final function post( $var , $default = '' ){
+        $input = filter_input(INPUT_POST, $var);
+        return !is_null($input) ? $input : $default;
+    }
+    /**
+     * @param string $var
+     * @param string $default
+     * @return string
+     */
+    public static final function get( $var , $default = '' ){
+        $input = filter_input(INPUT_GET, $var);
+        return !is_null($input) ? $input : $default;
+    }
+    /**
+    /**
+     * @param string $var
+     * @param string $default
+     * @return string
+     */
+    public static final function request( $var , $default = '' ){
+        $input = filter_input(INPUT_REQUEST, $var);
+        return !is_null($input) ? $input : $default;
+    }
     /**
      * @param string $name
      * @param mixed $default
      * @return mixed
      */
-    public final function get($name,$default=''){
+    public final function get__($name,$default=''){
         return array_key_exists($name, $this->_input) ?
                 $this->_input[$name] :
                 $default;
@@ -401,8 +435,10 @@ final class Request{
 
         $url = self::fullPath();
         
-        if( preg_match('/\/artpad\/rid.[a-z\-0-9]/i', $url) ){
-            $match = sprintf('/%s/rid.', \ArtPad::ENDPOINT);
+        $pattern = sprintf('/\/artpad\/%s.[a-z\-0-9]/i',\ArtPad::RESOURCE);
+        
+        if( preg_match($pattern, $url) ){
+            $match = sprintf('/%s/%s.', \ArtPad::ENDPOINT,\ArtPad::RESOURCE);
             return preg_replace(
                     '/\//', '', 
                     substr($url, strpos($url, $match ) + strlen($match)));

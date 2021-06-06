@@ -36,12 +36,12 @@
 </div>
 <?php endif; ?>
 <div class="container stack-col collection-box">
-    <div id="id_artpad_uploader" class="uploader" data-tab="uploader">
+    <div id="id_uploader" class="uploader" data-tab="uploader">
         <form name="collection" method="POST" action="<?php print $this->upload_url ?>" enctype="multipart/form-data">
             <input type="hidden" name="MAX_FILE_SIZE" value="<?php
                     print $this->file_size ?>">
-            <!--input class="hidden" id="id_uploader" type="file" name="upload[]" multiple="true"-->
-            <label class="dashicons-before dashicons-media-default button" for="id_collection"><?php
+            <input class="hidden" id="id_files" type="file" name="upload[]" multiple="true">
+            <label class="dashicons-before dashicons-media-default button" for="id_files"><?php
                     print __('Select files','coders_artpad') ?></label>
             <button class="button button-primary dashicons-before dashicons-upload" type="submit" name="_action" value="upload"><?php
                     print __('Upload','coders_artpad') ?></button>

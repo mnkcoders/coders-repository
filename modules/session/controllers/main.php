@@ -7,7 +7,7 @@ final class MainController extends \CODERS\ArtPad\Response{
     
     protected function default_action(\CODERS\ArtPad\Request $request) {
         
-        $this->importView('session.main')->setLayout('login')->display();
+        $this->view('session.main')->setLayout('login')->display();
         
         return TRUE;
     }

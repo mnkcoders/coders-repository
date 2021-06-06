@@ -1,5 +1,7 @@
 <?php namespace CODERS\ArtPad;
-
+/**
+ * 
+ */
 final class Project extends \CODERS\ArtPad\Model{
     
     const STATUS_INACTIVE = 0;
@@ -194,4 +196,45 @@ final class Project extends \CODERS\ArtPad\Model{
 
 
 
+add_action('init', function() {
 
+    register_post_type('artpad_project', array(
+        'public' => FALSE,
+        'publicly_queryable' => FALSE,
+        'show_ui' => TRUE,
+        'show_in_menu' => FALSE,
+        'query_var' => FALSE,
+        'rewrite' => array('slug' => 'artpad-project'),
+        'capability_type' => 'post',
+        'has_archive' => FALSE,
+        'hierarchical' => FALSE,
+        'menu_position' => null,
+        'supports' => array('title', 'editor', 'author', 'thumbnail'),
+        'labels' => array(
+            'name' => _x('Projects', 'Projects', 'coders_artpad'),
+            'singular_name' => _x('Project', 'Project', 'coders_artpad'),
+            'menu_name' => _x('Project', 'Project', 'coders_artpad'),
+            'name_admin_bar' => _x('Project', 'New Project', 'coders_artpad'),
+            'add_new' => __('Create', 'coders_artpad'),
+            'add_new_item' => __('Add New Project', 'coders_artpad'),
+            'new_item' => __('New Project', 'coders_artpad'),
+            'edit_item' => __('Edit Project', 'coders_artpad'),
+            'view_item' => __('View Project', 'coders_artpad'),
+            'all_items' => __('Projects', 'coders_artpad'),
+            'search_items' => __('Search Project', 'coders_artpad'),
+            'parent_item_colon' => __('Parent Project:', 'coders_artpad'),
+            'not_found' => __('No projects  found.', 'coders_artpad'),
+            'not_found_in_trash' => __('No projects found in Trash.', 'coders_artpad'),
+            'featured_image' => _x('Cover Image', 'Overrides the “Featured Image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'set_featured_image' => _x('Set cover image', 'Overrides the “Set featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'remove_featured_image' => _x('Remove cover image', 'Overrides the “Remove featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'use_featured_image' => _x('Use as cover image', 'Overrides the “Use as featured image” phrase for this post type. Added in 4.3', 'coders_artpad'),
+            'archives' => _x('Archives', 'The post type archive label used in nav menus. Default “Post Archives”. Added in 4.4', 'coders_artpad'),
+            'insert_into_item' => _x('Insert into Project', 'Overrides the “Insert into post”/”Insert into page” phrase (used when inserting media into a post). Added in 4.4', 'coders_artpad'),
+            'uploaded_to_this_item' => _x('Uploaded to this Project', 'Overrides the “Uploaded to this post”/”Uploaded to this page” phrase (used when viewing media attached to a post). Added in 4.4', 'coders_artpad'),
+            'filter_items_list' => _x('Filter Projects', 'Screen reader text for the filter links heading on the post type listing screen. Default “Filter posts list”/”Filter pages list”. Added in 4.4', 'coders_artpad'),
+            'items_list_navigation' => _x('Projects Navigation', 'Screen reader text for the pagination heading on the post type listing screen. Default “Posts list navigation”/”Pages list navigation”. Added in 4.4', 'coders_artpad'),
+            'items_list' => _x('Project List', 'Screen reader text for the items list heading on the post type listing screen. Default “Posts list”/”Pages list”. Added in 4.4', 'coders_artpad'),
+        ),
+    ));
+});

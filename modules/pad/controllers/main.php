@@ -10,9 +10,9 @@ final class MainController extends \CODERS\ArtPad\Response{
      */
     protected function default_action(\CODERS\ArtPad\Request $request) {
         
-        $dashboard = $this->importModel('pad.dashboard');
+        $dashboard = $this->model('pad.dashboard');
         
-        $this->importView('pad.dashboard')->setModel($dashboard)->setLayout('dashboard')->display();
+        $this->view('pad.dashboard')->setModel($dashboard)->setLayout('dashboard')->display();
         
         return TRUE;
     }
