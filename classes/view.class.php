@@ -380,7 +380,7 @@ abstract class View{
     public static final function assetUrl( $url , $module = '' ){
         
         if(strlen($module)){
-            return sprintf('%smodules/%s/views/client/%s',
+            return sprintf('%smodules/%s/assets/%s',
                     CODERS__REPOSITORY__URL, $module, $url );
         }
         
@@ -1007,9 +1007,10 @@ abstract class View{
      * @return string
      */
     protected final function getView( $view ){
-        return sprintf('%s/modules/%s/views/html/%s.php',
+        return sprintf('%s/modules/%s/views/%s/html/%s.php',
                 CODERS__REPOSITORY__DIR,
                 strtolower( $this->module( true ) ),
+                strtolower( $this->__class() ),
                 $view );
     }
     /**
@@ -1091,7 +1092,9 @@ abstract class View{
         $module = $call[0];
         $view = count( $call ) > 1 ? $call[1] : 'main';
         
-        $path = sprintf('%s/modules/%s/views/%s.php',CODERS__REPOSITORY__DIR,$module,$view);
+        $path = sprintf('%s/modules/%s/views/%s/%s.php',
+                preg_replace('/\\\\/', '/',  CODERS__REPOSITORY__DIR ),
+                $module,$view,$view);
         $class = sprintf('\CODERS\ArtPad\%s\%sView',$module,$view);
         
         if(file_exists($path)){

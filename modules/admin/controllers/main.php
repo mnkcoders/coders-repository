@@ -76,7 +76,7 @@ final class MainController extends \CODERS\ArtPad\Response{
             }
         }
 
-        $display->setLayout('tier.error')->display();
+        $display->setLayout('error')->display();
         
         return TRUE;
     }

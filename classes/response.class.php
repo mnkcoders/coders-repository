@@ -68,7 +68,7 @@ abstract class Response {
      * @param array $data
      * @return \CODERS\ArtPad\Model
      */
-    protected final function model( $model , array $data = array() ){
+    protected function model( $model , array $data = array() ){
         return Model::Instance( $model , $data );
     }
     /**
@@ -199,12 +199,12 @@ abstract class Response {
     /**
      * @return \CODERS\ArtPad\Response | boolean
      */
-    public static final function Route( $route = Request::_DEFAULT ){
+    public static final function Route( $route ){
         
         $request = Request::route( $route );
-        var_dump( strval( $request ) ); 
+        //var_dump( strval( $request ) ); 
         $controller = self::create( $request );
-        var_dump($controller);
+        //var_dump($controller);
         return $controller;
     }
 }

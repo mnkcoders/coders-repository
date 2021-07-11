@@ -21,7 +21,8 @@ class AdminModule extends \ArtPad{
                 ->registerRoute( 'collection' , __('Collections','coders_artpad'))
                 ->registerRoute( 'accounts' , __('Accounts','coders_artpad'))
                 ->registerRoute( 'settings' , __('Settings','coders_artpad'))
-                ->registerRoute( 'logs' , __('Logs','coders_artpad'));
+                ->registerRoute( 'logs' , __('Logs','coders_artpad'))
+                ->registerRoute( 'post' , __('Post','coders_artpad'));
 
         parent::__construct();
 

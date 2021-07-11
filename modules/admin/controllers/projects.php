@@ -10,7 +10,7 @@ final class ProjectsController extends \CODERS\ArtPad\Response{
         
         $view = $this->view('admin.projects');
         
-        $view->setModel($project)->setLayout('project.list')->display();
+        $view->setModel($project)->setLayout('list')->display();
         
         return TRUE;
     }

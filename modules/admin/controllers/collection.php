@@ -25,7 +25,7 @@ final class CollectionController extends \CODERS\ArtPad\Response{
         $this->view('admin.collection')
                 ->setModel($collection)
                 //->setLayout('collection')
-                ->setLayout('collection.new')
+                ->setLayout('new')
                 ->display();
         return TRUE;
     }
@@ -39,7 +39,7 @@ final class CollectionController extends \CODERS\ArtPad\Response{
         //$collection->post( $request->getInt('ID') );
         $this->view('admin.collection')
                 ->setModel($collection)
-                ->setLayout('collection.new')
+                ->setLayout('new')
                 ->display();
         return TRUE;
     }
@@ -66,7 +66,7 @@ final class CollectionController extends \CODERS\ArtPad\Response{
     protected final function test_action( \CODERS\ArtPad\Request $request ){
         
         $this->view('admin.collection')
-                ->setLayout('collection.new')
+                ->setLayout('new')
                 ->display();
         
         return TRUE;

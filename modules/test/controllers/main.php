@@ -7,7 +7,13 @@ final class MainController extends \CODERS\ArtPad\Response{
     
     protected function default_action(\CODERS\ArtPad\Request $request) {
         
-        var_dump($this->query());
+        var_dump($request);
+        
+        var_dump( \CODERS\ArtPad\Request::url('test.gallery'));
+        var_dump( \CODERS\ArtPad\Request::url('test.post'));
+        var_dump( \CODERS\ArtPad\Request::url('test.project'));
+        
+        //var_dump($this->query());
         
         
         return TRUE;

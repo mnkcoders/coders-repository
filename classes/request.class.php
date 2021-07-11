@@ -11,27 +11,37 @@ final class Request{
     const ACTION = '_action';
     const CONTROLLER = '_controller';
     const MODULE = '_module';
-    const _DEFAULT = 'repository.main.default';
-    
+    //const _DEFAULT = 'repository.main.default';
+
+    /**
+     * @var string
+     */
+    private $_fingerprint;
+    /**
+     * @var int
+     */
+    private $_ts = 0;
+    /**
+     * @var string
+     */
+    private $_module = 'public';
+    /**
+     * @var string
+     */
+    private $_controller = 'main';
+    /**
+     * @var string
+     */
+    private $_action = 'default';
     /**
      * @var array
      */
     private $_input = array( );
-    
-    private $_action = 'default';
-    private $_controller = 'main';
-    private $_module = '';
-    
-    private $_fingerprint;
-    private $_ts = 0;
-    
     /**
      * @param array $input
      */
     private function __construct( array $input ) {
-        
         $this->readFP()->import($input);
-
     }
     /**
      * @return string
@@ -47,7 +57,7 @@ final class Request{
      * @return string
      */
     public final function __get($name) {
-        return $this->get($name, '');
+        return $this->request($name,'');
     }
     /**
      * Import fingerprint
@@ -69,7 +79,7 @@ final class Request{
     /**
      * @return \CODERS\ArtPad\Request
      */
-    private final function register( $request = '' ){
+    /*private final function register( $request = '' ){
         if(strlen($request)){
             $path = explode('.', $request);
             $this->_module = $path[0];
@@ -84,7 +94,7 @@ final class Request{
             $this->_module = is_admin() ? 'admin' : 'repository';
         }
         return $this;
-    }
+    }*/
     /**
      * @param array $input
      * @return \CODERS\ArtPad\Request
@@ -93,7 +103,10 @@ final class Request{
         foreach( $input as $var => $val ){
             switch( $var ){
                 case self::ACTION:
-                    $this->register($val);
+                    $route = self::PARSE($val);
+                    $this->_module = $route['module'];
+                    $this->_controller = $route['controller'];
+                    $this->_action = $route['action'];
                     break;
                 default:
                     $this->_input[ $var ] = $val;
@@ -110,7 +123,7 @@ final class Request{
             self::ACTION => strval($this),
             'ts' => $this->_ts,
             'fp' => $this->_fingerprint,
-            'input' => $this->_input,
+            'input' => $this->input(),
         );
     }
     /**
@@ -133,19 +146,12 @@ final class Request{
         return sprintf('[%s::%s]',$this->_fingerprint,$this->time(self::FORMAT_TIMESTAMP));
     }
     /**
-     * @return array
-     */
-    public final function input(){
-        return $_REQUEST;
-        return $this->_input;
-    }
-    /**
      * @return string
      */
     //public final function action(){ return $this->_input[self::ACTION]; }
     public final function action(){
         return $this->_action;
-        }
+    }
     /**
      * @return string
      */
@@ -158,6 +164,18 @@ final class Request{
     //public final function module(){ return $this->_input[self::MODULE]; }
     public final function module( $capitalize = FALSE ){
         return $capitalize ? ucfirst($this->_module) : $this->_module;
+    }
+    /**
+     * @return array
+     */
+    public static final function input(){ return $this->_input; }
+    /**
+     * @param string $name
+     * @param string $default
+     * @return string
+     */
+    public final function request( $name , $default = '' ){
+        return array_key_exists( $name, $this->_input) ? $this->_input[$name] : $default;
     }
     /**
      * @param string $var
@@ -178,59 +196,36 @@ final class Request{
         return !is_null($input) ? $input : $default;
     }
     /**
-    /**
-     * @param string $var
-     * @param string $default
-     * @return string
-     */
-    public static final function request( $var , $default = '' ){
-        $input = filter_input(INPUT_REQUEST, $var);
-        return !is_null($input) ? $input : $default;
-    }
-    /**
-     * @param string $name
-     * @param mixed $default
-     * @return mixed
-     */
-    public final function get__($name,$default=''){
-        return array_key_exists($name, $this->_input) ?
-                $this->_input[$name] :
-                $default;
-    }
-    /**
      * @param string $name
      * @return int
      */
     public final function getInt( $name ){
-        return array_key_exists($name, $this->_input) ? intval( $this->_input[$name] ) : 0;
+        return intval( $this->request($name,0) );
     }
     /**
      * @param string $name
      * @return array
      */
-    public final function parseArray( $name , $sep = ',' ){
-        return array_key_exists($name, $this->_input) ?
-                explode( $sep, $this->_input[$name] ) :
-                array();
+    public final function getArray( $name , $sep = ',' ){
+        $input = $this->request($name,'');
+        return strlen($input) ?  explode( $sep, $input ) : array();
     }
     /**
      * HASH CODE from the current client's request fingerprint
      * @return string
      */
     public final function fingerPrint(){
-        
         return md5( $this->_fingerprint );
     }
     /**
      * @return string|boolean
      */
     public static final function SID(){
-        
         $SID = filter_input(INPUT_COOKIE, sprintf('%s_sid', \ArtPad::ENDPOINT ) );
-        
         return $SID !== NULL && strlen($SID) ? $SID : FALSE;
     }
     /**
+     * Get WordPress current|Active User ID
      * @return int
      */
     public static final function UID(){
@@ -255,11 +250,11 @@ final class Request{
      * @param string $route
      * @return \CODERS\ArtPad\Request
      */
-    public final function redirect( $route = self::_DEFAULT , array $input = array( ) ){
-        $action = explode('.', $route);
-        $this->_module = $action[0];
-        $this->_controller = count( $action ) > 1 ? $action[1] : 'main';
-        $this->_action = count( $action ) > 2 ? $action[2] : 'default';
+    public final function redirect( $route , array $input = array( ) ){
+        $path = self::PARSE($route);
+        $this->_module = $path['module'];
+        $this->_controller = $path['controller'];
+        $this->_action = $path['action'];
         $this->_input = $input;
         return $this;
     }
@@ -268,53 +263,39 @@ final class Request{
      * @param array $args
      * @return string
      */
-    public static final function url( $request = self::_DEFAULT , $args = array( ) ){
+    public static final function url( $request  , $args = array( ) ){
         $serialized = array();
         $EP = \ArtPad::ENDPOINT;
-        $route = explode( '.' , $request );
-        $is_admin = $route[ 0 ] === 'admin';
+        $route = self::PARSE($request);
+        $is_admin = $route[ 'module' ] === 'admin';
         $url = $is_admin ? admin_url() . 'admin.php' : get_site_url();
 
         if( $is_admin ){
-
-            $page = $route[ 1 ] === 'main' ?
+            $page = $route[ 'controller' ] === 'main' ?
                     $EP : 
-                    $EP . '-' . $route[ 1 ];
+                    $EP . '-' . $route[ 'controller' ];
             $serialized[ ] = 'page=' . $page;
-            
-            if( count( $route ) > 2  && $route[2] !== 'default' ){
-                $serialized[ ] = sprintf('%s=%s',self::ACTION, $route[2]);
-            }
+            $serialized[ ] = sprintf('%s=%s',self::ACTION, $route['action']);
         }
-        elseif( FALSE ){
+        elseif( TRUE ){
             //public modules using permalink format SEF
-            $url .= sprintf( '/%s/%s' ,
+            $url .= sprintf( '/%s/%s-%s-%s/' ,
                     $EP ,
-                    count( $route ) > 1 ? $route[0] . '-' . $route[1] : $route[0] . '-main' );
-
-            if( count( $route ) > 2  && $route[2] !== 'default' ){
-                //append action
-                $url .= '-' . $route[2];
-            }
-            
-            $url .= '/';
+                    $route['module'],
+                    $route['controller'],
+                    $route['action'] );
 
             foreach( $args as $var => $val ){
                 $serialized[ ] = sprintf('%s=%s',$var,$val);
             }
-
-            //return sprintf('%s?%s', $url , implode('&', $serialized ) );
+           //return sprintf('%s?%s', $url , implode('&', $serialized ) );
         }
         else{
             $url .= '/';
             //public modules using PLAIN URL FORMAT (no sef)
-            $serialized[ ] = sprintf( '%s=%s' ,
-                    $EP ,
-                    count( $route ) > 1 ? $route[0].'.'.$route[1] : $route[0] . '.main' );
-        
-            if( count( $route ) > 2  && $route[2] !== 'default' ){
-                $serialized[ ] = sprintf('%s=%s',self::ACTION, $route[2]);
-            }
+            $serialized[ ] = sprintf( '%s=%s-%s' , $EP , $route['module'], $route['controller'] );
+            $serialized[ ] = sprintf('%s=%s',self::ACTION, $route['action']);
+            //if( count( $route ) > 2  && $route[2] !== 'default' ){}
         }
 
         foreach( $args as $var => $val ){
@@ -334,9 +315,10 @@ final class Request{
      * @param string $route
      * @return \CODERS\ArtPad\Request
      */
-    public static final function route( $route = self::_DEFAULT  ){
+    public static final function route( $route  ){
         
-        $input = self::read();
+        $input = self::READ();
+        $path = self::PARSE( $route );
         
         if(is_admin() ){
             unset( $input['page'] );
@@ -345,31 +327,13 @@ final class Request{
             unset( $input[\ArtPad::ENDPOINT  ] );
         }
         
-        $path = explode('.', $route);
-        
-        if(count($path) < 2){ $path[] = 'main'; }
-        
-        switch( TRUE ){
-            case array_key_exists(self::ACTION, $input):
-                $input[self::ACTION] = sprintf('%s.%s.%s',
-                        $path[0],
-                        $path[1],
-                        $input[self::ACTION]);
-                break;
-            case count($path) > 2:
-                $input[self::ACTION] = sprintf('%s.%s.%s',
-                        $path[0],
-                        $path[1],
-                        $path[2] );
-                break;
-            default:
-                $input[self::ACTION] = sprintf('%s.%s.default',
-                        $path[0],
-                        $path[1] );
-                break;
+        if(array_key_exists(self::ACTION, $input) ){
+            $path['action'] = $input[self::ACTION];
         }
-
-        return self::create($input);
+        $input[ self::ACTION ] = implode('.', $path);
+        
+        return new Request( $input );
+        //return self::create($input);
     }
     /**
      * @param string $route
@@ -377,30 +341,25 @@ final class Request{
      */
     public static final function ajax( $route ){
         
-        $ajax = self::read();
+        $ajax = self::READ();
         
         //action is related to wp_ajax_[action] hook: remove it
         //request is related to coders action request: parse it and remove it
         //unset( $ajax['action'] );
         
-        $action = explode('.', $route);
-        
-        if( array_key_exists('request', $ajax) ){
-            $action[] = $ajax['request'];
-        }
-
         $input = array_key_exists('data', $ajax) ?
                 json_decode($ajax['data'], TRUE) :
             array();
         
-        $input[ self::ACTION ] = implode('.', $action);
+        $input[ self::ACTION ] = $route;
         
-        return new Request( $input );
+        return new Request($input);
+        //return new Request( $input );
     }
     /**
      * @return array
      */
-    public static final function read( $input = INPUT_REQUEST ){
+    private static final function READ( $input = INPUT_REQUEST ){
         switch( $input ){
             case INPUT_POST:
                 $post = filter_input_array( INPUT_POST );
@@ -409,7 +368,8 @@ final class Request{
                 $get = filter_input_array( INPUT_GET );
                 return is_array($get) ? $get : array();
             case INPUT_REQUEST:
-                return array_merge( self::read(INPUT_POST) , self::read(INPUT_GET ) );
+                return $_REQUEST;
+                //return array_merge( self::READ(INPUT_POST) , self::READ(INPUT_GET ) );
             case INPUT_COOKIE:
                 $cookie = filter_input_array(INPUT_COOKIE );
                 return is_array($cookie) ? $cookie : array();
@@ -457,6 +417,17 @@ final class Request{
             return apache_request_headers();
         }
         return array();
+    }
+    /**
+     * @param array $request
+     */
+    private static final function PARSE( $request ){
+        $path = explode('.', $request);
+        return array(
+            'module' => $path[0],
+            'controller' => count( $path ) > 1 ? $path[ 1 ] : 'main',
+            'action' => count( $path ) > 2 ? $path[ 2 ] : 'default',
+        ); 
     }
 }
 

@@ -7,11 +7,8 @@ final class AccountsController extends \CODERS\ArtPad\Response{
     protected function default_action(\CODERS\ArtPad\Request $request) {
         //var_dump($request);
         $account = $this->model('admin.account');
-        
         $view = $this->view('admin.accounts');
-        
-        $view->setModel($account)->setLayout('account.list')->display();
-        
+        $view->setModel($account)->setLayout('list')->display();
         
         return TRUE;
     }
@@ -28,12 +25,12 @@ final class AccountsController extends \CODERS\ArtPad\Response{
             
             $form->import($account->listValues());
         
-            $view->setModel($form)->setLayout('account.view')->display();
+            $view->setModel($form)->setLayout('account')->display();
             
             return TRUE;
         }
         else{
-            $view->setLayout('account.invalid')->display();
+            $view->setLayout('invalid')->display();
         }
         
         return FALSE;
@@ -54,7 +51,7 @@ final class AccountsController extends \CODERS\ArtPad\Response{
                 
                 $this->view('admin.accounts')
                         ->setModel($account)
-                        ->setLayout('account.view')
+                        ->setLayout('account')
                         ->display();
                 
                 return TRUE;
@@ -69,7 +66,7 @@ final class AccountsController extends \CODERS\ArtPad\Response{
         
         $this->view('admin.accounts')
                 ->setModel($form)
-                ->setLayout('account.list')
+                ->setLayout('list')
                 ->display();
         
         

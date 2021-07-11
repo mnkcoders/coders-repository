@@ -122,10 +122,18 @@ abstract class Model{
         }
     }
     /**
+     * @param boolean $noformat
      * @return string
      */
-    protected static function __ts(){
-        return date('Y-m-d H:i:s');
+    protected static function __ts( $noformat = FALSE ){
+        return $noformat ? date('YmdHis')  : date('Y-m-d H:i:s');
+    }
+    /**
+     * @param string $tag
+     * @return String
+     */
+    protected static function __makeID( $tag = '' ){
+        return md5( uniqid( strlen($tag) ? $tag : self::__ts(true), TRUE) );
     }
     
     /**
@@ -196,7 +204,7 @@ abstract class Model{
      * @param array $input
      * @return \CODERS\ArtPad\Model
      */
-    private final function __populate( array $input ){
+    protected function __populate( array $input ){
         foreach( $input as $element => $value ){
             $this->setValue($element, $value);
         }

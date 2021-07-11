@@ -621,7 +621,7 @@ add_action('init', function() {
         'has_archive' => FALSE,
         'hierarchical' => TRUE,
         'menu_position' => null,
-        'supports' => array('title', 'editor', 'author', 'excerpt', 'comments', 'thumbnail'),
+        'supports' => array('title', 'editor', 'author', 'excerpt', 'comments', 'thumbnail','parent'),
         'labels' => array(
             'name' => _x('Collection', 'Collection', 'coders_artpad'),
             'singular_name' => _x('Posts', 'Post', 'coders_artpad'),
@@ -651,22 +651,128 @@ add_action('init', function() {
     ));
     
     if(is_admin()){
+        
+        global $wp;
+        $wp->add_query_var('post_parent');
+        
         add_filter('page_row_actions',function( $actions , $post ){
                 //check for your post type
                 if ($post->post_type === 'artpad_post' ){
-                    /*do you stuff here
-                    you can unset to remove actions
-                    and to add actions ex:
-                    $actions['in_google'] = '<a href="http://www.google.com/?q='.get_permalink($post->ID).'">check if indexed</a>';
-                    */
-                   
+                   $url = sprintf('%s/edit.php?post_type=artpad_post&post_parent=%s',
+                                    get_admin_url(), $post->ID);
                    $link = sprintf('<a href="%s" target="_self" class="children">%s</a>',
-                            '#',
+                            $url,
                             __('Children','coders_artpad'));
                    
                    $actions[ 'children' ] = $link;
                 }
                 return $actions;
         }, 10, 2);
+
+        add_action('edit_form_top',function( $post ){
+            if( $post->post_type === 'artpad_post' && $post->ID > 0 ){
+                $parent_id = intval( $post->post_parent );
+                $url = $parent_id > 0 ? 
+                        sprintf('%spost.php?post=%s&action=edit', get_admin_url(),$parent_id ) :
+                        sprintf('%sedit.php?post_type=artpad_post', get_admin_url());
+                printf('<a class="button" href="%s" target="_self">%s</a>',
+                       $url,
+                        __('Parent','coders_artpad'));
+            }
+        });
+        
+        add_action( 'pre_get_posts' , function( $query ){
+            //$query->set('post_parent',  2635 );
+            //var_dump($query);
+            
+            return $query;
+        });
+        /**
+         * @param WP_Post $post
+         * @return array
+         */
+        function list_parent_posts( $post ){
+            
+            $list = array(
+                0 => '<b>' . __('Root','coders_artpad') . '</b>',
+            );
+            
+            $parent_id = get_post_parent($post) | 0;
+            //parent post's parent or root
+            if( $parent_id ){
+                $parent = get_post($parent_id);
+                $list[ $parent->ID ] = '<b>'. __('Move to upper','coders_artpad') .'</b>';
+            }
+            else{
+                //$list[ 0 ] = __('Root','coders_artpad');
+            }
+            //adjacent posts
+            $child_args = array(
+                'post_parent' => $post->post_parent,
+                'post_type' => 'artpad_post',
+                'numberposts' => -1 );
+            $adjacent = get_children($child_args);
+            foreach( $adjacent as $p ){
+                if( $p->ID != $post->ID ){
+                    $list[ $p->ID ] = $p->post_title;
+                }
+            }
+            
+            return $list;
+        }
+        
+        ///metaboxes
+        add_action( 'add_meta_boxes' , function(  ){
+            add_meta_box(
+                    'artpad_post_parent',
+                    __('Attributes','coders_artpad'),
+                    function($post){
+                
+                        printf('<p><label class="bold widefat" for="post_name">%s</label></p>',
+                                __('Post name','coders_artpad'));
+                        printf('<p><input type="text" class="widefat" name="post_name" id="post_name" value="%s" /></p>',
+                                $post->post_name);
+                
+                        $post_list = list_parent_posts($post);
+                        printf('<p><label class="widefat" for="_parent_id">%s</label></p>',
+                                __('Parent'));
+                        printf('<p><select class="widefat" name="%s" id="%s">',
+                                '_parent_id',
+                                '_parent_id' );
+                        foreach( $post_list as $id => $title ){
+                            $selected = $id > 0 && $id == $post->ID;
+                            printf('<option value="%s" %s>%s</option>',
+                                    $id,
+                                    $selected ? 'selected="selected"' : '',
+                                    $selected ? sprintf('%s (%s)',$title,__('current','coders_artpad')) : $title);
+                        }
+                        printf('</select></p>');
+                        var_dump($post);
+                    },
+                    'artpad_post','side','core'
+                );
+        });
+        function generate_post_name( $post_title ){
+            return $post_title;
+        }
+        /*add_action( 'save_post' , function( $post_id , $post ){
+            // Block on Autosave
+            if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )  
+                return;
+            // Block Revisions
+            if ( 'revision' == $post->post_type )
+                return;
+            $post_title = filter_input(INPUT_POST, 'post_title');
+            $post_name = filter_input(INPUT_POST, 'post_name') | generate_post_name($post_title);
+            
+            $parent_id = filter_input(INPUT_POST, '_parent_id') | 0;
+
+            if( $post->post_type === 'artpad_post' ){
+                update_post_meta($post->ID, 'post_title', $post_title);
+                update_post_meta($post->ID, 'post_parent', $parent_id);
+            }
+        }, 10 , 2 );*/
     }
+    
+    
 });

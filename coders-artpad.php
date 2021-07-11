@@ -191,7 +191,7 @@ class ArtPad{
     function run( $route = '' ){
         
         if(strlen($route)){
-            return \CODERS\ArtPad\Response::Route($route);
+            return \CODERS\ArtPad\Response::Route( preg_replace('/-/', '.', $route) );
         }
         
         return FALSE;
@@ -253,7 +253,8 @@ class ArtPad{
             else{
                 if( !self::check('rewrite') ){ return; }
                 //now let wordpress do it's stuff with the query router
-                add_rewrite_endpoint( ArtPad::ENDPOINT, EP_ROOT );
+                //add_rewrite_endpoint( ArtPad::ENDPOINT, EP_ROOT );
+                ArtPad::setupRewrite(TRUE);
             }
         },10);
         //Setup Route management
@@ -290,7 +291,6 @@ class ArtPad{
                         break;
                     default:
                         $module = ArtPad::module($path[0]);
-
                         if(FALSE !== $module && $module->run( $endpoint )){
                             //ArtPad::terminate();
                             exit;
@@ -298,7 +298,7 @@ class ArtPad{
                         break;
                 }
                 //hooked repository app, exit WP framework into WP error display
-                wp_die('Invalid Endpoint');
+                wp_die('Wrong Endpoint');
                 //exit;
             }
         },10);
